@@ -17,7 +17,7 @@ namespace Mobishare.Core.Security
     /// <summary>
     /// Defines the available roles in the system.
     /// </summary>
-    public enum Roles
+    public enum UserRole
     {
         /// <summary>
         /// Standard user with limited access.

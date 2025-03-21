@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Mobishare.Core.Data;
+using TicketShop.Core.Security.Policies;
+using Mobishare.Core.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,10 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 var app = builder.Build();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
+builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
