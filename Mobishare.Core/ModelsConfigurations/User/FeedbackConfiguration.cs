@@ -13,10 +13,19 @@ public class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
     public void Configure(EntityTypeBuilder<Feedback> builder)
     {
         builder.ToTable("Feedback");
+
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Message).IsRequired();
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.Rating).IsRequired();
+
+        builder.Property(x => x.Message)
+                .IsRequired();
+
+        builder.Property(x => x.CreatedAt)
+                .IsRequired();
+
+        builder.Property(x => x.Rating)
+                .IsRequired()
+                .HasDefaultValue(0);
+                
         builder.HasOne(x => x.User)
                .WithMany()
                .HasForeignKey(x => x.UserId)

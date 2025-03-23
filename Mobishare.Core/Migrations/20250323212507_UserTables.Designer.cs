@@ -11,7 +11,7 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250323113426_UserTables")]
+    [Migration("20250323212507_UserTables")]
     partial class UserTables
     {
         /// <inheritdoc />
