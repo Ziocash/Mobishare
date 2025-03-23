@@ -20,6 +20,12 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 
 var app = builder.Build();
 
+builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+    googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+});
+
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
