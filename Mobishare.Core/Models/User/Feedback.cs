@@ -12,6 +12,6 @@ public class Feedback
     public string Message {get; set;}
     public DateTime CreatedAt {get; set;}
     public float Rating {get; set;}
-    public int UserId {get; set;}
     public IdentityUser User {get; set;}
+    public string UserId {get; set;}
 }

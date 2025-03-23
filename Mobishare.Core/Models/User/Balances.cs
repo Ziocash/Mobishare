@@ -11,5 +11,5 @@ public class Balances
     public double Credit {get; set;}
     public int Points {get; set;}
     public IdentityUser User {get; set;}
-    public int UserId {get; set;}
+    public string UserId {get; set;}
 }
