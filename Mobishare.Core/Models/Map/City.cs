@@ -4,6 +4,9 @@ using NetTopologySuite.Geometries;
 
 namespace Mobishare.Core.Models.Map;
 
+/// <summary>
+/// This class is used to store the city information.
+/// </summary>
 public class City
 {
     public int Id {get; set;}

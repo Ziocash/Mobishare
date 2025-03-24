@@ -4,6 +4,9 @@ using NetTopologySuite.Geometries;
 
 namespace Mobishare.Core.Models.Map;
 
+/// <summary>
+/// This class is used to store the parking slot information.
+/// </summary>
 public class ParkingSlot
 {
     public int Id {get; set;}

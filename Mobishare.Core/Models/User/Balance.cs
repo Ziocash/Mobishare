@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Identity;
+
 namespace Mobishare.Core.Models.User;
 
 //<summary>
