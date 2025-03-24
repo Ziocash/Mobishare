@@ -1,9 +1,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Mobishare.Core.Models.Map;
+using Mobishare.Core.Models.Maps;
 
-namespace Mobishare.Core.ModelsConfigurations.Map;
+namespace Mobishare.Core.ModelsConfigurations.Maps;
 
 public class CitiesConfiguration : IEntityTypeConfiguration<City>
 {

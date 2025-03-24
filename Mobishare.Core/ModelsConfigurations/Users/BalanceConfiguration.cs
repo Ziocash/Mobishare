@@ -2,9 +2,9 @@ using System;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Mobishare.Core.Models.User;
+using Mobishare.Core.Models.Users;
 
-namespace Mobishare.Core.ModelsConfigurations.User;
+namespace Mobishare.Core.ModelsConfigurations.Users;
 
 //<summary>
 // This class is used to configure the Balances table in the database.
