@@ -10,7 +10,7 @@ public class Feedback
 {
     public int Id {get; set;}
     public string Message {get; set;}
-    public DateTime CreatedAt {get; set;}
+    public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
     public float Rating {get; set;}
     public IdentityUser User {get; set;}
     public string UserId {get; set;}
