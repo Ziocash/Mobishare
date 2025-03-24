@@ -2,7 +2,7 @@ using System;
 
 namespace Mobishare.Core.ModelsConfigurations.Vehicle;
 
-public class VehiclesConfiguration
+public class RideConfiguration
 {
 
 }

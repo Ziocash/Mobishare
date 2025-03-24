@@ -5,9 +5,9 @@ using Mobishare.Core.Models.Map;
 
 namespace Mobishare.Core.ModelsConfigurations.Map;
 
-public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlots>
+public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlot>
 {
-    public void Configure(EntityTypeBuilder<ParkingSlots> builder)
+    public void Configure(EntityTypeBuilder<ParkingSlot> builder)
     {
         builder.ToTable("ParkingSlots");
 
@@ -26,7 +26,7 @@ public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlots>
 
         builder.HasOne(x => x.User)
                .WithOne()
-               .HasForeignKey<ParkingSlots>(x => x.UserId)
+               .HasForeignKey<ParkingSlot>(x => x.UserId)
                .IsRequired();
     }
 }

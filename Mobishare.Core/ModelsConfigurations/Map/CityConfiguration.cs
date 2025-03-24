@@ -5,9 +5,9 @@ using Mobishare.Core.Models.Map;
 
 namespace Mobishare.Core.ModelsConfigurations.Map;
 
-public class CitiesConfiguration : IEntityTypeConfiguration<Cities>
+public class CitiesConfiguration : IEntityTypeConfiguration<City>
 {
-    public void Configure(EntityTypeBuilder<Cities> builder)
+    public void Configure(EntityTypeBuilder<City> builder)
     {
         builder.ToTable("Cities");
 
@@ -25,7 +25,7 @@ public class CitiesConfiguration : IEntityTypeConfiguration<Cities>
 
         builder.HasOne(x => x.User)
                .WithOne()
-               .HasForeignKey<Cities>(x => x.UserId)
+               .HasForeignKey<City>(x => x.UserId)
                .IsRequired();
     }
 }

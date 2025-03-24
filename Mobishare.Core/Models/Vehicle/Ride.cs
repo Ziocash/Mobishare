@@ -2,7 +2,7 @@ using System;
 
 namespace Mobishare.Core.Models.Vehicle;
 
-public class RepairAssignments
+public class Ride
 {
 
 }
