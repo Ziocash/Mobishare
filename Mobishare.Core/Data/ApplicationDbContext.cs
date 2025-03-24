@@ -9,15 +9,27 @@ namespace Mobishare.Core.Data
     public class ApplicationDbContext : IdentityDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-        public DbSet<Balance> Balance { get; set; }
+        public DbSet<Balance> Balances { get; set; }
         public DbSet<Feedback> Feedback { get; set; }
-        public DbSet<City> City { get; set; }
-        public DbSet<ParkingSlot> ParkingSlot { get; set; }
-        public DbSet<Vehicle> Vehicle { get; set; }
-        public DbSet<Repair> Repair { get; set; }
-        public DbSet<Report> Report { get; set; }
-        public DbSet<Ride> Ride { get; set; }
-        public DbSet<RepairAssignment> RepairAssignment { get; set; }
+        public DbSet<City> Cities { get; set; }
+        public DbSet<ParkingSlot> ParkingSlots { get; set; }
+        public DbSet<Vehicle> Vehicles { get; set; }
+        public DbSet<Repair> Repairs { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Ride> Rides { get; set; }
+        public DbSet<RepairAssignment> RepairAssignments { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<ParkingSlot>()
+                .Property(p => p.PerimeterLocation)
+                .HasColumnType("geometry");
+
+            modelBuilder.Entity<City>()
+            .Property(p => p.PerimeterLocation)
+            .HasColumnType("geometry");
+        }
 
     }
 }

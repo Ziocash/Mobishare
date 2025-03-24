@@ -10,7 +10,7 @@ namespace Mobishare.Core.Models.Maps;
 public class ParkingSlot
 {
     public int Id {get; set;}
-    public Polygon PermiterLocation {get; set;}
+    public Polygon PerimeterLocation {get; set;}
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
     public City City {get; set;}
     public int CityId {get; set;}
