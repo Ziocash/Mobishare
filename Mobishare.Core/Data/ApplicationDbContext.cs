@@ -18,18 +18,5 @@ namespace Mobishare.Core.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<Ride> Rides { get; set; }
         public DbSet<RepairAssignment> RepairAssignments { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<ParkingSlot>()
-                .Property(p => p.PerimeterLocation)
-                .HasColumnType("geometry");
-
-            modelBuilder.Entity<City>()
-            .Property(p => p.PerimeterLocation)
-            .HasColumnType("geometry");
-        }
-
     }
 }

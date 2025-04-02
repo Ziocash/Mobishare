@@ -5,6 +5,9 @@ using Mobishare.Core.Models.Maps;
 
 namespace Mobishare.Core.ModelsConfigurations.Maps;
 
+//<summary>
+// This class is used to configure the ParkingSlots table in the database.
+//</summary>
 public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlot>
 {
     public void Configure(EntityTypeBuilder<ParkingSlot> builder)
@@ -13,7 +16,7 @@ public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlot>
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.PermiterLocation)
+        builder.Property(x => x.PerimeterLocation)
                 .IsRequired();
 
         builder.Property(x => x.CreatedAt)
