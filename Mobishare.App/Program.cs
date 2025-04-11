@@ -22,6 +22,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 #endregion
 
+
 #region Google Authentication
 builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 {
@@ -33,6 +34,7 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 #region Authorization policies
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
+
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
 #endregion
 

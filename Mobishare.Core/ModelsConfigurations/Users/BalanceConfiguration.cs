@@ -2,16 +2,16 @@ using System;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Mobishare.Core.Models.User;
+using Mobishare.Core.Models.Users;
 
-namespace Mobishare.Core.ModelsConfigurations.User;
+namespace Mobishare.Core.ModelsConfigurations.Users;
 
 //<summary>
 // This class is used to configure the Balances table in the database.
 //</summary>
-public class BalancesConfiguration : IEntityTypeConfiguration<Balances>
+public class BalancesConfiguration : IEntityTypeConfiguration<Balance>
 {
-    public void Configure(EntityTypeBuilder<Balances> builder)
+    public void Configure(EntityTypeBuilder<Balance> builder)
     {
         builder.ToTable("Balances");
 
@@ -27,7 +27,7 @@ public class BalancesConfiguration : IEntityTypeConfiguration<Balances>
 
         builder.HasOne(x => x.User)
                .WithOne()
-               .HasForeignKey<Balances>(x => x.UserId)
+               .HasForeignKey<Balance>(x => x.UserId)
                .IsRequired();
     }
 }
