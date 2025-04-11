@@ -8,7 +8,8 @@ namespace Mobishare.Core.Models.Vehicles;
 /// </summary>
 public class RepairAssignment
 {
-    public IdentityUser User { get; set; }
+	public int Id { get; set; }
+	public IdentityUser User { get; set; }
     public string UserId { get; set; }
     public Repair Repair { get; set; }
     public int RepairId { get; set; }
