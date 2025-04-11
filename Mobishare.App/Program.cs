@@ -18,11 +18,12 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-var app = builder.Build();
-
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
+
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
