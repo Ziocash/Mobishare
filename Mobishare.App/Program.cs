@@ -18,7 +18,7 @@ builder.Services.AddRazorPages();
 #endregion
 
 #region Identity configuration
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 #endregion
 
