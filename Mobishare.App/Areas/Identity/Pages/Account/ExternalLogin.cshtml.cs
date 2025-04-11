@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Identity.Pages.Account
 {
@@ -85,7 +86,7 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
             [EmailAddress]
             public string Email { get; set; }
         }
-        
+
         public IActionResult OnGet() => RedirectToPage("./Login");
 
         public IActionResult OnPost(string provider, string returnUrl = null)
@@ -162,6 +163,13 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
+                        // IdentityImplementation Add user role, First/Last name claim
+                        await _userManager.AddClaimsAsync(user, [
+                            new Claim(ClaimNames.Role, UserRole.User.ToString()),
+                            // new Claim(ClaimNames.FirstName, Input.FirstName),
+                            // new Claim(ClaimNames.LastName, Input.LastName)
+                        ]);
+
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
