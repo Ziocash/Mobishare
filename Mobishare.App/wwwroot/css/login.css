@@ -1,0 +1,162 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #e6eaf4;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #f5f9ff;
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+    width: 80px;
+    height: 80px;
+    background-color: #2db44f;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 30px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-label {
+    display: block;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.input-field {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #fff;
+    border-radius: 10px;
+    font-size: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-field input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 10px;
+    font-size: 14px;
+}
+
+.input-field .icon {
+    color: #aaa;
+    margin-right: 5px;
+}
+
+.input-field .toggle-password {
+    cursor: pointer;
+    color: #aaa;
+}
+
+.login-button {
+    width: 100%;
+    padding: 15px;
+    background-color: #2db44f;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #1f8439;
+}
+
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.separator span {
+    padding: 0 10px;
+    color: #777;
+    font-size: 14px;
+}
+
+.google-login-button {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.google-login-button:hover {
+    background-color: #f8f8f8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.google-login-button svg {
+    flex-shrink: 0;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.footer a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
