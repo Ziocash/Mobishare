@@ -1,55 +1,64 @@
 ﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
 let map;
 let drawingManager;
-let currentPolygon = null; // Riferimento al poligono attualmente disegnato/modificato
-let drawnPolygonWkt = null; // Memorizza l'output WKT corrente
+let currentPolygon = null;
+let drawnPolygonWkt = null;
 
 async function initMap() {
-    // Importa le librerie necessarie: 'maps' e 'drawing'
-    const { Map } = await google.maps.importLibrary("maps");
-    const { DrawingManager } = await google.maps.importLibrary("drawing");
+    // Rileva la pagina attuale dal path URL (controlla se contiene "main" o "home")
+    const page = window.location.pathname.toLowerCase().includes("main") ? "Main" : "Home";
 
-    // Inizializza la mappa (come nel tuo codice originale)
+    // Importa la libreria base di Google Maps
+    const { Map } = await google.maps.importLibrary("maps");
+
     map = new Map(document.getElementById("map"), {
         center: { lat: 45.50884930272857, lng: 8.950421885612588 },
         zoom: 15,
-        styles: [{ featureType: "poi.business", elementType: "all", stylers: [{ visibility: "off" }] }]
+        styles: [
+            {
+                featureType: "poi.business",
+                elementType: "all",
+                stylers: [{ visibility: "off" }]
+            }
+        ]
     });
 
-    // Inizializza il Drawing Manager
-    drawingManager = new DrawingManager({
-        drawingControl: true,
-        drawingControlOptions: {
-            position: google.maps.ControlPosition.TOP_CENTER,
-            drawingModes: [google.maps.drawing.OverlayType.POLYGON]
-        },
-        polygonOptions: {
-            editable: true,
-            draggable: true,
-            fillColor: '#007bff',
-            strokeColor: '#0056b3',
-            strokeWeight: 2
-        }
-    });
-    drawingManager.setMap(map);
+    // Se siamo sulla pagina "Main", abilita strumenti per disegnare
+    if (page === "Main") {
+        const { DrawingManager } = await google.maps.importLibrary("drawing");
 
-    // Listener per quando un poligono è completato
+        drawingManager = new DrawingManager({
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [google.maps.drawing.OverlayType.POLYGON]
+            },
+            polygonOptions: {
+                editable: true,
+                draggable: true,
+                fillColor: '#007bff',
+                strokeColor: '#0056b3',
+                strokeWeight: 2
+            }
+        });
+        drawingManager.setMap(map);
+
+        setupPolygonHandlers(); // Chiama le funzioni per gestire i poligoni
+    }
+}
+
+function setupPolygonHandlers() {
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
         if (currentPolygon) {
-            currentPolygon.setMap(null); // Rimuovi vecchio poligono
+            currentPolygon.setMap(null);
         }
-        currentPolygon = polygon; // Salva riferimento nuovo
+        currentPolygon = polygon;
+        updateWktAndUI();
 
-        updateWktAndUI(); // Aggiorna WKT e stato UI (inclusi i pulsanti)
-
-        // Disabilita disegno e controlli
         drawingManager.setDrawingMode(null);
         drawingManager.setOptions({ drawingControl: false });
 
-        // Listeners per modifiche al poligono
         const path = polygon.getPath();
         google.maps.event.addListener(path, 'set_at', updateWktAndUI);
         google.maps.event.addListener(path, 'insert_at', updateWktAndUI);
@@ -59,66 +68,24 @@ async function initMap() {
         polygon.setDraggable(true);
     });
 
-    // Funzione helper per calcolare WKT e aggiornare l'UI (textarea e pulsanti)
-    function updateWktAndUI() {
-        const wktOutputArea = document.getElementById('wktOutput');
-        const sendButton = document.getElementById('sendToServerButton');
-        const deleteButton = document.getElementById('deletePolygonButton'); // Riferimento al pulsante elimina
-
-        if (!currentPolygon) {
-            // Stato: Nessun poligono presente
-            drawnPolygonWkt = null;
-            if (wktOutputArea) wktOutputArea.value = '';
-            if (sendButton) sendButton.style.display = 'none';
-            if (deleteButton) deleteButton.style.display = 'none'; // Nascondi pulsante elimina
-            return;
-        }
-
-        // Stato: Poligono presente
-        const path = currentPolygon.getPath();
-        let coordinates = [];
-        path.getArray().forEach((latLng) => {
-            coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
-        });
-        if (coordinates.length > 0) {
-            coordinates.push(coordinates[0]); // Chiudi anello
-        }
-        drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
-
-        if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
-        if (sendButton) sendButton.style.display = 'inline-block'; // Mostra pulsante invia
-        if (deleteButton) deleteButton.style.display = 'inline-block'; // Mostra pulsante elimina
-        console.log("WKT Aggiornato:", drawnPolygonWkt);
-    }
-
-    // --- Logica per il Pulsante Elimina Poligono ---
     const deleteButton = document.getElementById('deletePolygonButton');
     if (deleteButton) {
         deleteButton.addEventListener('click', () => {
             if (currentPolygon) {
-                currentPolygon.setMap(null); // Rimuovi poligono dalla mappa
-                currentPolygon = null; // Cancella riferimento
-                console.log("Poligono rimosso dalla mappa.");
+                currentPolygon.setMap(null);
+                currentPolygon = null;
             }
 
-            // Resetta lo stato chiamando la funzione di aggiornamento UI
-            // (che nasconderà i pulsanti, pulirà la textarea, ecc.)
             updateWktAndUI();
 
-            // Riabilita gli strumenti di disegno per permettere la creazione di un nuovo poligono
             if (drawingManager) {
                 drawingManager.setOptions({
-                    drawingControl: true // Mostra di nuovo i controlli (es. icona poligono)
+                    drawingControl: true
                 });
-                // Opzionale: puoi rimettere direttamente in modalità disegno poligono
-                // drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
             }
         });
-    } else {
-        console.warn("Elemento con ID 'deletePolygonButton' non trovato.");
     }
 
-    // --- Logica per il Pulsante Invia al Server (invariata) ---
     const sendButton = document.getElementById('sendToServerButton');
     if (sendButton) {
         sendButton.addEventListener('click', () => {
@@ -126,17 +93,51 @@ async function initMap() {
                 alert('Disegna e completa un poligono prima di inviare.');
                 return;
             }
-            const postUrl = '/Home/ProcessPolygonWkt'; // !! MODIFICA QUESTO URL !!
-            console.log(`Invio WKT a ${postUrl}:`, drawnPolygonWkt);
-            fetch(postUrl, { /* ... opzioni fetch ... */ })
-                .then(response => { /* ... gestione risposta ... */ })
-                .catch(error => { /* ... gestione errore ... */ });
+
+            const postUrl = '/Home/ProcessPolygonWkt';
+            fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ wkt: drawnPolygonWkt })
+            })
+                .then(res => res.ok ? alert("WKT inviato!") : alert("Errore durante l'invio."))
+                .catch(err => alert("Errore di rete: " + err));
         });
-    } else {
-        console.warn("Elemento con ID 'sendToServerButton' non trovato.");
+    }
+}
+
+function updateWktAndUI() {
+    const wktOutputArea = document.getElementById('wktOutput');
+    const sendButton = document.getElementById('sendToServerButton');
+    const deleteButton = document.getElementById('deletePolygonButton');
+
+    if (!currentPolygon) {
+        drawnPolygonWkt = null;
+        if (wktOutputArea) wktOutputArea.value = '';
+        if (sendButton) sendButton.style.display = 'none';
+        if (deleteButton) deleteButton.style.display = 'none';
+        return;
     }
 
-} // Fine della funzione initMap
+    const path = currentPolygon.getPath();
+    let coordinates = [];
+    path.getArray().forEach((latLng) => {
+        coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
+    });
 
-// Chiama initMap per avviare
+    if (coordinates.length > 0) {
+        coordinates.push(coordinates[0]);
+    }
+
+    drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
+
+    if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
+    if (sendButton) sendButton.style.display = 'inline-block';
+    if (deleteButton) deleteButton.style.display = 'inline-block';
+    console.log("WKT Aggiornato:", drawnPolygonWkt);
+}
+
+// Avvia la mappa
 initMap();

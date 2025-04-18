@@ -15,7 +15,7 @@ namespace Mobishare.App.Pages
         public IActionResult OnGet()
         {
             if (User?.Identity != null && User.Identity.IsAuthenticated)
-                return RedirectToPage("/LandingPage");
+                return RedirectToPage("/Home");
 
             return Page();
         }
