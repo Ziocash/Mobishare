@@ -19,17 +19,6 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(x => x.Plate)
                 .IsRequired()
                 .HasMaxLength(50);
-
-        builder.Property(x => x.Model)
-                .IsRequired()
-                .HasMaxLength(50);
-
-        builder.Property(x => x.Type)
-                .IsRequired()
-                .HasMaxLength(50);
-
-        builder.Property(x => x.PricePerMinute)
-                .IsRequired();
         
         builder.Property(x => x.Status)
                 .IsRequired()
@@ -44,6 +33,11 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.HasOne(x => x.ParkingSlot)
                .WithOne()
                .HasForeignKey<Vehicle>(x => x.ParkingSlotId)
+               .IsRequired();
+
+        builder.HasOne(x => x.VehicleType)
+               .WithMany()
+               .HasForeignKey(x => x.VehicleTypeId)
                .IsRequired();
     }
 }
