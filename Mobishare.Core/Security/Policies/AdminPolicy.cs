@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Mobishare.Core.Security;
 
-namespace TicketShop.Core.Security.Policies;
+namespace Mobishare.Core.Security.Policies;
 
 public class IsAdmin : IAuthorizationRequirement { }
 

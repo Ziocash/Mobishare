@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Mobishare.Core.Data;
-using TicketShop.Core.Security.Policies;
 using Mobishare.Core.Security;
+using Mobishare.Core.Security.Policies;
 
 var builder = WebApplication.CreateBuilder(args);
 
