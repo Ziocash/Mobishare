@@ -1,0 +1,33 @@
+﻿@page
+@model Mobishare.App.Areas.Admin.Pages.UserSettings.IndexModel
+@{
+}
+
+<h3>User Settings - Operations Overview</h3>
+<div class="box pt-2 ps-2">
+    <div class="row mb-3">
+        <div class="col-sm-12">
+            <h4 class="mt-2">Available Operations</h4>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="/Admin/UserSettings/SuspendedUser" class="operation-box">
+                        <h5>Suspended User</h5>
+                        <p class="mb-0">
+                            This option allows the temporary suspension of a user. Suspended users cannot access the
+                            system until the administrator lifts the suspension.
+                        </p>
+                    </a>
+                </li>
+                <li class="list-group-item">
+                    <a href="/Admin/UserSettings/UserPermissions" class="operation-box">
+                        <h5>User Permissions</h5>
+                        <p class="mb-0">
+                            This function allows the modification of a user's access permissions. Administrators can
+                            assign or revoke specific privileges.
+                        </p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
