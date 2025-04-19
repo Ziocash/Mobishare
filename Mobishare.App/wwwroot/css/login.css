@@ -145,18 +145,18 @@ body {
     flex-shrink: 0;
 }
 
-.footer {
+.login-footer {
     display: flex;
     justify-content: space-between;
     margin-top: 15px;
 }
 
-.footer a {
+.login-footer  a {
     color: #666;
     text-decoration: none;
     font-size: 14px;
 }
 
-.footer a:hover {
+.login-footer  a:hover {
     text-decoration: underline;
 }
