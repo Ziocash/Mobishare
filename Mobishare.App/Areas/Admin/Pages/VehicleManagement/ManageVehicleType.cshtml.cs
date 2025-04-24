@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
+using Mobishare.Core.ValidationAttributes;
 using Mobishare.Core.VehicleClassification;
 
 namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
@@ -37,8 +38,11 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         /// </summary>
         public class InputSportModel
         {
+            public int Id { get; set; }
+
             [Required(ErrorMessage = "Provide a vehicle model.")]
-            [MaxLength(100, ErrorMessage = "Model name cannot be longer than 50 characters.")]
+            [MaxLength(50, ErrorMessage = "Model name cannot be longer than 50 characters.")]
+            [UniqueVehicleTypeModel(ErrorMessage = "Vehicle type with this model already exists.")]
             public string Model { get; set; }
             [Required(ErrorMessage = "Select a valid vehicle type.")]
             public VehicleTypes? Type { get; set; }
@@ -63,7 +67,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
             await _mediator.Send(_mapper.Map<CreateVehicleType>(
                 new VehicleType
                 {
-                    Model = Input.Model,
+                    Model = Input.Model.ToUpper(),
                     Type = Input.Type.ToString()!,
                     PricePerMinute = Input.PricePerMinute ?? 0.0m,
                     CreatedAt = DateTime.UtcNow
@@ -74,7 +78,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
 
         public async Task<IActionResult> OnPostUpdateVehicleType(int id)
         {
-
+            Input.Id = id;
             if (!ModelState.IsValid)
             {
                 AllVehicleTypes = await _mediator.Send(new GetAllVehicleType());
@@ -90,7 +94,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                 new VehicleType
                 {
                     Id = id,
-                    Model = Input.Model,
+                    Model = Input.Model.ToUpper(),
                     Type = Input.Type.ToString()!,
                     PricePerMinute = decimal.Parse(rawPriceValue, CultureInfo.InvariantCulture.NumberFormat),
                     CreatedAt = DateTime.UtcNow

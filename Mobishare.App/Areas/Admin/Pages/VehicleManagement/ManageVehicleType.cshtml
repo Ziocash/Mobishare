@@ -79,6 +79,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <form method="post" asp-page-handler="UpdateVehicleType" asp-route-id="@vehicleType.Id">
+                                            <input type="hidden" name="Input.Id" value="@vehicleType.Id" />
                                             <div class="form-group">
                                                 <label for="Model-@vehicleType.Id">Vehicle Model<b
                                                         class="text-danger">*</b></label>
