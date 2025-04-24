@@ -1,0 +1,40 @@
+.fs-s {
+    font-size: small;
+}
+
+.b-g {
+    border-color: #5b708a !important;
+}
+
+.b-d:hover {
+    color: #fff !important;
+    background-color: #5b708a !important;
+    border-color: #5b708a !important;
+}
+
+.bold-500 {
+    font-weight: 500;
+}
+
+.super_admin-color {
+    color: #ee8c1d !important;
+}
+
+.admin-color {
+    color: #1dacee !important;
+}
+
+.staff-color {
+    color: #901dee !important;
+}
+
+.operation-box {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s;
+}
+
+    .operation-box:hover {
+        background-color: #f8f9fa;
+    }

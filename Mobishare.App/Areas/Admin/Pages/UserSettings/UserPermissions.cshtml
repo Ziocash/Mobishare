@@ -1,0 +1,282 @@
+﻿@page
+@using Microsoft.IdentityModel.Tokens
+@using Mobishare.Core.Security
+@model Mobishare.App.Areas.Admin.Pages.UserSettings.UserPermissionsModel
+@{
+}
+
+<h4>Search User</h4>
+<hr />
+
+<form asp-page-handler="FilterUsers" method="POST" class="row g-2 align-items-center mb-4">
+    <!-- Email e Ruolo -->
+    <div class="col-12 col-lg-8 d-flex gap-2">
+        <input asp-for="Input.Email" type="text" class="form-control" placeholder="Email" aria-label="Email">
+        <select asp-for="Input.Role" class="form-control" aria-label="Role">
+            <option value="" selected>All Roles</option>
+            @foreach (var role in Enum.GetValues(typeof(UserRole)))
+            {
+                <option value="@role">@role</option>
+            }
+        </select>
+    </div>
+
+    <!-- Pulsante di ricerca e reset -->
+    <div class="col-12 col-lg-4 d-flex gap-2">
+        <button type="submit" class="btn button-tertiary-color w-100">Search</button>
+        <a asp-page-handler="Reset" class="btn button-quartyary-color w-100">Reset</a>
+    </div>
+</form>
+
+@if (HttpContext.Request.Method == "POST")
+{
+    @if (!Model.ModelState.IsValid)
+    {
+        <div class="alert alert-info text-center">
+            Invalid match criteria.
+        </div>
+    }
+    else if (Model.FilteredUser.Count() > 0)
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.FilteredUser)
+                {
+                    <tr>
+                        <td>@user.User.Email</td>
+                        <td>@user.Claim.Value</td>
+                        <td>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                                        data-bs-target="#editRoleModal-@user.User.Id" data-user-id="@user.User.Id"
+                                        data-current-role="@user.Claim?.Value ?? " No Role"">
+                                        Edit Role
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button
+                                        class="btn btn-sm btn-outline-danger w-100 @(user.User.LockoutEnd.HasValue ? "disabled" : "")"
+                                        @(user.User.LockoutEnd.HasValue ? "disabled" : "") data-bs-toggle="modal"
+                                        data-bs-target="#suspendModal-@user.User.Id" data-user-id="@user.User.Id"
+                                        data-current-role="@user.Claim?.Value ?? " No Role"">
+                                        Suspend
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="post" asp-page-handler="Suspend">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editRoleModalLabel">Suspend User</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current User</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                                readonly />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current Role</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                                readonly />
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-outline-danger">Suspend</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="editRoleModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="post" asp-page-handler="EditRole">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editRoleModalLabel">Edit Role</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current User</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                                readonly />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current Role</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                                readonly />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newRole" class="form-label">New Role</label>
+                                            <select id="newRole" name="newRole" class="form-select">
+                                                @foreach (var role in Enum.GetValues(typeof(UserRole)))
+                                                {
+                                                    <option value="@role">@role</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-outline-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+    }
+    else if (Model.FilteredUser.Count() == 0)
+    {
+        <div class="alert alert-warning text-center">
+            No user for this criteria.
+        </div>
+    }
+}
+
+
+<h4>All Users</h4>
+<hr />
+
+@if (Model.UsersWithRoles.IsNullOrEmpty())
+{
+    <p>There are no users.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.UsersWithRoles)
+            {
+                <tr>
+                    <td>@user.User.Email</td>
+                    <td>@user.Claim.Value</td>
+                    <td>
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                                    data-bs-target="#editRoleModal-@user.User.Id" data-user-id="@user.User.Id"
+                                    data-current-role="@user.Claim?.Value ?? " No Role"">
+                                    Edit Role
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button
+                                    class="btn btn-sm btn-outline-danger w-100 @(user.User.LockoutEnd.HasValue ? "disabled" : "")"
+                                    @(user.User.LockoutEnd.HasValue ? "disabled" : "") data-bs-toggle="modal"
+                                    data-bs-target="#suspendModal-@user.User.Id" data-user-id="@user.User.Id"
+                                    data-current-role="@user.Claim?.Value ?? " No Role"">
+                                    Suspend
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="suspendModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="post" asp-page-handler="Suspend">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="suspendModalLabel">Suspend User</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current User</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                            readonly />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current Role</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                            readonly />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-outline-danger">Suspend</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="editRoleModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="post" asp-page-handler="EditRole">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editRoleModalLabel">Edit Role</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current User</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                            readonly />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current Role</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                            readonly />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="newRole" class="form-label">New Role</label>
+                                        <select id="newRole" name="newRole" class="form-select">
+                                            @foreach (var role in Enum.GetValues(typeof(UserRole)))
+                                            {
+                                                <option value="@role">@role</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-outline-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </tbody>
+    </table>
+}

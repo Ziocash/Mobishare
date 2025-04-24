@@ -1,0 +1,55 @@
+@{
+    Layout = "_AdminLayout.cshtml";
+    ViewData["Title"] = "Map Management";
+}
+
+<div class="container">
+    <h1>Map Management</h1>
+    <div class="box pt-2 ps-2">
+        <div class="row mb-3">
+            <div class="col-lg-3 pe-5 pb-4">
+                <div class="row mt-2">
+                    <p class="fs-s text-secondary mb-1">Management</p>
+                </div>
+                <div class="row">
+                    <a href="/Admin/MapManagement/ManageCity"
+                        class="btn mb-1 text-start b-d @(Context.Request.Path == "/Admin/MapManagement/ManageCity" ? "b-g bold-500" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                            <path fill="currentColor"
+                                d="M3 19V9q0-.825.588-1.412T5 7h4V5.825q0-.4.15-.763t.425-.637l1-1Q11.15 2.85 12 2.85t1.425.575l1 1q.275.275.425.638t.15.762V11h4q.825 0 1.413.588T21 13v6q0 .825-.587 1.413T19 21H5q-.825 0-1.412-.587T3 19m2 0h2v-2H5zm0-4h2v-2H5zm0-4h2V9H5zm6 8h2v-2h-2zm0-4h2v-2h-2zm0-4h2V9h-2zm0-4h2V5h-2zm6 12h2v-2h-2zm0-4h2v-2h-2z" />
+                        </svg>
+                        Manage City
+                    </a>
+                    <a href="/Admin/MapManagement/ManageParkingSlot"
+                        class="btn mb-1 text-start b-d @(Context.Request.Path == "/Admin/MapManagement/ManageParkingSlot" ? "b-g bold-500" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                            <path fill="currentColor"
+                                d="M10 15v4q0 .825-.587 1.413T8 21t-1.412-.587T6 19V5q0-.825.588-1.412T8 3h5q2.5 0 4.25 1.75T19 9t-1.75 4.25T13 15zm0-4h3.2q.825 0 1.413-.587T15.2 9t-.587-1.412T13.2 7H10z" />
+                        </svg>
+                        Manage Parking Slot
+                    </a>
+                </div>
+                <div class="row border-top"></div>
+                <div class="row mt-2">
+                    <p class="fs-s text-secondary mb-1">Map Visualization</p>
+                </div>
+                <div class="row">
+                    <a href="/Admin/MapManagement/VisualizeMap"
+                        class="btn mb-1 text-start b-d align-middle @(Context.Request.Path == "/Admin/MapManagement/VisualizeMap" ? "b-g bold-500" : "")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                            <path fill="currentColor"
+                                d="M16 18q.85 0 1.413-.5T18 16q.025-.85-.562-1.425T16 14t-1.425.575T14 16t.575 1.425T16 18m0 2q-1.65 0-2.825-1.175T12 16t1.175-2.825T16 12t2.825 1.175T20 16q0 .575-.137 1.088t-.413.962l1.85 1.85q.275.275.275.7t-.275.7t-.7.275t-.7-.275l-1.85-1.85q-.45.275-.962.413T16 20m-11.65.7q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8l4.65-1.575Q8.675 3.1 9 3.1t.65.125L15 5.1l4.65-1.8q.5-.2.925.113T21 4.25V11q0 .425-.4.575t-.725-.15q-.825-.7-1.812-1.063T16 10h-.425q-.225 0-.425.05q-.45.05-.8-.213T14 9.15v-2.3l-4-1.4v12.025q0 .475-.262.85t-.688.55z" />
+                        </svg>
+                        Visualize Map
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-9 ps-0">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</div>

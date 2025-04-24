@@ -4,7 +4,47 @@
     ViewData["Title"] = "Home page";
 }
 
-<div>
-    <h1 class="display-4">Welcome To Mobishare.App</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="position-relative mb-4 img-container">
+    <img class="w-100" src="@Url.Content("~/gif/cycling.gif")" alt="Cycling gif">
+    <h1 class="position-absolute top-50 start-50 translate-middle text-center text-highlight text-white">
+        Ride Green. Live Clean.
+    </h1>
+</div>
+
+<p class="h2 text-center">Our vehicle</p>
+<div class="container">
+    <div class="row">
+        <!-- Bike -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/bike.png")" class="card-img-top" alt="Bike">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Bike</h5>
+                    <p class="card-text">The classic choice for a healthy and green ride.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- E-bike -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/e-bike.png")" class="card-img-top" alt="E-bike">
+                <div class="card-body">
+                    <h5 class="card-title text-center">E-bike</h5>
+                    <p class="card-text">Effortless, electric-powered cycling for long rides.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scooter -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/scooter.png")" class="card-img-top" alt="Scooter">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Scooter</h5>
+                    <p class="card-text">Compact and fast, the perfect urban solution.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

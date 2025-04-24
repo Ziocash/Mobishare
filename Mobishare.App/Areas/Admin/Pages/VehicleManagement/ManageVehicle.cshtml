@@ -1,0 +1,168 @@
+﻿@page
+@model Mobishare.App.Areas.Admin.Pages.VehicleManagement.ManageVehicleModel
+@{
+}
+
+<h4>Search Vehicle</h4>
+<hr />
+
+<form asp-page-handler="FilterUsers" method="POST" class="row g-2 align-items-center mb-4">
+    <!-- Filtro -->
+    <div class="col-12 col-lg-8 d-flex gap-2">
+        @* <input asp-for="Input.Email" type="text" class="form-control" placeholder="Email" aria-label="Email">
+        <select asp-for="Input.Role" class="form-control" aria-label="Role">
+            <option value="" selected>All Roles</option>
+            @foreach (var role in Enum.GetValues(typeof(UserRole)))
+            {
+                <option value="@role">@role</option>
+            }
+        </select> *@
+    </div>
+
+    <!-- Pulsante di ricerca e reset -->
+    <div class="col-12 col-lg-4 d-flex gap-2">
+        <button type="submit" class="btn button-tertiary-color w-100">Search</button>
+        <a asp-page-handler="Reset" class="btn button-quartyary-color w-100">Reset</a>
+    </div>
+</form>
+
+@if (HttpContext.Request.Method == "POST")
+{
+    @* @if (!Model.ModelState.IsValid)
+    {
+        <div class="alert alert-info text-center">
+            Invalid match criteria.
+        </div>
+    }
+    else if (Model.FilteredUser.Count() > 0)
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.SuspendeUser)
+                {
+                    <tr>
+                        <td>@user.User.Email</td>
+                        <td>@user.Claim.Value</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                                data-bs-target="#removeSuspensionModal-@user.User.Id" data-user-id="@user.User.Id">
+                                Remove Suspension
+                            </button>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="removeSuspensionModal-@user.User.Id" tabindex="-1"
+                        aria-labelledby="removeSuspensionModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="post" asp-page-handler="RemoveSuspension">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editRoleModalLabel">Remove Suspension User</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current User</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                                readonly />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="currentRoleInput" class="form-label">Current Role</label>
+                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                                readonly />
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-outline-success">Remove Suspension</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+    }
+    else if (Model.FilteredUser.Count() == 0)
+    {
+        <div class="alert alert-warning text-center">
+            No user for this criteria.
+        </div>
+    } *@
+}
+
+<h4>All Vehicle</h4>
+<hr />
+@* @if (Model.SuspendeUser.IsNullOrEmpty())
+{
+    <p>There are no suspende user.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.SuspendeUser)
+            {
+                <tr>
+                    <td>@user.User.Email</td>
+                    <td>@user.Claim.Value</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                            data-bs-target="#removeSuspensionModal-@user.User.Id" data-user-id="@user.User.Id">
+                            Remove Suspension
+                        </button>
+                    </td>
+                </tr>
+
+                <div class="modal fade" id="removeSuspensionModal-@user.User.Id" tabindex="-1"
+                    aria-labelledby="removeSuspensionModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="post" asp-page-handler="RemoveSuspension">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editRoleModalLabel">Remove Suspension User</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current User</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
+                                            readonly />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="currentRoleInput" class="form-label">Current Role</label>
+                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                            readonly />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-outline-success">Remove Suspension</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </tbody>
+    </table>
+} *@

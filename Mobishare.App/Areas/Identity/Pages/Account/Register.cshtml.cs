@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Identity.Pages.Account
 {
@@ -130,6 +132,13 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
                         pageHandler: null,
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
+
+                    // IdentityImplementation Add user role, First/Last name claim
+                    await _userManager.AddClaimsAsync(user, [
+                        new Claim(ClaimNames.Role, UserRole.User.ToString()),
+                            // new Claim(ClaimNames.FirstName, Input.FirstName),
+                            // new Claim(ClaimNames.LastName, Input.LastName)
+                        ]);
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
