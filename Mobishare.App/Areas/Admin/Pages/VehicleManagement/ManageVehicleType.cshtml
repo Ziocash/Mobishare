@@ -34,6 +34,15 @@
     <button type="submit" class="btn btn-outline-success mt-3 mb-3">Add New Vehicle Type</button>
 </form>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+        <strong>Success!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
 <h4>Existing Vehicle Types</h4>
 
 <hr />

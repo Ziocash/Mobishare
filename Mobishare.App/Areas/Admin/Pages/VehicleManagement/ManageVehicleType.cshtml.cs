@@ -62,7 +62,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                 return Page();
             }
 
-            // TO-DO: Check if the vehicle type already exists in the database with the same model name.
+          
 
             await _mediator.Send(_mapper.Map<CreateVehicleType>(
                 new VehicleType
@@ -72,6 +72,9 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                     PricePerMinute = Input.PricePerMinute ?? 0.0m,
                     CreatedAt = DateTime.UtcNow
                 }));
+            
+            _logger.LogInformation("Vehicle Type succesfully added.");
+            TempData["SuccessMessage"] = "Vehicle Type succesfully added.";
 
             return RedirectToPage();
         }
@@ -101,8 +104,8 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                 }
             ));
 
-            var aus = Decimal.Parse(rawPriceValue);
-
+            _logger.LogInformation("Vehicle Type succesfully updated");
+            TempData["SuccessMessage"] = "Vehicle Type succesfully updated.";
             return RedirectToPage();
         }
 
@@ -115,6 +118,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                 }));
 
             _logger.LogInformation("Vehicle Type succesflully deleted.");
+            TempData["SuccessMessage"] = "Vehicle Type succesflully deleted.";
 
             AllVehicleTypes = await _mediator.Send(new GetAllVehicleType());
 
