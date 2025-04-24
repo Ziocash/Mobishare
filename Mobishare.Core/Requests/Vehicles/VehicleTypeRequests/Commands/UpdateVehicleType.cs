@@ -41,8 +41,8 @@ public class UpdateVehicleTypeHandler : IRequestHandler<UpdateVehicleType, Vehic
                     vehicleTypeToUpdate.Type = vehicleType.Type;
                 if(vehicleTypeToUpdate.PricePerMinute != vehicleType.PricePerMinute)
                     vehicleTypeToUpdate.PricePerMinute = vehicleType.PricePerMinute;
-                if(vehicleTypeToUpdate.CreatedAt != vehicleType.CreatedAt)
-                    vehicleTypeToUpdate.CreatedAt = vehicleType.CreatedAt;
+                    
+                vehicleTypeToUpdate.CreatedAt = vehicleType.CreatedAt;
 
                 _dbContext.VehicleTypes.Update(vehicleTypeToUpdate).State = EntityState.Modified;
                 await _dbContext.SaveChangesAsync(cancellationToken);

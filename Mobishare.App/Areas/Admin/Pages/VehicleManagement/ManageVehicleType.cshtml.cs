@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -91,7 +92,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                     Id = id,
                     Model = Input.Model,
                     Type = Input.Type.ToString()!,
-                    PricePerMinute = decimal.Parse(rawPriceValue),
+                    PricePerMinute = decimal.Parse(rawPriceValue, CultureInfo.InvariantCulture.NumberFormat),
                     CreatedAt = DateTime.UtcNow
                 }
             ));
