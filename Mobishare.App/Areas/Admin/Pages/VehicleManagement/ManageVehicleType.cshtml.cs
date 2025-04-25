@@ -28,7 +28,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         }
 
         [BindProperty]
-        public InputSportModel Input { get; set; }
+        public InputVehicleTypeModel Input { get; set; }
 
         /// <summary>
         /// Model for the input form to add a new vehicle type.
@@ -36,7 +36,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         /// Vehicle type is required and must be one of the defined vehicle types.
         /// Price per minute is required and must be greater than 0.
         /// </summary>
-        public class InputSportModel
+        public class InputVehicleTypeModel
         {
             public int Id { get; set; }
 
