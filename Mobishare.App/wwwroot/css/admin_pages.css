@@ -35,6 +35,11 @@
     transition: background-color 0.2s;
 }
 
-    .operation-box:hover {
-        background-color: #f8f9fa;
-    }
+.operation-box:hover {
+    background-color: #f8f9fa;
+}
+
+#map {
+    height: 700px; /* o quanto vuoi */
+    width: 100%;
+  }

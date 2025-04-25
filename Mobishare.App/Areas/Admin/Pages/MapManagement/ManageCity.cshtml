@@ -3,4 +3,20 @@
 @{
 }
 
-<h5>Manage City</h5>
+<h4>Add New City</h4>
+
+<hr />
+<div class="container">
+    <div id="map" data-api-key="@Model.GoogleMapsApiKey"></div>
+    @* <br />
+    <label for="wktOutput">Output WKT:</label>
+    <form method="post" asp-asp-page-handler="AddNewCity">
+        <textarea id="wktOutput" rows="4" style="width: 100%; font-family: monospace;" readonly></textarea>
+        <br />
+        <button id="sendToServerButton" type="button" class="btn btn-primary"
+            style="display: disabled; margin-right: 5px;">Invia
+            WKT al Server</button>
+        <button id="deletePolygonButton" type="button" class="btn btn-danger" style="display: none;">Elimina
+            Poligono</button>
+    </form> *@
+</div>
