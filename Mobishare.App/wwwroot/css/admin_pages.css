@@ -42,4 +42,8 @@
 #map {
     height: 700px; /* o quanto vuoi */
     width: 100%;
-  }
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
