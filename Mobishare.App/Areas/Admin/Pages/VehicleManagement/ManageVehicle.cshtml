@@ -8,20 +8,90 @@
 
 <form method="post" asp-page-handler="AddVehicle">
     <div class="form-group">
-        @* <label asp-for="Input.Model" for="Model">Vehicle Model<b class="text-danger">*</b></label>
-        <input asp-for="Input.Model" type="text" class="form-control" />
-        <span asp-validation-for="Input.Model" class="text-danger d-block"></span>
+        <label asp-for="Input.Plate" for="Model">Vehicle Plate</label>
+        <input asp-for="Input.Plate" type="text" class="form-control" />
+        <span asp-validation-for="Input.Plate" class="text-danger d-block"></span>
 
-        <label class="pt-2" asp-for="Input.Type" for="VehicleType">Vehicle Type<b class="text-danger">*</b></label>
-        <select id="VehicleType" class="form-control" asp-for="Input.Type">
-            <option value="" selected>Select Vehicle Type</option>
-            @foreach (var type in Enum.GetValues(typeof(VehicleTypes)))
-            {
-                <option value="@type">@type</option>
-            }
-        </select>
-        <span asp-validation-for="Input.Type" class="text-danger d-block"></span>
+        @if (Model.AllVehicleTypes?.Count() == 0)
+        {
+            <a href="/Admin/VehicleManagement/ManageVehicleType" class="text-decoration-none">
+                <div class="alert alert-danger mt-2 cursor-pointer" role="alert">
+                    <div class="row">
+                        <div class="col">
+                            No vehicle types available. Please add a vehicle type first.
+                        </div>
+                        <div class="col text-end">
+                            <svg class="alert-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24"><!-- Icon from Material Symbols Light by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                                <path fill="currentColor"
+                                    d="M12 20q-.213 0-.357-.144T11.5 19.5v-7h-7q-.213 0-.356-.144T4 11.999t.144-.356t.356-.143h7v-7q0-.213.144-.356T12.001 4t.356.144t.143.356v7h7q.213 0 .356.144t.144.357t-.144.356t-.356.143h-7v7q0 .213-.144.356t-.357.144" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+        else
+        {
+            <label class="pt-2" asp-for="Input.VehicleTypeId" for="VehicleType">Vehicle Type<b
+                    class="text-danger">*</b></label>
+            <select id="VehicleType" class="form-control" asp-for="Input.VehicleTypeId">
+                <option value="" selected>Select Vehicle Type</option>
+                @if (Model.AllVehicleTypes != null)
+                {
+                    foreach (var vehicleType in Model.AllVehicleTypes)
+                    {
+                        <option value="@vehicleType.Id">@vehicleType.Model</option>
+                    }
+                }
+                else
+                {
+                    <option value="">No vehicle types available</option>
+                }
+            </select>
+        }
+        <span asp-validation-for="Input.VehicleTypeId" class="text-danger d-block"></span>
 
+        @if (Model.AllCities?.Count() == 0)
+        {
+            <a href="/Admin/MapManagement/ManageCity" class="text-decoration-none">
+                <div class="alert alert-danger mt-2 cursor-pointer" role="alert">
+                    <div class="row">
+                        <div class="col">
+                            No cities available. Please add a city first.
+                        </div>
+                        <div class="col text-end">
+                            <svg class="alert-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24"><!-- Icon from Material Symbols Light by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                                <path fill="currentColor"
+                                    d="M12 20q-.213 0-.357-.144T11.5 19.5v-7h-7q-.213 0-.356-.144T4 11.999t.144-.356t.356-.143h7v-7q0-.213.144-.356T12.001 4t.356.144t.143.356v7h7q.213 0 .356.144t.144.357t-.144.356t-.356.143h-7v7q0 .213-.144.356t-.357.144" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+        else
+        {
+            <label class="pt-2" asp-for="Input.CityId" for="City">City<b class="text-danger">*</b></label>
+            <select id="City" class="form-control" asp-for="Input.CityId">
+                <option value="" selected>Select City</option>
+                @if (Model.AllCities != null)
+                {
+
+                    @foreach (var city in Model.AllCities)
+                    {
+                        <option value="@city.Id">@city.Name</option>
+                    }
+                }
+                else
+                {
+                    <option value="">No cities available</option>
+                }
+            </select>
+        }
+        <span asp-validation-for="Input.CityId" class="text-danger d-block"></span>
+        @* 
         <label class="pt-2" asp-for="Input.PricePerMinute" for="PricePerMinute">Price Per Minute (€)<b
                 class="text-danger">*</b></label>
         <input asp-for="Input.PricePerMinute" type="number" class="form-control" inputmode="numeric" min="0.01"
@@ -43,7 +113,7 @@
 
 <hr />
 
-@* @if (Model.AllVehicleTypes != null && Model.AllVehicleTypes.Count() > 0)
+@if (Model.AllVehicles != null && Model.AllVehicles.Count() > 0)
 {
     <table class="table table-striped table-bordered">
         <thead>
@@ -55,15 +125,15 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var vehicleType in Model.AllVehicleTypes)
+            @foreach (var vehicle in Model.AllVehicles)
             {
                 <tr>
-                    <td>@vehicleType.Model</td>
-                    <td>@vehicleType.Type</td>
-                    <td>@vehicleType.PricePerMinute.ToString("C")</td>
+                    <td>@vehicle.Plate</td>
+                    <td>@vehicle.Plate</td>
+                    <td>@vehicle.Plate</td>
                     <td>
                         <!-- Icona per aprire il modale di modifica -->
-                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@vehicleType.Id"
+                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@vehicle.Id"
                             title="Edit" style="text-decoration: none;">
                             <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
                                 viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
@@ -73,48 +143,44 @@
                         </a>
 
                         <!-- Modal per modificare -->
-                        <div class="modal fade" id="editModal-@vehicleType.Id" tabindex="-1" role="dialog"
-                            aria-labelledby="editModalLabel-@vehicleType.Id" aria-hidden="true">
+                        <div class="modal fade" id="editModal-@vehicle.Id" tabindex="-1" role="dialog"
+                            aria-labelledby="editModalLabel-@vehicle.Id" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="editModalLabel-@vehicleType.Id">Edit @vehicleType.Model</h5>
+                                        <h5 class="modal-title" id="editModalLabel-@vehicle.Id">Edit @vehicle.Plate</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form method="post" asp-page-handler="UpdateVehicleType" asp-route-id="@vehicleType.Id">
-                                            <input type="hidden" name="Input.Id" value="@vehicleType.Id" />
+                                        <form method="post" asp-page-handler="UpdateVehicleType" asp-route-id="@vehicle.Id">
+                                            <input type="hidden" name="Input.Id" value="@vehicle.Id" />
                                             <div class="form-group">
-                                                <label for="Model-@vehicleType.Id">Vehicle Model<b
-                                                        class="text-danger">*</b></label>
-                                                <input type="text" class="form-control" id="Model-@vehicleType.Id"
-                                                    name="Input.Model" value="@vehicleType.Model" required />
+                                                <label for="Model-@vehicle.Id">Vehicle Model<b class="text-danger">*</b></label>
+                                                <input type="text" class="form-control" id="Model-@vehicle.Id"
+                                                    name="Input.Model" value="@vehicle.Plate" required />
                                             </div>
 
                                             <div class="form-group pt-2">
-                                                <label for="Type-@vehicleType.Id">Vehicle Type<b
-                                                        class="text-danger">*</b></label>
-                                                <select class="form-control" id="Type-@vehicleType.Id" name="Input.Type"
-                                                    required>
-                                                    @foreach (var type in Enum.GetValues(typeof(VehicleTypes)))
+                                                <label for="Type-@vehicle.Id">Vehicle Type<b class="text-danger">*</b></label>
+                                                <select class="form-control" id="Type-@vehicle.Id" name="Input.Type" required>
+                                                    @* @foreach (var type in Enum.GetValues(typeof(VehicleTypes)))
                                                     {
                                                         <option value="@type"
-                                                            selected="@(type.ToString() == vehicleType.Type.ToString() ? "selected" : null)">
+                                                            selected="@(type.ToString() == vehicle.Type.ToString() ? "selected" : null)">
                                                             @type</option>
-                                                    }
+                                                    } *@
                                                 </select>
                                             </div>
 
                                             <div class="form-group pt-2">
-                                                <label for="PricePerMinute-@vehicleType.Id">Price Per Minute (€)<b
+                                                <label for="PricePerMinute-@vehicle.Id">Price Per Minute (€)<b
                                                         class="text-danger">*</b></label>
-                                                <input type="number" class="form-control" id="PricePerMinute-@vehicleType.Id"
-                                                    name="Input.PricePerMinute"
-                                                    value="@vehicleType.PricePerMinute.ToString("0.00", new System.Globalization.CultureInfo("en-US"))"
-                                                    step="0.01" min="0.01" required />
+                                                <input type="number" class="form-control" id="PricePerMinute-@vehicle.Id"
+                                                    name="Input.PricePerMinute" value="@vehicle.Status" step="0.01" min="0.01"
+                                                    required />
                                             </div>
-                                            <small>Debug - Valore grezzo: @vehicleType.PricePerMinute</small>
+                                            <small>Debug - Valore grezzo: @vehicle.Status</small>
                                             <div class="modal-footer pb-0 pt-3">
                                                 <button type="button" class="btn btn-outline-secondary"
                                                     data-bs-dismiss="modal">Cancel</button>
@@ -127,7 +193,7 @@
                         </div>
 
                         <!-- Icona che apre il modale -->
-                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteModal-@vehicleType.Id"
+                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteModal-@vehicle.Id"
                             title="Delete" style="text-decoration: none;">
                             <svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
                                 viewBox="0 0 24 24">
@@ -137,22 +203,22 @@
                             </svg>
                         </a>
                         <!-- Modal -->
-                        <div class="modal fade" id="deleteModal-@vehicleType.Id" tabindex="-1" role="dialog"
-                            aria-labelledby="deleteModalLabel-@vehicleType.Id" aria-hidden="true">
+                        <div class="modal fade" id="deleteModal-@vehicle.Id" tabindex="-1" role="dialog"
+                            aria-labelledby="deleteModalLabel-@vehicle.Id" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteModalLabel-@vehicleType.Id">Delete @vehicleType.Model
+                                        <h5 class="modal-title" id="deleteModalLabel-@vehicle.Id">Delete @vehicle.Plate
                                         </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form method="post" asp-page-handler="DeleteVehicleType" asp-route-id="@vehicleType.Id">
+                                        <form method="post" asp-page-handler="DeleteVehicleType" asp-route-id="@vehicle.Id">
                                             <p class="mb-2">Are you sure you want to delete this vehicle type?</p>
-                                            <p><strong>Model:</strong> @vehicleType.Model</p>
-                                            <p><strong>Type:</strong> @vehicleType.Type</p>
-                                            <p><strong>Price per minute:</strong> @vehicleType.PricePerMinute.ToString("C")</p>
+                                            <p><strong>Model:</strong> @vehicle.Plate</p>
+                                            <p><strong>Type:</strong> @vehicle.Status</p>
+                                            <p><strong>Price per minute:</strong> @vehicle.Status</p>
 
                                             <div class="modal-footer pb-0">
                                                 <button type="button" class="btn btn-outline-secondary"
@@ -173,5 +239,5 @@
 }
 else
 {
-    <p>No vehicle types available.</p>
-} *@
+    <p>No vehicle available.</p>
+}
