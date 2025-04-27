@@ -28,7 +28,6 @@ public class CreateVehicleTypeHandler : IRequestHandler<CreateVehicleType, Vehic
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
     public async Task<VehicleType> Handle(CreateVehicleType request, CancellationToken cancellationToken)
     {
         var newVehicleType = _mapper.Map<VehicleType>(request);
