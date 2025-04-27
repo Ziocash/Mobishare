@@ -6,17 +6,95 @@
 <h4>Add New City</h4>
 
 <hr />
-<div class="container">
-    <div id="map" data-api-key="@Model.GoogleMapsApiKey"></div>
-    <br />
-    <label for="wktOutput">Output WKT:</label>
-    <form method="post" asp-page-handler="AddNewCity">
-        <textarea id="wktOutput" rows="4" style="width: 500px;height: 400px; font-family: monospace;" readonly></textarea>
-        <br />
-        <button id="sendToServerButton" type="button" class="btn btn-primary"
-            style="display: disabled; margin-right: 5px;">Invia
-            WKT al Server</button>
-        <button id="deletePolygonButton" type="button" class="btn btn-danger" style="display: none;">Elimina
-            Poligono</button>
-    </form> 
-</div>
+
+<form method="post" asp-page-handler="AddNewCity">
+    <div class="controls  mt-3 mb-3">
+        <div id="map"></div>
+        <button id="deletePolygonButton" class="btn btn-outline-danger  mt-3">Clear Polygon</button>
+        <button type="button" class="button-none" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24"><!-- Icon from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE -->
+                <path fill="currentColor"
+                    d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8" />
+            </svg>
+        </button>
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <p class="modal-title h3" id="staticBackdropLabel">Button Actions Overview</p>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="info pt-3 mb-0"></p>
+                        Button actions:
+                        <ul>
+                            <li>Click on the map to add points to the polygon.</li>
+                            <li>Click on the polygon to remove points.</li>
+                            <li>Click on the "Clear Polygon" button to reset the polygon.</li>
+                        </ul>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">I got
+                            it!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <label class="h5 mt-3 mb-0" asp-for="Input.CityArea" for="MappedArea">Mapped area<b
+                    class="text-danger">*</b></label>
+            <textarea id="wktOutput" asp-for="Input.CityArea" class="form-control" readonly></textarea>
+        </div>
+        <span asp-validation-for="Input.CityArea" class="text-danger d-block"></span>
+    </div>
+
+    <label asp-for="Input.CityName" for="CityName">City name</label>
+    <input asp-for="Input.CityName" type="text" class="form-control" />
+    <span asp-validation-for="Input.CityName" class="text-danger d-block"></span>
+    <button type="submit" class="btn btn-outline-success mt-3 mb-3">Add New City</button>
+</form>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+        <strong>Success!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<h4>Existing Cities</h4>
+
+<hr />
+
+@if(Model.AllCities != null && Model.AllCities.Count() > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>City Name</th>
+                @* <th>City Area</th> *@
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var city in Model.AllCities)
+            {
+                <tr>
+                    <td>@city.Name</td>
+                    @* <td>@city.CityArea</td> *@
+                    <td>
+                        <form method="post" asp-page-handler="DeleteCity" asp-route-cityId="@city.Id">
+                            <button type="submit" class="btn btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No cities found.</p>
+}
