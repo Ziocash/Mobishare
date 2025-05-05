@@ -44,6 +44,6 @@ public class DeleteVehicleTypeHandler : IRequestHandler<DeleteVehicleType, Vehic
             }
         }
 
-        return vehicleTypeToDelete; ;
+        return vehicleTypeToDelete;
     }
 }
