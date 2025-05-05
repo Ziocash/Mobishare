@@ -18,14 +18,14 @@ public class UniqueCityNameAttribute : ValidationAttribute
         if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
             return new ValidationResult("City name is required.");
 
-        var cityName = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value.ToString()!);
+        var cityName = value.ToString()!.ToUpper();
 
         var instance = validationContext.ObjectInstance;
         var idProperty = instance.GetType().GetProperty("Id");
         var id = idProperty != null ? (int)(idProperty.GetValue(instance) ?? 0) : 0;
 
-        var exists = dbContext.VehicleTypes
-            .Any(v => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(v.Model) == cityName && v.Id != id);
+        var exists = dbContext.Cities
+            .Any(v => v.Name.ToUpper() == cityName && v.Id != id);
 
         if (exists)
             return new ValidationResult(ErrorMessage ?? $"City '{cityName}' already exists.");
