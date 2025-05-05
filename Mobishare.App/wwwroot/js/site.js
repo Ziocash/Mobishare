@@ -1,25 +1,38 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿// Main map initialization
 let map;
 let drawingManager;
-let currentPolygon = null; // Riferimento al poligono attualmente disegnato/modificato
-let drawnPolygonWkt = null; // Memorizza l'output WKT corrente
+let currentPolygon = null;
+let drawnPolygonWkt = null;
+let mapsInitialized = false;
 
-async function initMap() {
-    // Importa le librerie necessarie: 'maps' e 'drawing'
-    const { Map } = await google.maps.importLibrary("maps");
-    const { DrawingManager } = await google.maps.importLibrary("drawing");
+// Wait for Google Maps API to load completely before initializing maps
+async function initMaps() {
+    if (mapsInitialized) return;
+    
+    try {
+        const { Map } = await google.maps.importLibrary("maps");
+        const { DrawingManager } = await google.maps.importLibrary("drawing");
+        
+        // Initialize main map
+        await initMainMap(Map, DrawingManager);
+        
+        // Initialize city maps in modals
+        initCityMaps();
+        
+        mapsInitialized = true;
+        console.log("All maps initialized successfully");
+    } catch (error) {
+        console.error("Error initializing maps:", error);
+    }
+}
 
-    // Inizializza la mappa (come nel tuo codice originale)
+async function initMainMap(Map, DrawingManager) {
     map = new Map(document.getElementById("map"), {
         center: { lat: 45.50884930272857, lng: 8.950421885612588 },
         zoom: 15,
         styles: [{ featureType: "poi.business", elementType: "all", stylers: [{ visibility: "off" }] }]
     });
 
-    // Inizializza il Drawing Manager
     drawingManager = new DrawingManager({
         drawingControl: true,
         drawingControlOptions: {
@@ -36,20 +49,16 @@ async function initMap() {
     });
     drawingManager.setMap(map);
 
-    // Listener per quando un poligono è completato
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
         if (currentPolygon) {
-            currentPolygon.setMap(null); // Rimuovi vecchio poligono
+            currentPolygon.setMap(null);
         }
-        currentPolygon = polygon; // Salva riferimento nuovo
+        currentPolygon = polygon;
+        updateWktAndUI();
 
-        updateWktAndUI(); // Aggiorna WKT e stato UI (inclusi i pulsanti)
-
-        // Disabilita disegno e controlli
         drawingManager.setDrawingMode(null);
         drawingManager.setOptions({ drawingControl: false });
 
-        // Listeners per modifiche al poligono
         const path = polygon.getPath();
         google.maps.event.addListener(path, 'set_at', updateWktAndUI);
         google.maps.event.addListener(path, 'insert_at', updateWktAndUI);
@@ -59,84 +68,176 @@ async function initMap() {
         polygon.setDraggable(true);
     });
 
-    // Funzione helper per calcolare WKT e aggiornare l'UI (textarea e pulsanti)
-    function updateWktAndUI() {
-        const wktOutputArea = document.getElementById('wktOutput');
-        const sendButton = document.getElementById('sendToServerButton');
-        const deleteButton = document.getElementById('deletePolygonButton'); // Riferimento al pulsante elimina
+    // Setup event listeners for buttons
+    setupEventListeners();
+}
 
-        if (!currentPolygon) {
-            // Stato: Nessun poligono presente
-            drawnPolygonWkt = null;
-            if (wktOutputArea) wktOutputArea.value = '';
-            if (sendButton) sendButton.style.display = 'none';
-            if (deleteButton) deleteButton.style.display = 'none'; // Nascondi pulsante elimina
-            return;
-        }
+function updateWktAndUI() {
+    const wktOutputArea = document.getElementById('wktOutput');
+    const sendButton = document.getElementById('sendToServerButton');
+    const deleteButton = document.getElementById('deletePolygonButton');
 
-        // Stato: Poligono presente
-        const path = currentPolygon.getPath();
-        let coordinates = [];
-        path.getArray().forEach((latLng) => {
-            coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
-        });
-        if (coordinates.length > 0) {
-            coordinates.push(coordinates[0]); // Chiudi anello
-        }
-        drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
-
-        if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
-        if (sendButton) sendButton.style.display = 'inline-block'; // Mostra pulsante invia
-        if (deleteButton) deleteButton.style.display = 'inline-block'; // Mostra pulsante elimina
-        console.log("WKT Aggiornato:", drawnPolygonWkt);
+    if (!currentPolygon) {
+        drawnPolygonWkt = null;
+        if (wktOutputArea) wktOutputArea.value = '';
+        if (deleteButton) deleteButton.style.display = 'inline-block';
+        return;
     }
 
-    // --- Logica per il Pulsante Elimina Poligono ---
+    const path = currentPolygon.getPath();
+    let coordinates = [];
+    path.getArray().forEach((latLng) => {
+        coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
+    });
+    if (coordinates.length > 0) {
+        coordinates.push(coordinates[0]);
+    }
+    drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
+
+    if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
+    if (sendButton) sendButton.style.display = 'inline-block';
+    if (deleteButton) deleteButton.style.display = 'inline-block';
+    console.log("WKT Updated:", drawnPolygonWkt);
+}
+
+function setupEventListeners() {
     const deleteButton = document.getElementById('deletePolygonButton');
     if (deleteButton) {
-        deleteButton.addEventListener('click', () => {
+        deleteButton.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent form submission
             if (currentPolygon) {
-                currentPolygon.setMap(null); // Rimuovi poligono dalla mappa
-                currentPolygon = null; // Cancella riferimento
-                console.log("Poligono rimosso dalla mappa.");
+                currentPolygon.setMap(null);
+                currentPolygon = null;
+                console.log("Polygon removed from map.");
             }
 
-            // Resetta lo stato chiamando la funzione di aggiornamento UI
-            // (che nasconderà i pulsanti, pulirà la textarea, ecc.)
             updateWktAndUI();
 
-            // Riabilita gli strumenti di disegno per permettere la creazione di un nuovo poligono
             if (drawingManager) {
-                drawingManager.setOptions({
-                    drawingControl: true // Mostra di nuovo i controlli (es. icona poligono)
-                });
-                // Opzionale: puoi rimettere direttamente in modalità disegno poligono
-                // drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+                drawingManager.setOptions({ drawingControl: true });
             }
         });
-    } else {
-        console.warn("Elemento con ID 'deletePolygonButton' non trovato.");
     }
 
-    // --- Logica per il Pulsante Invia al Server (invariata) ---
     const sendButton = document.getElementById('sendToServerButton');
     if (sendButton) {
         sendButton.addEventListener('click', () => {
             if (!drawnPolygonWkt) {
-                alert('Disegna e completa un poligono prima di inviare.');
+                alert('Draw and complete a polygon before sending.');
                 return;
             }
-            const postUrl = '/Home/ProcessPolygonWkt'; // !! MODIFICA QUESTO URL !!
-            console.log(`Invio WKT a ${postUrl}:`, drawnPolygonWkt);
-            fetch(postUrl, { /* ... opzioni fetch ... */ })
-                .then(response => { /* ... gestione risposta ... */ })
-                .catch(error => { /* ... gestione errore ... */ });
+            const postUrl = '/Home/ProcessPolygonWkt';
+            console.log(`Sending WKT to ${postUrl}:`, drawnPolygonWkt);
+            // Fetch implementation...
         });
-    } else {
-        console.warn("Elemento con ID 'sendToServerButton' non trovato.");
+    }
+}
+
+// Function to initialize maps in city modals
+ function initCityMaps() {
+    // Set up listeners for modal show events
+    document.querySelectorAll('.modal[data-wkt]').forEach(modal => {
+        modal.addEventListener('shown.bs.modal', function() {
+            console.log("Modal shown, initializing map");
+            const mapId = this.id.replace('editModal-', 'map-edit-');
+            const mapContainer = this.querySelector(`#${mapId}`);
+            const wktValue = this.getAttribute('data-wkt');
+            
+            console.log("Map container:", mapId);
+            console.log("WKT value:", wktValue);
+            
+            if (mapContainer && wktValue && !mapContainer.dataset.initialized) {
+                try {
+                    initializeCityMap(mapContainer, wktValue);
+                    mapContainer.dataset.initialized = "true";
+                    console.log(`Map initialized for ${mapId}`);
+                } catch (error) {
+                    console.error("Error initializing city map:", error);
+                }
+            }
+        });
+    });
+}
+
+function initializeCityMap(mapContainer, wkt) {
+    if (!mapContainer || !wkt) {
+        console.error("Missing map container or WKT data");
+        return;
     }
 
-} // Fine della funzione initMap
+    const polygon = convertWKTToPolygon(wkt);
+    if (!polygon) {
+        console.error("Failed to convert WKT to polygon:", wkt);
+        return;
+    }
 
-// Chiama initMap per avviare
-initMap();
+    const bounds = new google.maps.LatLngBounds();
+    polygon.getPath().forEach(coord => bounds.extend(coord));
+
+    const map = new google.maps.Map(mapContainer, {
+        center: bounds.getCenter(),
+        zoom: 13,
+    });
+
+    polygon.setMap(map);
+    map.fitBounds(bounds);
+    
+    // Ensure map is properly sized for the container
+    setTimeout(() => {
+        google.maps.event.trigger(map, 'resize');
+        map.fitBounds(bounds);
+    }, 100);
+}
+
+function convertWKTToPolygon(wkt) {
+    try {
+        const match = wkt.match(/POLYGON\s*\(\(\s*(.*?)\s*\)\)/i);
+        if (!match) {
+            console.error("Invalid WKT format:", wkt);
+            return null;
+        }
+
+        const coordStr = match[1];
+        const coordPairs = coordStr.split(',').map(pair => {
+            const [lng, lat] = pair.trim().split(/\s+/).map(parseFloat);
+            return new google.maps.LatLng(lat, lng);
+        });
+
+        return new google.maps.Polygon({
+            paths: coordPairs,
+            strokeColor: "#007bff",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#007bff",
+            fillOpacity: 0.35
+        });
+    } catch (error) {
+        console.error("Error converting WKT to polygon:", error, wkt);
+        return null;
+    }
+}
+
+// Initialize maps when DOM is loaded
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM loaded, initializing maps");
+    initMaps();
+    
+    // Add global listener for all modals
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('shown.bs.modal', function() {
+            console.log(`Modal shown: ${this.id}`);
+        });
+    });
+});
+
+// Additional helper to ensure maps are resized correctly when modal is shown
+document.addEventListener('shown.bs.modal', function (event) {
+    const modal = event.target;
+    const mapContainer = modal.querySelector('.city-map');
+    if (mapContainer && mapContainer.dataset.initialized === "true") {
+        const map = mapContainer.__gm_map;
+        if (map) {
+            google.maps.event.trigger(map, 'resize');
+        }
+    }
+}, false);
