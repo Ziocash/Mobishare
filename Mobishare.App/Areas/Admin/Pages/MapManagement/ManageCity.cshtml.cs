@@ -89,16 +89,19 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                     UserId = userId
                 }));
 
+            _logger.LogInformation("City successfully added.");
+            TempData["SuccessMessage"] = "City successfully added.";
+
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteCity(int id)
         {
-            // await _mediator.Send(_mapper.Map<DeleteCity>(
-            //     new City
-            //     {
-            //         Id = id
-            //     }));
+            await _mediator.Send(_mapper.Map<DeleteCity>(
+                new City
+                {
+                    Id = id
+                }));
 
             _logger.LogInformation("City succesflully deleted.");
             TempData["SuccessMessage"] = "City succesflully deleted.";
