@@ -13,7 +13,7 @@ public class MappingProfile : Profile
     {
         CreateMap<CreateCity, City>().ReverseMap();
         // CreateMap<UpdateCity, City>().ReverseMap();
-        // CreateMap<DeleteCity, City>().ReverseMap();
+        CreateMap<DeleteCity, City>().ReverseMap();
 
         CreateMap<CreateVehicle, Vehicle>().ReverseMap();
         // CreateMap<UpdateVehicle, Vehicle>().ReverseMap();
