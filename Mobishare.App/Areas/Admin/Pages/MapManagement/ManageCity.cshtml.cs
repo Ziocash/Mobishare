@@ -95,6 +95,35 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             return RedirectToPage();
         }
 
+        public async Task<IActionResult> OnPostUpdateCity(int id)
+        {
+            Input.Id = id;
+            if (!ModelState.IsValid)
+            {
+                AllCities = await _mediator.Send(new GetAllCities());
+
+                _logger.LogWarning("Invalid model states. Model states status: " + !ModelState.IsValid);
+
+                return Page();
+            }
+
+            await _mediator.Send(new UpdateCity
+            {
+                Id = id,
+                Name = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Input.CityName),
+                PerimeterLocation = Input.CityArea,
+                CreatedAt = DateTime.UtcNow
+            });
+
+
+            _logger.LogInformation("City successfully updated.");
+            TempData["SuccessMessage"] = "City successfully updated.";
+
+            return RedirectToPage();
+        }
+
+
+
         public async Task<IActionResult> OnPostDeleteCity(int id)
         {
             await _mediator.Send(_mapper.Map<DeleteCity>(
