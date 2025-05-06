@@ -181,13 +181,39 @@ function initializeCityMap(mapContainer, wkt) {
 
     polygon.setMap(map);
     map.fitBounds(bounds);
+
+    // Aggiorna il campo hidden con il nuovo WKT
+    const cityId = mapContainer.id.replace('map-edit-', '');
+    const wktInput = document.getElementById(`editCityWkt-${cityId}`);
     
-    // Ensure map is properly sized for the container
+    function updateWktFromPolygon() {
+        const path = polygon.getPath();
+        const coords = [];
+        path.forEach(latLng => {
+            coords.push(`${latLng.lng()} ${latLng.lat()}`);
+        });
+        if (coords.length > 0) coords.push(coords[0]); // chiudi il poligono
+        const newWkt = `POLYGON((${coords.join(', ')}))`;
+        if (wktInput) {
+            wktInput.value = newWkt;
+        }
+        console.log("Updated modal WKT:", newWkt);
+    }
+
+    // Listener per modifiche manuali
+    const path = polygon.getPath();
+    google.maps.event.addListener(path, 'set_at', updateWktFromPolygon);
+    google.maps.event.addListener(path, 'insert_at', updateWktFromPolygon);
+    google.maps.event.addListener(path, 'remove_at', updateWktFromPolygon);
+    google.maps.event.addListener(polygon, 'dragend', updateWktFromPolygon);
+
+    // Trigger resize nel caso non venga visualizzato correttamente
     setTimeout(() => {
         google.maps.event.trigger(map, 'resize');
         map.fitBounds(bounds);
     }, 100);
 }
+
 
 function convertWKTToPolygon(wkt) {
     try {
@@ -209,7 +235,9 @@ function convertWKTToPolygon(wkt) {
             strokeOpacity: 0.8,
             strokeWeight: 2,
             fillColor: "#007bff",
-            fillOpacity: 0.35
+            fillOpacity: 0.35,
+            editable: true, // <== permette di spostare i vertici
+            draggable: true  // <== permette di trascinare il poligono
         });
     } catch (error) {
         console.error("Error converting WKT to polygon:", error, wkt);

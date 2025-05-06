@@ -32,15 +32,18 @@
                         Button actions:
                         <ul>
                             <li>
-                                <img style="width: 3rem;" src="@Url.Content("~/img/instruction/hand-command.png")" alt="Hand Command Example">
+                                <img style="width: 3rem;" src="@Url.Content("~/img/instruction/hand-command.png")"
+                                    alt="Hand Command Example">
                                 <span>
                                     Move the map to the desired location.
                                 </span>
                             </li>
                             <li>
-                                <img style="width: 3rem;" src="@Url.Content("~/img/instruction/polygon-command.png")" alt="Polygon Command Example">
+                                <img style="width: 3rem;" src="@Url.Content("~/img/instruction/polygon-command.png")"
+                                    alt="Polygon Command Example">
                                 <span>
-                                    Click and drag to draw a polygon on the map. You can add multiple points to the polygon.
+                                    Click and drag to draw a polygon on the map. You can add multiple points to the
+                                    polygon.
                                 </span>
                             </li>
                             <li>
@@ -95,98 +98,98 @@
             </tr>
         </thead>
         <tbody>
-        @foreach (var city in Model.AllCities)
-        {
-            <tr>
-                <td>@city.Name</td>
-                <td>Click here to load map</td>
-                <td>
-                    <!-- Icona per aprire il modale di modifica -->
-                    <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@city.Id" title="Edit"
-                    style="text-decoration: none;">
-                        <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                            viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M5 19h1.425L16.2 9.225L14.775 7.8L5 17.575zm-1 2q-.425 0-.712-.288T3 20v-2.425q0-.4.15-.763t.425-.637L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.437.65T21 6.4q0 .4-.138.763t-.437.662l-12.6 12.6q-.275.275-.638.425t-.762.15zM19 6.4L17.6 5zm-3.525 2.125l-.7-.725L16.2 9.225z" />
-                        </svg>
-                    </a>
+            @foreach (var city in Model.AllCities)
+            {
+                <tr>
+                    <td>@city.Name</td>
+                    <td>Click here to load map</td>
+                    <td>
+                        <!-- Icona per aprire il modale di modifica -->
+                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@city.Id" title="Edit"
+                            style="text-decoration: none;">
+                            <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M5 19h1.425L16.2 9.225L14.775 7.8L5 17.575zm-1 2q-.425 0-.712-.288T3 20v-2.425q0-.4.15-.763t.425-.637L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.437.65T21 6.4q0 .4-.138.763t-.437.662l-12.6 12.6q-.275.275-.638.425t-.762.15zM19 6.4L17.6 5zm-3.525 2.125l-.7-.725L16.2 9.225z" />
+                            </svg>
+                        </a>
 
-                    <!-- Modal per modificare -->
-                    <div class="modal fade" id="editModal-@city.Id" data-wkt="@city.PerimeterLocation" tabindex="-1" role="dialog"
-                        aria-labelledby="editModalLabel-@city.Id" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editModalLabel-@city.Id">Edit @city.Name</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        <!-- Modal per modificare -->
+                        <div class="modal fade" id="editModal-@city.Id" data-wkt="@city.PerimeterLocation" tabindex="-1"
+                            role="dialog" aria-labelledby="editModalLabel-@city.Id" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editModalLabel-@city.Id">Edit @city.Name</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- Mappa e dati WKT -->
-                                    <div class="mb-3">
-                                        <div id="map-edit-@city.Id" class="city-map" style="height: 300px; border: 1px solid #ccc;"></div>
-                                        <span class="wkt-data d-none">@city.PerimeterLocation</span>
                                     </div>
-
-                                    <form method="post" asp-page-handler="UpdateCity" asp-route-id="@city.Id">
-                                        <input type="hidden" name="Input.Id" value="@city.Id" />
-                                        <div class="form-group">
-                                            <label for="Name-@city.Id">City Name<b class="text-danger">*</b></label>
-                                            <input type="text" class="form-control" id="Name-@city.Id" name="Input.CityName"
-                                                value="@city.Name" required />
+                                    <div class="modal-body">
+                                        <!-- Mappa e dati WKT -->
+                                        <div class="mb-3">
+                                            <div id="map-edit-@city.Id" class="city-map"
+                                                style="height: 300px; border: 1px solid #ccc;"></div>
+                                            <span class="wkt-data d-none">@city.PerimeterLocation</span>
                                         </div>
-
-                                        <div class="modal-footer pb-0 pt-3">
-                                            <button type="button" class="btn btn-outline-secondary"
+                                        <form method="post" asp-page-handler="UpdateCity" asp-route-id="@city.Id">
+                                            <input type="hidden" name="Input.Id" value="@city.Id" />
+                                           <textarea id="editCityWkt-@city.Id" asp-for="Input.CityArea" class="form-control" name="Input.CityArea" readonly></textarea>
+                                            <div class="form-group">
+                                                <label for="Name-@city.Id">City Name<b class="text-danger">*</b></label>
+                                                <input type="text" class="form-control" id="Name-@city.Id" name="Input.CityName"
+                                                    value="@city.Name" required />
+                                            </div>
+                                            <div class="modal-footer pb-0 pt-3">
+                                                <button type="button" class="btn btn-outline-secondary"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-outline-success">Save Changes</button>
-                                        </div>
-                                    </form>
+                                                <button type="submit" class="btn btn-outline-success">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Icona che apre il modale di cancellazione -->
-                    <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteModal-@city.Id"
-                    title="Delete" style="text-decoration: none;">
-                        <svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="m9.4 16.5l2.6-2.6l2.6 2.6l1.4-1.4l-2.6-2.6L16 9.9l-1.4-1.4l-2.6 2.6l-2.6-2.6L8 9.9l2.6 2.6L8 15.1zM7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM7 6v13z"
-                                fill="currentColor" />
-                        </svg>
-                    </a>
+                        <!-- Icona che apre il modale di cancellazione -->
+                        <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteModal-@city.Id"
+                            title="Delete" style="text-decoration: none;">
+                            <svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="m9.4 16.5l2.6-2.6l2.6 2.6l1.4-1.4l-2.6-2.6L16 9.9l-1.4-1.4l-2.6 2.6l-2.6-2.6L8 9.9l2.6 2.6L8 15.1zM7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM7 6v13z"
+                                    fill="currentColor" />
+                            </svg>
+                        </a>
 
-                    <!-- Modal per cancellazione -->
-                    <div class="modal fade" id="deleteModal-@city.Id" tabindex="-1" role="dialog"
-                        aria-labelledby="deleteModalLabel-@city.Id" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel-@city.Id">Delete @city.Name</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        <!-- Modal per cancellazione -->
+                        <div class="modal fade" id="deleteModal-@city.Id" tabindex="-1" role="dialog"
+                            aria-labelledby="deleteModalLabel-@city.Id" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel-@city.Id">Delete @city.Name</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form method="post" asp-page-handler="DeleteCity" asp-route-id="@city.Id">
-                                        <p class="mb-2">Are you sure you want to delete this city?</p>
-                                        <p><strong>City Name:</strong> @city.Name</p>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="post" asp-page-handler="DeleteCity" asp-route-id="@city.Id">
+                                            <p class="mb-2">Are you sure you want to delete this city?</p>
+                                            <p><strong>City Name:</strong> @city.Name</p>
 
-                                        <div class="modal-footer pb-0">
-                                            <button type="button" class="btn btn-outline-secondary"
+                                            <div class="modal-footer pb-0">
+                                                <button type="button" class="btn btn-outline-secondary"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-outline-danger">Delete City</button>
-                                        </div>
-                                    </form>
+                                                <button type="submit" class="btn btn-outline-danger">Delete City</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </td>
-            </tr>
-        }
-    </tbody>
+                    </td>
+                </tr>
+            }
+        </tbody>
 
     </table>
 }
