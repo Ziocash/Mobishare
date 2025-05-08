@@ -1,24 +1,62 @@
-﻿// Main map initialization
-let map;
+﻿let map;
 let drawingManager;
+let allCityMaps = [];
 let currentPolygon = null;
 let drawnPolygonWkt = null;
 let mapsInitialized = false;
 
-// Wait for Google Maps API to load completely before initializing maps
+let editablePolygonStrokeColor = '#0056b3';
+let editablePolygonFillColor = '#007bff';
+
+let readOnlyPolygonStrokeColor = '#00b3aa';
+let readOnlyPolygonFillColor = '#00fff2';
+
+// Initialize maps when DOM is loaded
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM loaded, initializing maps");
+    initMaps();
+
+    // Add global listener for all modals
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('shown.bs.modal', function() {
+            console.log(`Modal shown: ${this.id}`);
+        });
+    });
+});
+
+// Additional helper to ensure maps are resized correctly when modal is shown
+document.addEventListener('shown.bs.modal', function (event) {
+    const modal = event.target;
+    const mapContainer = modal.querySelector('.city-map');
+    if (mapContainer && mapContainer.dataset.initialized === "true") {
+        const map = mapContainer.__gm_map;
+        if (map) google.maps.event.trigger(map, 'resize');
+    }
+}, false);
+
+/**
+ * Initialize Google Maps and Drawing Manager.
+ *
+ * This function loads the Google Maps library and initializes the main map and drawing manager.
+ *
+ * It also sets up event listeners for the drawing manager and buttons.
+ *
+ * It initializes the city maps to draw polygons and initializes all modals to update the WKT value for each city.
+ * @returns {Promise<void>}
+ */
 async function initMaps() {
     if (mapsInitialized) return;
-    
+
     try {
         const { Map } = await google.maps.importLibrary("maps");
         const { DrawingManager } = await google.maps.importLibrary("drawing");
-        
+
         // Initialize main map
         await initMainMap(Map, DrawingManager);
-        
+
         // Initialize city maps in modals
         initCityMaps();
-        
+
         mapsInitialized = true;
         console.log("All maps initialized successfully");
     } catch (error) {
@@ -26,10 +64,22 @@ async function initMaps() {
     }
 }
 
+/**
+ * Initialize the main map with a drawing manager.
+ *
+ * This function sets up the map, drawing manager, and event listeners for drawing polygons.
+ *
+ * It also handles multiple WKT to draw all cities in the modal.
+ *
+ * Can save the drawn polygon to the server.
+ * @param {*} Map - Map class from Google Maps.
+ * @param {*} DrawingManager - DrawingManager class from Google Maps.
+ * @returns {Promise<void>}
+ */
 async function initMainMap(Map, DrawingManager) {
     map = new Map(document.getElementById("map"), {
         center: { lat: 45.50884930272857, lng: 8.950421885612588 },
-        zoom: 15,
+        zoom: 10,
         styles: [{ featureType: "poi.business", elementType: "all", stylers: [{ visibility: "off" }] }]
     });
 
@@ -47,12 +97,13 @@ async function initMainMap(Map, DrawingManager) {
             strokeWeight: 2
         }
     });
+
     drawingManager.setMap(map);
 
+    displayAllPolygons();
+
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
-        if (currentPolygon) {
-            currentPolygon.setMap(null);
-        }
+        if (currentPolygon) currentPolygon.setMap(null);
         currentPolygon = polygon;
         updateWktAndUI();
 
@@ -72,6 +123,32 @@ async function initMainMap(Map, DrawingManager) {
     setupEventListeners();
 }
 
+
+function displayAllPolygons() 
+{
+    allCityMaps = document.getElementById("allWkt").value.split(';').filter(wkt => wkt.trim() !== '');
+    
+    allCityMaps.forEach(city => {
+        console.log("Processing city WKT:", city);
+        const polygon = convertWKTToPolygon(
+            city,
+            readOnlyPolygonStrokeColor,
+            readOnlyPolygonFillColor,
+            false,
+            false
+        );
+        if (polygon) polygon.setMap(map);
+    });
+}
+
+/**
+ * Update the WKT output area and UI elements based on the current polygon.
+ * 
+ * This function retrieves the coordinates of the current polygon, converts them to WKT format,
+ * and updates the WKT output area and button visibility accordingly.
+ * 
+ * If no polygon is drawn, it clears the WKT output and hides the buttons.
+ */
 function updateWktAndUI() {
     const wktOutputArea = document.getElementById('wktOutput');
     const sendButton = document.getElementById('sendToServerButton');
@@ -89,9 +166,8 @@ function updateWktAndUI() {
     path.getArray().forEach((latLng) => {
         coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
     });
-    if (coordinates.length > 0) {
-        coordinates.push(coordinates[0]);
-    }
+    if (coordinates.length > 0) coordinates.push(coordinates[0]);
+    
     drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
 
     if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
@@ -100,6 +176,9 @@ function updateWktAndUI() {
     console.log("WKT Updated:", drawnPolygonWkt);
 }
 
+/**
+ * Setup event listeners for buttons.
+ */
 function setupEventListeners() {
     const deleteButton = document.getElementById('deletePolygonButton');
     if (deleteButton) {
@@ -113,9 +192,8 @@ function setupEventListeners() {
 
             updateWktAndUI();
 
-            if (drawingManager) {
-                drawingManager.setOptions({ drawingControl: true });
-            }
+            if (drawingManager) drawingManager.setOptions({ drawingControl: true });
+            
         });
     }
 
@@ -133,8 +211,10 @@ function setupEventListeners() {
     }
 }
 
-// Function to initialize maps in city modals
- function initCityMaps() {
+/**
+ * Initialize city maps in modals.
+ */
+function initCityMaps() {
     // Set up listeners for modal show events
     document.querySelectorAll('.modal[data-wkt]').forEach(modal => {
         modal.addEventListener('shown.bs.modal', function() {
@@ -142,10 +222,10 @@ function setupEventListeners() {
             const mapId = this.id.replace('editModal-', 'map-edit-');
             const mapContainer = this.querySelector(`#${mapId}`);
             const wktValue = this.getAttribute('data-wkt');
-            
+
             console.log("Map container:", mapId);
             console.log("WKT value:", wktValue);
-            
+
             if (mapContainer && wktValue && !mapContainer.dataset.initialized) {
                 try {
                     initializeCityMap(mapContainer, wktValue);
@@ -159,6 +239,16 @@ function setupEventListeners() {
     });
 }
 
+/**
+ * Initialize a city map in a modal.
+ * 
+ * This function sets up the map, converts WKT to a polygon, and updates the WKT input field.
+ * 
+ * It also sets up event listeners for polygon modifications.
+ * @param {*} mapContainer - The map container element.
+ * @param {*} wkt - The WKT string to convert.
+ * @returns 
+ */
 function initializeCityMap(mapContainer, wkt) {
     if (!mapContainer || !wkt) {
         console.error("Missing map container or WKT data");
@@ -177,6 +267,7 @@ function initializeCityMap(mapContainer, wkt) {
     const map = new google.maps.Map(mapContainer, {
         center: bounds.getCenter(),
         zoom: 13,
+        styles: [{ featureType: "poi.business", elementType: "all", stylers: [{ visibility: "off" }] }],
     });
 
     polygon.setMap(map);
@@ -184,8 +275,8 @@ function initializeCityMap(mapContainer, wkt) {
 
     // Aggiorna il campo hidden con il nuovo WKT
     const cityId = mapContainer.id.replace('map-edit-', '');
-    const wktInput = document.getElementById(`editCityWkt-${cityId}`);
-    
+    const wktInput = document.getElementById(`editWkt-${cityId}`);
+
     function updateWktFromPolygon() {
         const path = polygon.getPath();
         const coords = [];
@@ -214,8 +305,22 @@ function initializeCityMap(mapContainer, wkt) {
     }, 100);
 }
 
-
-function convertWKTToPolygon(wkt) {
+/**
+ * Convert WKT to Google Maps Polygon object.
+ * @param {string} wkt - The WKT string to convert
+ * @param {string} polygonStrokeColor - The stroke color for the polygon
+ * @param {string} polygonFillColor - The fill color for the polygon
+ * @param {boolean} isEditable - Whether the polygon is editable (default: true)
+ * @param {boolean} isDraggable - Whether the polygon is draggable (default: true)
+ * @returns {google.maps.Polygon} - The Google Maps Polygon object
+ */
+function convertWKTToPolygon(
+    wkt,
+    polygonStrokeColor = editablePolygonStrokeColor,
+    polygonFillColor = editablePolygonFillColor,
+    isEditable = true,
+    isDraggable = true
+) {
     try {
         const match = wkt.match(/POLYGON\s*\(\(\s*(.*?)\s*\)\)/i);
         if (!match) {
@@ -231,41 +336,16 @@ function convertWKTToPolygon(wkt) {
 
         return new google.maps.Polygon({
             paths: coordPairs,
-            strokeColor: "#007bff",
+            strokeColor: polygonStrokeColor,
             strokeOpacity: 0.8,
             strokeWeight: 2,
-            fillColor: "#007bff",
+            fillColor: polygonFillColor,
             fillOpacity: 0.35,
-            editable: true, // <== permette di spostare i vertici
-            draggable: true  // <== permette di trascinare il poligono
+            editable: isEditable,
+            draggable: isDraggable
         });
     } catch (error) {
         console.error("Error converting WKT to polygon:", error, wkt);
         return null;
     }
 }
-
-// Initialize maps when DOM is loaded
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOM loaded, initializing maps");
-    initMaps();
-    
-    // Add global listener for all modals
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('shown.bs.modal', function() {
-            console.log(`Modal shown: ${this.id}`);
-        });
-    });
-});
-
-// Additional helper to ensure maps are resized correctly when modal is shown
-document.addEventListener('shown.bs.modal', function (event) {
-    const modal = event.target;
-    const mapContainer = modal.querySelector('.city-map');
-    if (mapContainer && mapContainer.dataset.initialized === "true") {
-        const map = mapContainer.__gm_map;
-        if (map) {
-            google.maps.event.trigger(map, 'resize');
-        }
-    }
-}, false);

@@ -22,6 +22,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
         public IEnumerable<City> AllCities { get; set; }
+        public string AllCitiesPerimeter { get; set; }
 
         public string GoogleMapsApiKey { get; private set; }
 
@@ -115,7 +116,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                 CreatedAt = DateTime.UtcNow
             });
 
-
             _logger.LogInformation("City successfully updated.");
             TempData["SuccessMessage"] = "City successfully updated.";
 
@@ -136,6 +136,8 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             TempData["SuccessMessage"] = "City succesflully deleted.";
 
             AllCities = await _mediator.Send(new GetAllCities());
+            foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
+
             GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
                 ?? throw new InvalidOperationException("Google Maps API key is not configured.");
 
@@ -145,6 +147,8 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         public async Task OnGet()
         {
             AllCities = await _mediator.Send(new GetAllCities());
+            foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
+            
             GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
                 ?? throw new InvalidOperationException("Google Maps API key is not configured.");
         }

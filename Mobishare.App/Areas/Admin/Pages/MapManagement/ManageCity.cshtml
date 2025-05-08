@@ -10,6 +10,7 @@
 <form method="post" asp-page-handler="AddNewCity">
     <div class="controls  mt-3 mb-3">
         <div id="map"></div>
+        <input type="hidden" id="allWkt" value="@Model.AllCitiesPerimeter" />
         <button id="deletePolygonButton" class="btn btn-outline-danger  mt-3">Clear Polygon</button>
         <button type="button" class="button-none" data-bs-toggle="modal" data-bs-target="#exampleModal">
             <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -133,7 +134,7 @@
                                         </div>
                                         <form method="post" asp-page-handler="UpdateCity" asp-route-id="@city.Id">
                                             <input type="hidden" name="Input.Id" value="@city.Id" />
-                                           <textarea id="editCityWkt-@city.Id" asp-for="Input.CityArea" class="form-control" name="Input.CityArea" readonly></textarea>
+                                           <textarea id="editWkt-@city.Id" asp-for="Input.CityArea" class="form-control" name="Input.CityArea" readonly></textarea>
                                             <div class="form-group">
                                                 <label for="Name-@city.Id">City Name<b class="text-danger">*</b></label>
                                                 <input type="text" class="form-control" id="Name-@city.Id" name="Input.CityName"
