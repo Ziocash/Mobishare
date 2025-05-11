@@ -11,6 +11,7 @@ using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
 using Mobishare.Core.ValidationAttributes;
+using NetTopologySuite.IO;
 
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
@@ -48,6 +49,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             public int Id { get; set; }
 
             [Required(ErrorMessage = "City area is required.")]
+            [AvoidCitiesCollision(ErrorMessage = "City area intersects with an existing city.")]
             public string CityArea { get; set; }
             [Required(ErrorMessage = "City name is required.")]
             [UniqueCityName(ErrorMessage = "City already exists.")]
@@ -66,6 +68,8 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                 AllCities = await _mediator.Send(new GetAllCities());
                 GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
                     ?? throw new InvalidOperationException("Google Maps API key is not configured.");
+                
+                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
                 _logger.LogWarning("User ID is null.");
                 return Page();
@@ -76,6 +80,8 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                 AllCities = await _mediator.Send(new GetAllCities());
                 GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
                     ?? throw new InvalidOperationException("Google Maps API key is not configured.");
+
+                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
                 _logger.LogWarning("Invalid model states. Model states status: " + !ModelState.IsValid);
                 return Page();
@@ -102,7 +108,10 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             if (!ModelState.IsValid)
             {
                 AllCities = await _mediator.Send(new GetAllCities());
+                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
+                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
+                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 _logger.LogWarning("Invalid model states. Model states status: " + !ModelState.IsValid);
 
                 return Page();
@@ -121,8 +130,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
             return RedirectToPage();
         }
-
-
 
         public async Task<IActionResult> OnPostDeleteCity(int id)
         {
