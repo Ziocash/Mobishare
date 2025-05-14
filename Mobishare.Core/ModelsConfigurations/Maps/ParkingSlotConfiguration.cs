@@ -21,6 +21,9 @@ public class ParkingSlotsConfiguration : IEntityTypeConfiguration<ParkingSlot>
 
         builder.Property(x => x.CreatedAt)
                 .IsRequired();
+        
+        builder.Property(x => x.Type)
+                .IsRequired();
 
         builder.HasOne(x => x.City)
                .WithMany()
