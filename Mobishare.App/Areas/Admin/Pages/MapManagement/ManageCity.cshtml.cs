@@ -46,8 +46,8 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         public InputCityModel Input { get; set; }
         public class InputCityModel
         {
-            public int Id { get; set; }
-
+            public int? Id { get; set; }
+           
             [Required(ErrorMessage = "City area is required.")]
             [AvoidCitiesCollision(ErrorMessage = "City area intersects with an existing city.")]
             public string CityArea { get; set; }
