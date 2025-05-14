@@ -1,4 +1,5 @@
 ﻿@page
+@using Mobishare.Core.ParkingSlotClassification
 @model Mobishare.App.Areas.Admin.Pages.MapManagement.ManageParkingSlotModel
 @{
 }
@@ -10,8 +11,8 @@
 <form method="post" asp-page-handler="AddNewParkingSlot">
     <div class="controls mt-3 mb-3">
         <div id="map"></div>
-        <input type="hidden" id="allWkt">
-        <button id="deletePolygonButton" class="btn btn-outline-danger mt-3">Clear Polygon</button>
+        <input type="hidden" id="allCities" value="@Model.AllCitiesPerimeter" />
+    <button id="deletePolygonButton" class="btn btn-outline-danger mt-3">Clear Polygon</button>
         <button type="button" class="button-none" data-bs-toggle="modal" data-bs-target="#exampleModal">
             <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                 viewBox="0 0 24 24"><!-- Icon from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE -->
@@ -69,4 +70,23 @@
         </div>
         <span asp-validation-for="Input.ParkingArea" class="text-danger d-block"></span>
     </div>
+
+     <label class="pt-2" asp-for="Input.Type" for="ParkingSlotType">Parking Slot Type<b class="text-danger">*</b></label>
+        <select id="ParkingSlotType" class="form-control" asp-for="Input.Type">
+            <option value="" selected>Select Parking Slot Type</option>
+            @foreach (var type in Enum.GetValues(typeof(ParkingSlotTypes)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+        <span asp-validation-for="Input.Type" class="text-danger d-block"></span>
+        <button type="submit" class="btn btn-outline-success mt-3 mb-3">Add New Parking Slot</button>
 </form>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="successAlert">
+        <strong>Success!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
