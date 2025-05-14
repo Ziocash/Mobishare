@@ -100,7 +100,9 @@ async function initMainMap(Map, DrawingManager) {
 
     drawingManager.setMap(map);
 
-    displayAllPolygons();
+    displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
+    displayAllPolygons("allParkingSlots", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
+    
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
         if (currentPolygon) currentPolygon.setMap(null);
@@ -124,20 +126,38 @@ async function initMainMap(Map, DrawingManager) {
 }
 
 
-function displayAllPolygons() 
+/**
+ * Display all polygons on the map from a WKT input element.
+ * @param {string} elementId - The ID of the input element containing WKT data
+ * @param {*} polygonStrokeColor - The stroke color for the polygons
+ * @param {*} polygonFillColor - The fill color for the polygons
+ * @param {*} outMap - The map to display the polygons on
+ */
+function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, outMap, removePolygons = '')
 {
-    allCityMaps = document.getElementById("allWkt").value.split(';').filter(wkt => wkt.trim() !== '');
-    
-    allCityMaps.forEach(city => {
-        console.log("Processing city WKT:", city);
+    var inputElement = document.getElementById(elementId);
+
+    if (!inputElement) return; // console.error("Element not found:", elementId);
+        
+    if(inputElement.value == null || inputElement.value == "") return; //console.log("No WKT data found for element:", elementId);
+
+    allWkt = inputElement.value.split(';').filter(wkt => wkt.trim() !== '');
+
+    if (removePolygons) 
+        allWkt = allWkt.filter(wkt => wkt !== removePolygons);
+
+
+
+    allWkt.forEach(wkt => {
+        console.log("Processing city WKT:", wkt);
         const polygon = convertWKTToPolygon(
-            city,
-            readOnlyPolygonStrokeColor,
-            readOnlyPolygonFillColor,
+            wkt,
+            polygonStrokeColor,
+            polygonFillColor,
             false,
             false
         );
-        if (polygon) polygon.setMap(map);
+        if (polygon) polygon.setMap(outMap);
     });
 }
 
@@ -276,6 +296,8 @@ function initializeCityMap(mapContainer, wkt) {
     // Aggiorna il campo hidden con il nuovo WKT
     const cityId = mapContainer.id.replace('map-edit-', '');
     const wktInput = document.getElementById(`editWkt-${cityId}`);
+
+    displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map, wkt);
 
     function updateWktFromPolygon() {
         const path = polygon.getPath();
