@@ -18,11 +18,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.NetTopologySuite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Requests/Maps/ParkingSlotRequests/Commands/" />
     <Folder Include="Requests/Users/" />
+    <Folder Include="Requests/Vehicles/PositionRequests/Queries/" />
   </ItemGroup>
 
 </Project>

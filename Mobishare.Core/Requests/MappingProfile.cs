@@ -2,6 +2,8 @@ using AutoMapper;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
+using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.PositionRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
 
@@ -22,5 +24,11 @@ public class MappingProfile : Profile
         CreateMap<CreateVehicleType, VehicleType>().ReverseMap();
         CreateMap<UpdateVehicleType, VehicleType>().ReverseMap();
         CreateMap<DeleteVehicleType, VehicleType>().ReverseMap();
+
+        CreateMap<CreateParkingSlot, ParkingSlot>().ReverseMap();
+        CreateMap<UpdateParkingSlot, ParkingSlot>().ReverseMap();
+        CreateMap<DeleteParkingSlot, ParkingSlot>().ReverseMap();
+
+        CreateMap<CreatePosition, Position>().ReverseMap();
     }
 }
