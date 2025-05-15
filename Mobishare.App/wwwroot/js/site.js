@@ -101,7 +101,7 @@ async function initMainMap(Map, DrawingManager) {
     drawingManager.setMap(map);
 
     displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
-    displayAllPolygons("allParkingSlots", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
+    displayAllPolygons("allParkingSlots", "#b0b0b0", "#c4c4c4", map);
     
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
@@ -155,7 +155,9 @@ function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, out
             polygonStrokeColor,
             polygonFillColor,
             false,
-            false
+            false,
+            false,
+            1
         );
         if (polygon) polygon.setMap(outMap);
     });
@@ -334,6 +336,7 @@ function initializeCityMap(mapContainer, wkt) {
  * @param {string} polygonFillColor - The fill color for the polygon
  * @param {boolean} isEditable - Whether the polygon is editable (default: true)
  * @param {boolean} isDraggable - Whether the polygon is draggable (default: true)
+ * @param {boolean} isClickable - Whether the polygon is clickable (default: true)
  * @returns {google.maps.Polygon} - The Google Maps Polygon object
  */
 function convertWKTToPolygon(
@@ -341,7 +344,9 @@ function convertWKTToPolygon(
     polygonStrokeColor = editablePolygonStrokeColor,
     polygonFillColor = editablePolygonFillColor,
     isEditable = true,
-    isDraggable = true
+    isDraggable = true,
+    isClickable = true,
+    indexZ = 2
 ) {
     try {
         const match = wkt.match(/POLYGON\s*\(\(\s*(.*?)\s*\)\)/i);
@@ -364,7 +369,9 @@ function convertWKTToPolygon(
             fillColor: polygonFillColor,
             fillOpacity: 0.35,
             editable: isEditable,
-            draggable: isDraggable
+            draggable: isDraggable,
+            clickable: isClickable,
+            zIndex: indexZ
         });
     } catch (error) {
         console.error("Error converting WKT to polygon:", error, wkt);
