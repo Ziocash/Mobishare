@@ -6,8 +6,11 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
+using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
+using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
 {
@@ -17,7 +20,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         public IEnumerable<VehicleType> AllVehicleTypes { get; set; }
-        public IEnumerable<City> AllCities { get; set; }
+        public IEnumerable<ParkingSlot> AllParkingSlot { get; set; }
         public IEnumerable<Vehicle> AllVehicles { get; set; }
         
         public ManageVehicleModel(ILogger<ManageVehicleModel> logger, IMediator mediator, IMapper mapper)
@@ -40,9 +43,9 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
             [MinLength(5, ErrorMessage = "Invalid, plate must be long exactly 5 characters.")]
             public string? Plate { get; set; }
             [Required(ErrorMessage = "Select a valid vehicle type.")]
-            public int? VehicleTypeId { get; set; }
+            public int VehicleTypeId { get; set; }
             [Required(ErrorMessage = "Select a valid city.")]
-            public int? CityId { get; set; }
+            public int ParkingSlotId { get; set; }
         }
         
         public async Task<IActionResult> OnPostAddVehicle()
@@ -50,20 +53,23 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
             if (!ModelState.IsValid)
             {
                 AllVehicleTypes = await _mediator.Send(new GetAllVehicleType());
-                AllCities = await _mediator.Send(new GetAllCities());
+                AllParkingSlot = await _mediator.Send(new GetAllParkingSlots());
                 AllVehicles = await _mediator.Send(new GetAllVehicles());
 
                 _logger.LogWarning("Invalid model states. Model states status: " + !ModelState.IsValid);
                 return Page();
             }
 
-            var vehicle = _mapper.Map<Vehicle>(Input);
-            /*var result = await _mediator.Send(new AddVehicleCommand(vehicle));
-
-            if (result)
-            {
-                return RedirectToPage("/Index");
-            }*/
+            await _mediator.Send(_mapper.Map<CreateVehicle>(
+                new Vehicle
+                {
+                    Plate = Input.Plate ?? string.Empty,
+                    Status = VehicleStatusType.Free.ToString(),
+                    VehicleTypeId = Input.VehicleTypeId,
+                    ParkingSlotId = Input.ParkingSlotId,
+                    CreatedAt = DateTime.UtcNow
+                }
+            ));
 
             ModelState.AddModelError(string.Empty, "Failed to add vehicle.");
             return RedirectToPage();
@@ -72,7 +78,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         public async Task OnGet()
         {
             AllVehicleTypes = await _mediator.Send(new GetAllVehicleType());
-            AllCities = await _mediator.Send(new GetAllCities());
+            AllParkingSlot = await _mediator.Send(new GetAllParkingSlots());
             AllVehicles = await _mediator.Send(new GetAllVehicles());
         }
     }

@@ -52,13 +52,13 @@
         }
         <span asp-validation-for="Input.VehicleTypeId" class="text-danger d-block"></span>
 
-        @if (Model.AllCities?.Count() == 0)
+        @if (Model.AllParkingSlot?.Count() == 0)
         {
-            <a href="/Admin/MapManagement/ManageCity" class="text-decoration-none">
-                <div class="alert alert-danger mt-2 cursor-pointer" role="alert">
+            <a href="/Admin/MapManagement/ManageParkingSlot" class="text-decoration-none">
+                <div class="alert alert-danger mt-3 cursor-pointer" role="alert">
                     <div class="row">
                         <div class="col">
-                            No cities available. Please add a city first.
+                            No Parking Slot available. Please add a Parking Slot first.
                         </div>
                         <div class="col text-end">
                             <svg class="alert-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -73,24 +73,24 @@
         }
         else
         {
-            <label class="pt-2" asp-for="Input.CityId" for="City">City<b class="text-danger">*</b></label>
-            <select id="City" class="form-control" asp-for="Input.CityId">
-                <option value="" selected>Select City</option>
-                @if (Model.AllCities != null)
+            <label class="pt-2" asp-for="Input.ParkingSlotId" for="City">Parking Slot<b class="text-danger">*</b></label>
+            <select id="City" class="form-control" asp-for="Input.ParkingSlotId">
+                <option value="" selected>Select Parking Slot</option>
+                @if (Model.AllParkingSlot != null)
                 {
 
-                    @foreach (var city in Model.AllCities)
+                    @foreach (var parkingSlot in Model.AllParkingSlot)
                     {
-                        <option value="@city.Id">@city.Name</option>
+                        <option value="@parkingSlot.Id">@parkingSlot.Id</option>
                     }
                 }
                 else
                 {
-                    <option value="">No cities available</option>
+                    <option value="">No Parking Slot available</option>
                 }
             </select>
         }
-        <span asp-validation-for="Input.CityId" class="text-danger d-block"></span>
+        <span asp-validation-for="Input.ParkingSlotId" class="text-danger d-block"></span>
         @* 
         <label class="pt-2" asp-for="Input.PricePerMinute" for="PricePerMinute">Price Per Minute (€)<b
                 class="text-danger">*</b></label>
@@ -118,9 +118,11 @@
     <table class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>Vehicle Model</th>
+                <th>Vehicle Id</th>
+                <th>Battery Level</th>
+                <th>Plate</th>
+                <th>Status</th>
                 <th>Vehicle Type</th>
-                <th>Price Per Minute</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -128,9 +130,11 @@
             @foreach (var vehicle in Model.AllVehicles)
             {
                 <tr>
+                    <td>@vehicle.Id</td>
+                    <td>@vehicle.BatteryLevel</td>
                     <td>@vehicle.Plate</td>
-                    <td>@vehicle.Plate</td>
-                    <td>@vehicle.Plate</td>
+                    <td>@vehicle.Status</td>
+                    <td>@vehicle.VehicleType.Type</td>
                     <td>
                         <!-- Icona per aprire il modale di modifica -->
                         <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@vehicle.Id"
@@ -208,17 +212,18 @@
                             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteModalLabel-@vehicle.Id">Delete @vehicle.Plate
+                                        <h5 class="modal-title" id="deleteModalLabel-@vehicle.Id">Delete @vehicle.Id
                                         </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         <form method="post" asp-page-handler="DeleteVehicleType" asp-route-id="@vehicle.Id">
-                                            <p class="mb-2">Are you sure you want to delete this vehicle type?</p>
-                                            <p><strong>Model:</strong> @vehicle.Plate</p>
-                                            <p><strong>Type:</strong> @vehicle.Status</p>
-                                            <p><strong>Price per minute:</strong> @vehicle.Status</p>
+                                            <p class="mb-2">Are you sure you want to delete this vehicle?</p>
+                                            <p><strong>Battery level:</strong> @vehicle.BatteryLevel</p>
+                                            <p><strong>Plate:</strong> @vehicle.Plate</p>
+                                            <p><strong>Status:</strong> @vehicle.Status</p>
+                                            <p><strong>Vehicle Type:</strong> @vehicle.VehicleType.Type</p>
 
                                             <div class="modal-footer pb-0">
                                                 <button type="button" class="btn btn-outline-secondary"
