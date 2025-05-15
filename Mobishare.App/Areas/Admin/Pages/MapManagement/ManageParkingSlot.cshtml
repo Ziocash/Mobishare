@@ -12,6 +12,7 @@
     <div class="controls mt-3 mb-3">
         <div id="map"></div>
         <input type="hidden" id="allCities" value="@Model.AllCitiesPerimeter" />
+        <input type="hidden" id="allParkingSlots" value="@Model.AllParkingSlotsPerimeter" />
     <button id="deletePolygonButton" class="btn btn-outline-danger mt-3">Clear Polygon</button>
         <button type="button" class="button-none" data-bs-toggle="modal" data-bs-target="#exampleModal">
             <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -80,7 +81,29 @@
             }
         </select>
         <span asp-validation-for="Input.Type" class="text-danger d-block"></span>
-        <button type="submit" class="btn btn-outline-success mt-3 mb-3">Add New Parking Slot</button>
+        
+        @if(Model.AllCities == null || Model.AllCities.Count() <= 0)
+        {
+            <a href="/Admin/MapManagement/ManageCity" class="text-decoration-none">
+                <div class="alert alert-danger mt-3 cursor-pointer" role="alert">
+                    <div class="row">
+                        <div class="col">
+                            No City available. Please add a City first.
+                        </div>
+                        <div class="col text-end">
+                            <svg class="alert-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24"><!-- Icon from Material Symbols Light by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                                <path fill="currentColor"
+                                    d="M12 20q-.213 0-.357-.144T11.5 19.5v-7h-7q-.213 0-.356-.144T4 11.999t.144-.356t.356-.143h7v-7q0-.213.144-.356T12.001 4t.356.144t.143.356v7h7q.213 0 .356.144t.144.357t-.144.356t-.356.143h-7v7q0 .213-.144.356t-.357.144" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            <button type="submit" class="btn btn-outline-success mt-3 mb-3" disabled>Add New Parking Slot</button>
+        } else {
+            <button type="submit" class="btn btn-outline-success mt-3 mb-3">Add New Parking Slot</button>
+        }
 </form>
 
 @if (TempData["SuccessMessage"] != null)
@@ -89,4 +112,118 @@
         <strong>Success!</strong> @TempData["SuccessMessage"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+}
+
+<h4>Existing Parking Slot</h4>
+
+<hr />
+
+@if(Model.AllParkingSlots != null && Model.AllParkingSlots.Count() > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Parking Slot Id</th>
+                    <th>City Name</th>
+                    <th>Parking Slot Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var parkingSlot in Model.AllParkingSlots)
+                {
+                    <tr>
+                        <td>@parkingSlot.Id</td>
+                        <td>@parkingSlot.City.Name</td>
+                        <td>@parkingSlot.Type</td>
+                        <td>
+                            <!-- Icona per aprire il modale di modifica -->
+                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#editModal-@parkingSlot.Id" title="Edit"
+                                style="text-decoration: none;">
+                                <svg class="text-secondary" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                    viewBox="0 0 24 24">
+                                    <path fill="currentColor"
+                                        d="M5 19h1.425L16.2 9.225L14.775 7.8L5 17.575zm-1 2q-.425 0-.712-.288T3 20v-2.425q0-.4.15-.763t.425-.637L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.437.65T21 6.4q0 .4-.138.763t-.437.662l-12.6 12.6q-.275.275-.638.425t-.762.15zM19 6.4L17.6 5zm-3.525 2.125l-.7-.725L16.2 9.225z" />
+                                </svg>
+                            </a>
+
+                            <!-- Modal per modificare -->
+                            <div class="modal fade" id="editModal-@parkingSlot.Id" data-wkt="@parkingSlot.PerimeterLocation" tabindex="-1"
+                                role="dialog" aria-labelledby="editModalLabel-@parkingSlot.Id" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editModalLabel-@parkingSlot.Id">Edit @parkingSlot.Id</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <!-- Mappa e dati WKT -->
+                                            <div class="mb-3">
+                                                <div id="map-edit-@parkingSlot.Id" class="city-map"
+                                                    style="height: 300px; border: 1px solid #ccc;"></div>
+                                                <input type="hidden" id="allCities" value="@Model.AllCitiesPerimeter" />
+                                                <span class="wkt-data d-none">@parkingSlot.PerimeterLocation</span>
+                                            </div>
+                                            <form method="post" asp-page-handler="UpdateParkingSlot" asp-route-id="@parkingSlot.Id">
+                                                <input type="hidden" name="Input.Id" value="@parkingSlot.Id" />
+                                            <textarea id="editWkt-@parkingSlot.Id" asp-for="Input.ParkingArea" class="form-control" name="Input.ParkingArea" readonly></textarea>
+                                                <div class="modal-footer pb-0 pt-3">
+                                                    <button type="button" class="btn btn-outline-secondary"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-outline-success">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Icona che apre il modale di cancellazione -->
+                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteModal-@parkingSlot.Id"
+                                title="Delete" style="text-decoration: none;">
+                                <svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="m9.4 16.5l2.6-2.6l2.6 2.6l1.4-1.4l-2.6-2.6L16 9.9l-1.4-1.4l-2.6 2.6l-2.6-2.6L8 9.9l2.6 2.6L8 15.1zM7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM7 6v13z"
+                                        fill="currentColor" />
+                                </svg>
+                            </a>
+
+                            <!-- Modal per cancellazione -->
+                            <div class="modal fade" id="deleteModal-@parkingSlot.Id" tabindex="-1" role="dialog"
+                                aria-labelledby="deleteModalLabel-@parkingSlot.Id" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel-@parkingSlot.Id">Delete @parkingSlot.Id</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form method="post" asp-page-handler="DeleteParkingSlot" asp-route-id="@parkingSlot.Id">
+                                                <p class="mb-2">Are you sure you want to delete this parking slot?</p>
+                                                
+
+                                                <div class="modal-footer pb-0">
+                                                    <button type="button" class="btn btn-outline-secondary"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-outline-danger">Delete Parking Slot</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>No parking slots found.</p>
 }
