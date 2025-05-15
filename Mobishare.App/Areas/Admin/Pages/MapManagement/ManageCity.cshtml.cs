@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Threading.Tasks;
 using AutoMapper;
-using Humanizer;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +9,6 @@ using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
 using Mobishare.Core.ValidationAttributes;
-using NetTopologySuite.IO;
 
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
@@ -24,7 +21,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         private readonly UserManager<IdentityUser> _userManager;
         public IEnumerable<City> AllCities { get; set; }
         public string AllCitiesPerimeter { get; set; }
-
         public string GoogleMapsApiKey { get; private set; }
 
         /// <param name="configuration"></param>  
@@ -120,6 +116,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             await _mediator.Send(new UpdateCity
             {
                 Id = id,
+                UserId = _userManager.GetUserId(User),
                 Name = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(Input.CityName),
                 PerimeterLocation = Input.CityArea,
                 CreatedAt = DateTime.UtcNow
