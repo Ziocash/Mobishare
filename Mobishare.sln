@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobishare.App", "Mobishare.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobishare.Core", "Mobishare.Core\Mobishare.Core.csproj", "{555F17A8-A6AC-4A2A-876D-F86B43288FCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobishare.Infrastructure", "Mobishare.Infrastructure\Mobishare.Infrastructure.csproj", "{57B46B4B-EE49-4D85-9773-859197FA7475}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{555F17A8-A6AC-4A2A-876D-F86B43288FCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{555F17A8-A6AC-4A2A-876D-F86B43288FCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{555F17A8-A6AC-4A2A-876D-F86B43288FCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57B46B4B-EE49-4D85-9773-859197FA7475}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57B46B4B-EE49-4D85-9773-859197FA7475}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57B46B4B-EE49-4D85-9773-859197FA7475}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57B46B4B-EE49-4D85-9773-859197FA7475}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
