@@ -44,6 +44,8 @@ namespace Mobishare.Core.Requests.Maps.CityRequests.Commands
                     cityToUpdate.Name = request.Name;
                 if (cityToUpdate.PerimeterLocation != request.PerimeterLocation)
                     cityToUpdate.PerimeterLocation = request.PerimeterLocation;
+                if (cityToUpdate.UserId != request.UserId)
+                    cityToUpdate.UserId = request.UserId;
                 cityToUpdate.CreatedAt = request.CreatedAt;
 
                 _dbContext.Cities.Update(cityToUpdate);
