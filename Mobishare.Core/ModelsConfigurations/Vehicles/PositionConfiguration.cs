@@ -18,9 +18,12 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
         builder.Property(x => x.Longitude)
             .IsRequired();
 
-        builder.Property(x => x.CreatedAt)
+        builder.Property(x => x.GpsReceptionTime)
             .IsRequired()
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Property(x => x.GpsEmissionTime)
+            .IsRequired();
 
         builder.HasOne(x => x.Vehicle)
             .WithMany()

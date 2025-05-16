@@ -10,7 +10,8 @@ public class Position
     public int Id { get; set; }
     public decimal Latitude { get; set; }
     public decimal Longitude { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GpsReceptionTime { get; set; } = DateTime.UtcNow;
+    public DateTime GpsEmissionTime { get; set; } = DateTime.UtcNow;
     public Vehicle Vehicle { get; set; }
     public int VehicleId { get; set; }
 }
