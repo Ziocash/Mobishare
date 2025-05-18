@@ -20,20 +20,17 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         private readonly ILogger<ManageParkingSlotModel> _logger;
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
-        private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
         public IEnumerable<ParkingSlot> AllParkingSlots { get; set; }
         public IEnumerable<City> AllCities { get; set; }
         public string AllParkingSlotsPerimeter { get; set; }
         public string AllCitiesPerimeter { get; set; }
-        public string GoogleMapsApiKey { get; private set; }
 
-        public ManageParkingSlotModel(ILogger<ManageParkingSlotModel> logger, IMediator mediator, IMapper mapper, IConfiguration configuration, UserManager<IdentityUser> userManager)
+        public ManageParkingSlotModel(ILogger<ManageParkingSlotModel> logger, IMediator mediator, IMapper mapper, UserManager<IdentityUser> userManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
@@ -57,8 +54,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
             if (userId == null)
             {
-                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 AllCities = await _mediator.Send(new GetAllCities());
                 foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
@@ -71,8 +66,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
             if (!ModelState.IsValid)
             {
-                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 AllCities = await _mediator.Send(new GetAllCities());
                 foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
@@ -104,8 +97,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             if (!contained)
             {
                 ModelState.AddModelError("Input.ParkingArea", "Parking slot area is not in the city.");
-                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 AllCities = await _mediator.Send(new GetAllCities());
                 foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
@@ -136,8 +127,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
             if (!ModelState.IsValid)
             {
-                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 AllCities = await _mediator.Send(new GetAllCities());
                 foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
@@ -167,8 +156,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             if(!contained)
             {
                 ModelState.AddModelError("Input.ParkingArea", "Parking slot area is not in the city.");
-                GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                    ?? throw new InvalidOperationException("Google Maps API key is not configured.");
                 AllCities = await _mediator.Send(new GetAllCities());
                 foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
@@ -199,9 +186,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             
             _logger.LogInformation("Parking slot successfully deleted");
             TempData["SuccessMessage"] = "Parking slot successfully deleted";
-
-            GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-                ?? throw new InvalidOperationException("Google Maps API key is not configured.");
             
             AllCities = await _mediator.Send(new GetAllCities());
             foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
@@ -215,8 +199,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
         public async Task OnGet()
         {
-            GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"]
-            ?? throw new InvalidOperationException("Google Maps API key is not configured.");
             AllCities = await _mediator.Send(new GetAllCities());
             foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
 
