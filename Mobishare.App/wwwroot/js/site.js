@@ -11,6 +11,9 @@ let editablePolygonFillColor = '#007bff';
 let readOnlyPolygonStrokeColor = '#00b3aa';
 let readOnlyPolygonFillColor = '#00fff2';
 
+let parkingPolygonStrokeColor = '';
+let parkingPolygonFillColor = '';
+
 // Initialize maps when DOM is loaded
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOM loaded, initializing maps");
@@ -101,7 +104,7 @@ async function initMainMap(Map, DrawingManager) {
     drawingManager.setMap(map);
 
     displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
-    displayAllPolygons("allParkingSlots", "#b0b0b0", "#c4c4c4", map);
+    displayAllPolygons("allParkingSlots", editablePolygonStrokeColor, editablePolygonFillColor, map, indexZ = 2);
     
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
@@ -133,7 +136,7 @@ async function initMainMap(Map, DrawingManager) {
  * @param {*} polygonFillColor - The fill color for the polygons
  * @param {*} outMap - The map to display the polygons on
  */
-function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, outMap, removePolygons = '')
+function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, outMap, removePolygons = '', indexZ = 1)
 {
     var inputElement = document.getElementById(elementId);
 
@@ -157,7 +160,7 @@ function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, out
             false,
             false,
             false,
-            1
+            indexZ
         );
         if (polygon) polygon.setMap(outMap);
     });
@@ -277,7 +280,7 @@ function initializeCityMap(mapContainer, wkt) {
         return;
     }
 
-    const polygon = convertWKTToPolygon(wkt);
+    const polygon = convertWKTToPolygon(wkt, indexZ = 3);
     if (!polygon) {
         console.error("Failed to convert WKT to polygon:", wkt);
         return;
@@ -299,7 +302,7 @@ function initializeCityMap(mapContainer, wkt) {
     const cityId = mapContainer.id.replace('map-edit-', '');
     const wktInput = document.getElementById(`editWkt-${cityId}`);
 
-    displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map, wkt);
+    displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map, wkt, indexZ = 2);
 
     function updateWktFromPolygon() {
         const path = polygon.getPath();
@@ -346,7 +349,7 @@ function convertWKTToPolygon(
     isEditable = true,
     isDraggable = true,
     isClickable = true,
-    indexZ = 2
+    indexZ = 1
 ) {
     try {
         const match = wkt.match(/POLYGON\s*\(\(\s*(.*?)\s*\)\)/i);

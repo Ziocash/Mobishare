@@ -12,15 +12,15 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-dark @(Context.Request.Path.ToString().Contains("usersettings", StringComparison.InvariantCultureIgnoreCase) ? "active" : "")"
-                        href="/Admin/UserSettings">User</a>
+                        href="/Admin/UserSettings/SuspendedUser">User</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-dark @(Context.Request.Path.ToString().Contains("vehiclemanagement", StringComparison.InvariantCultureIgnoreCase) ? "active" : "")"
-                        href="/Admin/VehicleManagement">Vehicle</a>
+                        href="/Admin/VehicleManagement/ManageVehicle">Vehicle</a>
                 </li>
                 <li class="nav-item"></li>
                     <a class="nav-link text-dark @(Context.Request.Path.ToString().Contains("mapmanagement", StringComparison.InvariantCultureIgnoreCase) ? "active" : "")"
-                        href="/Admin/MapManagement">Map</a>
+                        href="/Admin/MapManagement/ManageCity">Map</a>
                 </li>
                 <li class="nav-item"></li>
                     <a class="nav-link text-dark @(Context.Request.Path.ToString().Contains("reports", StringComparison.InvariantCultureIgnoreCase) ? "active" : "")"
