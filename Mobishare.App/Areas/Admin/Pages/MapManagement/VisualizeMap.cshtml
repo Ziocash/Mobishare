@@ -3,4 +3,41 @@
 @{
 }
 
-<h5>Visualize Map</h5>
+<h4>Visualize Map</h4>
+
+<hr />
+
+<div class="controls  mt-3 mb-3">
+    <div id="map"></div>
+    <input type="hidden" id="allCities" value="@Model.AllCitiesPerimeter" />        
+    <input type="hidden" id="allParkingSlots" value="@Model.AllParkingSlotsPerimeter" />
+</div>
+
+<h4>all Cities</h4>
+
+<hr />
+
+@if(Model.AllCities != null && Model.AllCities.Count() > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>City Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var city in Model.AllCities)
+                {
+                    <tr>
+                        <td>@city.Name</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>No cities available.</p>
+}

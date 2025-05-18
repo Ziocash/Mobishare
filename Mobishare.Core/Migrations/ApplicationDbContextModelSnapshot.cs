@@ -257,6 +257,10 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -318,6 +322,34 @@ namespace Mobishare.Core.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Feedback");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Position", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("GpsEmissionTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("GpsReceptionTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("Positions");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Repair", b =>
@@ -495,8 +527,8 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("PricePerMinute")
-                        .HasColumnType("REAL");
+                    b.Property<decimal>("PricePerMinute")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -608,6 +640,17 @@ namespace Mobishare.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Position", b =>
+                {
+                    b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Repair", b =>

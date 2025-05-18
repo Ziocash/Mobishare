@@ -19,5 +19,6 @@ namespace Mobishare.Core.Data
         public DbSet<Ride> Rides { get; set; }
         public DbSet<RepairAssignment> RepairAssignments { get; set; }
         public DbSet<VehicleType> VehicleTypes { get; set; }
+        public DbSet<Position> Positions { get; set; }
     }
 }

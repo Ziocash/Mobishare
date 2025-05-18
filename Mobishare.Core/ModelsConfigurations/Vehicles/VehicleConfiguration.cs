@@ -17,7 +17,6 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Plate)
-                .IsRequired()
                 .HasMaxLength(50);
         
         builder.Property(x => x.Status)

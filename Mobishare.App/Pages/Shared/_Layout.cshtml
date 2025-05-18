@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Mobishare.App</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/Mobishare.App.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/user_logged_home.css">
 </head>
@@ -36,6 +38,8 @@
     @* <script src="~/js/maps.js"></script> *@
     <script src="~/js/user_logged_home.js" type="text/javascript" ></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDI3u3QKHyX8IOdXXAZH3_jUIGDJZWPyME"></script>
+    <script src="~/js/vehicleType.js" asp-append-version="true"></script>
+    <script src="~/js/maps.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
