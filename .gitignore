@@ -396,3 +396,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+Mobishare.db
+*.db
+.DS_Store
+Mobishare.db-shm
+Mobishare.db-wal

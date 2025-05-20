@@ -12,9 +12,12 @@ namespace Mobishare.App.Pages
             _logger = logger;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (User?.Identity != null && User.Identity.IsAuthenticated)
+                return RedirectToPage("/LandingPage");
 
+            return Page();
         }
     }
 }

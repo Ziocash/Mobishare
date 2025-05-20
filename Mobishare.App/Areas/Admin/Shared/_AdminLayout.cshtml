@@ -1,0 +1,36 @@
+﻿@inject IConfiguration Configuration
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin_pages.css" asp-append-version="true" />
+    @await RenderSectionAsync("Stylesheets", required: false)
+</head>
+
+<body>
+    <header>
+        <partial name="_NavbarPartial" />
+    </header>
+    <div class="pb-5">
+        @RenderBody()
+    </div>
+
+    <partial name="_FooterPartial" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/vehicleType.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
+    <script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")' async defer></script>
+
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

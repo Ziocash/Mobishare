@@ -1,0 +1,71 @@
+.fs-s {
+    font-size: small;
+}
+
+.b-g {
+    border-color: #5b708a !important;
+}
+
+.b-d:hover {
+    color: #fff !important;
+    background-color: #5b708a !important;
+    border-color: #5b708a !important;
+}
+
+.bold-500 {
+    font-weight: 500;
+}
+
+.super_admin-color {
+    color: #ee8c1d !important;
+}
+
+.admin-color {
+    color: #1dacee !important;
+}
+
+.staff-color {
+    color: #901dee !important;
+}
+
+.operation-box {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s;
+}
+
+.operation-box:hover {
+    background-color: #f8f9fa;
+}
+
+#map {
+    height: 25rem;
+    width: 100%;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
+
+.controls {
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    padding: 10px;
+}
+
+#wktOutput {
+    width: 100%;
+    height: 50px;
+    margin-top: 10px;
+    font-family: monospace;
+}
+
+.button-none {
+    all: unset;
+  }
+  
+  .button-none:focus {
+    outline: revert;
+  }

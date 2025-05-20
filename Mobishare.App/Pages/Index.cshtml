@@ -4,7 +4,190 @@
     ViewData["Title"] = "Home page";
 }
 
-<div>
-    <h1 class="display-4">Welcome To Mobishare.App</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="position-relative mb-4 img-container">
+    <img class="w-100" src="@Url.Content("~/gif/cycling.gif")" alt="Cycling gif">
+    <h1 class="position-absolute top-50 start-50 translate-middle text-center text-highlight text-white">
+        Ride Green. Live Clean.
+    </h1>
+</div>
+
+<p class="h2 text-center">Our vehicle</p>
+<div class="container">
+    <div class="row">
+        <!-- Bike -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/bike.png")" class="card-img-top" alt="Bike">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Bike</h5>
+                    <p class="card-text">The classic choice for a healthy and green ride.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- E-bike -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/e-bike.png")" class="card-img-top" alt="E-bike">
+                <div class="card-body">
+                    <h5 class="card-title text-center">E-bike</h5>
+                    <p class="card-text">Effortless, electric-powered cycling for long rides.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scooter -->
+        <div class="col-md-4">
+            <div class="card h-100 bg-light">
+                <img src="@Url.Content("~/img/vehicle/scooter.png")" class="card-img-top" alt="Scooter">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Scooter</h5>
+                    <p class="card-text">Compact and fast, the perfect urban solution.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aggiungi queste sezioni dopo la sezione delle card dei veicoli -->
+
+<!-- Call to Action -->
+<div class="cta-container">
+  <a href="#" class="btn-cta">Inizia a pedalare</a>
+</div>
+
+<!-- How It Works Section -->
+<div class="container">
+  <h2 class="h2 text-center">Come funziona</h2>
+  <div class="steps-container">
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3 class="step-title">Trova</h3>
+      <p class="step-text">Trova il veicolo più vicino a te tramite la nostra app.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3 class="step-title">Sblocca</h3>
+      <p class="step-text">Scansiona il QR code per sbloccare il veicolo.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3 class="step-title">Guida</h3>
+      <p class="step-text">Goditi il tuo viaggio e parcheggia responsabilmente.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-section">
+  <div class="container">
+    <h2 class="h2 text-center">Perché sceglierci</h2>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-icon">🌿</div>
+          <h3 class="feature-title">Eco-friendly</h3>
+          <p class="feature-text">Zero emissioni, zero inquinamento. Aiuta l'ambiente con ogni viaggio.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-icon">💰</div>
+          <h3 class="feature-title">Conveniente</h3>
+          <p class="feature-text">Risparmia denaro rispetto a taxi e auto private.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-item">
+          <div class="feature-icon">🔄</div>
+          <h3 class="feature-title">Flessibile</h3>
+          <p class="feature-text">Prendi e lascia i veicoli dove vuoi, quando vuoi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App Download Section -->
+<div class="container">
+  <div class="app-download">
+    <div class="app-text">
+      <h2 class="app-title">Scarica la nostra app</h2>
+      <p class="app-description">Trova, sblocca e paga facilmente con la nostra app mobile. Disponibile per iOS e Android.</p>
+      <div class="app-buttons">
+        <a href="#" class="app-button">
+          <img src="/img/app-store.png" alt="App Store">
+          App Store
+        </a>
+        <a href="#" class="app-button">
+          <img src="/img/google-play.png" alt="Google Play">
+          Google Play
+        </a>
+      </div>
+    </div>
+    <img src="/img/app-mockup.png" alt="App Mockup" class="app-image">
+  </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+  <div class="container">
+    <h2 class="h2 text-center">I nostri numeri</h2>
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-value">10K+</div>
+        <div class="stat-label">Utenti attivi</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">500+</div>
+        <div class="stat-label">Veicoli disponibili</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">15+</div>
+        <div class="stat-label">Città servite</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pricing Section -->
+<div class="container">
+  <h2 class="h2 text-center">Tariffe</h2>
+  <div class="pricing-container">
+    <div class="pricing-card">
+      <h3 class="pricing-title">Base</h3>
+      <p class="pricing-vehicle">Bici muscolare</p>
+      <div class="pricing-price">€1.50<span>/30 min</span></div>
+      <ul class="pricing-features">
+        <li>Sblocco gratuito</li>
+        <li>Parcheggio in tutta la città</li>
+        <li>Assicurazione inclusa</li>
+      </ul>
+      <a href="#" class="pricing-button">Scegli</a>
+    </div>
+    <div class="pricing-card">
+      <h3 class="pricing-title">Plus</h3>
+      <p class="pricing-vehicle">E-bike</p>
+      <div class="pricing-price">€2.50<span>/30 min</span></div>
+      <ul class="pricing-features">
+        <li>Sblocco gratuito</li>
+        <li>Parcheggio in tutta la città</li>
+        <li>Assicurazione inclusa</li>
+        <li>Assistenza elettrica</li>
+      </ul>
+      <a href="#" class="pricing-button">Scegli</a>
+    </div>
+    <div class="pricing-card">
+      <h3 class="pricing-title">Turbo</h3>
+      <p class="pricing-vehicle">Monopattino elettrico</p>
+      <div class="pricing-price">€3.00<span>/30 min</span></div>
+      <ul class="pricing-features">
+        <li>Sblocco gratuito</li>
+        <li>Parcheggio in tutta la città</li>
+        <li>Assicurazione inclusa</li>
+        <li>Velocità fino a 25 km/h</li>
+      </ul>
+      <a href="#" class="pricing-button">Scegli</a>
+    </div>
+  </div>
 </div>
