@@ -3,6 +3,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('startTravelBtn');
     const errorMessage = document.getElementById('errorMessage');
     
+
+    // Inizializza il messaggio di errore come nascosto
+    const hub = new signalR.HubConnectionBuilder().withUrl("/VehicleHub").build();
+    hub.start().then(() => {
+        console.log("Connessione al SignalR Hub stabilita.");
+    }
+    ).catch(err => console.error(err));
+    hub.on("ReceivesVehicles", (message) => {
+        console.log("Messaggio ricevuto:", message);
+        // Qui puoi gestire il messaggio ricevuto dal server
+    }
+    );
+
+    
     btn.addEventListener('click', function() {
         const vehicleCode = code.value.trim();
         
