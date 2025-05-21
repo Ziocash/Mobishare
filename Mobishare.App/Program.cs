@@ -9,14 +9,26 @@ using Mobishare.Core.Requests;
 using Mobishare.Infrastructure.Services.HostedServices;
 using System.Reflection;
 using Mobishare.Infrastructure.Services.MQTT;
+using Mobishare.App.Services;
+using Mobishare.Core.Services.GoogleGeocoding;
+using Mobishare.Infrastructure.Services.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+#region SignalR configuration
+builder.Services.AddSignalR();
+#endregion
+
+#region Google geocoding service configuration
+builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
+#endregion
+
 #region Connection to the database
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -79,5 +91,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapHub<VehicleHub>("/vehicleHub");
 
 app.Run();
