@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mobishare.Core.Data;
 
@@ -10,9 +11,11 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250520215644_FixedRepairUserID")]
+    partial class FixedRepairUserID
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
@@ -426,8 +429,10 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId1")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VehicleId")
@@ -435,7 +440,7 @@ namespace Mobishare.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.HasIndex("VehicleId");
 
@@ -451,10 +456,10 @@ namespace Mobishare.Core.Migrations
                     b.Property<DateTime>("EndDateTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("PositionEndId")
+                    b.Property<int>("PositionEndId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("PositionStartId")
+                    b.Property<int>("PositionStartId")
                         .HasColumnType("INTEGER");
 
                     b.Property<double>("Price")
@@ -699,9 +704,7 @@ namespace Mobishare.Core.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId1");
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
                         .WithMany()
@@ -718,11 +721,15 @@ namespace Mobishare.Core.Migrations
                 {
                     b.HasOne("Mobishare.Core.Models.Vehicles.Position", "PositionEnd")
                         .WithMany()
-                        .HasForeignKey("PositionEndId");
+                        .HasForeignKey("PositionEndId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Position", "PositionStart")
                         .WithMany()
-                        .HasForeignKey("PositionStartId");
+                        .HasForeignKey("PositionStartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
