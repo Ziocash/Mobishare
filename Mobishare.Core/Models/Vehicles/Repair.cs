@@ -14,7 +14,7 @@ public class Repair
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
     public DateTime? FinishedAt {get; set;}
     public IdentityUser User {get; set;}
-    public int UserId {get; set;}
+    public String UserId {get; set;}
     public Vehicle Vehicle {get; set;}
     public int VehicleId {get; set;}
 }
