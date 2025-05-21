@@ -1,37 +1,70 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const code = document.getElementById('bikeCode');
-    const btn = document.getElementById('startTravelBtn');
-    const errorMessage = document.getElementById('errorMessage');
-    
+let map; // Mappa globale
+let vehicleMarkers = {};
+let marker;
+window.onload = initMap;
 
-    // Inizializza il messaggio di errore come nascosto
-    const hub = new signalR.HubConnectionBuilder().withUrl("/VehicleHub").build();
-    hub.start().then(() => {
-        console.log("Connessione al SignalR Hub stabilita.");
-    }
-    ).catch(err => console.error(err));
-    hub.on("ReceivesVehicles", (message) => {
-        console.log("Messaggio ricevuto:", message);
-        // Qui puoi gestire il messaggio ricevuto dal server
-    }
-    );
+document.addEventListener('DOMContentLoaded', function () {
+  const code = document.getElementById('bikeCode');
+  const btn = document.getElementById('startTravelBtn');
+  const errorMessage = document.getElementById('errorMessage');
 
-    
-    btn.addEventListener('click', function() {
-        const vehicleCode = code.value.trim();
+  const hub = new signalR.HubConnectionBuilder().withUrl("/VehicleHub").build();
+  hub.start()
+      .then(() => console.log("Connessione al SignalR Hub stabilita."))
+      .catch(err => console.error(err));
+
+  hub.on("ReceiveVehiclePositionUpdate", (vehicle) => {
+      console.log("Messaggio ricevuto:", vehicle);
+  
+      let id = vehicle.vehicleId.toString();
+      let newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
+
+      if (vehicleMarkers[id]) {
+      
+          const marker = vehicleMarkers[id];
+          const currentPos = marker.getPosition();
+          
+          // Se la posizione è diversa, aggiorna
+          if (currentPos.lat() !== newPosition.lat || currentPos.lng() !== newPosition.lng) {
+              marker.setPosition(newPosition);
+          }
+      } else {
+     
         
-        if (!isNaN(vehicleCode) && vehicleCode !== "") {
-            errorMessage.style.display = 'none';
-            code.value = '';
-        } else {
-            errorMessage.style.display = 'block';
-        }
-    });
-    
-    code.addEventListener('input', function() {
-        errorMessage.style.display = 'none';
-    });
+          // Veicolo nuovo → crea marker
+          marker = new google.maps.Marker({
+              position: newPosition,
+              map: map,
+              title: `Veicolo ${id}`,
+              icon: {
+                  url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                  scaledSize: new google.maps.Size(30, 30)
+              }
+          });
+          vehicleMarkers[id] = marker;
+      }
+  });
+
+  btn.addEventListener('click', function () {
+      const vehicleCode = code.value.trim();
+      if (!isNaN(vehicleCode) && vehicleCode !== "") {
+          errorMessage.style.display = 'none';
+          code.value = '';
+      } else {
+          errorMessage.style.display = 'block';
+      }
+  });
+
+  code.addEventListener('input', function () {
+      errorMessage.style.display = 'none';
+  });
+
+  // Salva map in una variabile accessibile al listener
+  window.setMapReference = function (m) {
+      map = m;
+  };
 });
+
 
 //------------------------------------------------------------------------------------------------------
 
@@ -44,7 +77,7 @@ function initMap() {
             lng: position.coords.longitude
           };
 
-          const map = new google.maps.Map(document.getElementById('map'), {
+          map = new google.maps.Map(document.getElementById('map'), {
             center: userLatLng,
             zoom: 18,
             mapTypeId: 'roadmap'
@@ -84,5 +117,3 @@ function initMap() {
       document.getElementById('locationLabel').innerText = "Geolocalizzazione non supportata.";
     }
   }
-
-  window.onload = initMap;
