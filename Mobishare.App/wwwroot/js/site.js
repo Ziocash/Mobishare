@@ -15,13 +15,13 @@ let parkingPolygonStrokeColor = '';
 let parkingPolygonFillColor = '';
 
 // Initialize maps when DOM is loaded
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM loaded, initializing maps");
     initMaps();
 
     // Add global listener for all modals
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('shown.bs.modal', function() {
+        modal.addEventListener('shown.bs.modal', function () {
             console.log(`Modal shown: ${this.id}`);
         });
     });
@@ -105,7 +105,7 @@ async function initMainMap(Map, DrawingManager) {
 
     displayAllPolygons("allCities", readOnlyPolygonStrokeColor, readOnlyPolygonFillColor, map);
     displayAllPolygons("allParkingSlots", editablePolygonStrokeColor, editablePolygonFillColor, map, indexZ = 2);
-    
+
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
         if (currentPolygon) currentPolygon.setMap(null);
@@ -136,17 +136,16 @@ async function initMainMap(Map, DrawingManager) {
  * @param {*} polygonFillColor - The fill color for the polygons
  * @param {*} outMap - The map to display the polygons on
  */
-function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, outMap, removePolygons = '', indexZ = 1)
-{
+function displayAllPolygons(elementId, polygonStrokeColor, polygonFillColor, outMap, removePolygons = '', indexZ = 1) {
     var inputElement = document.getElementById(elementId);
 
     if (!inputElement) return; // console.error("Element not found:", elementId);
-        
-    if(inputElement.value == null || inputElement.value == "") return; //console.log("No WKT data found for element:", elementId);
+
+    if (inputElement.value == null || inputElement.value == "") return; //console.log("No WKT data found for element:", elementId);
 
     allWkt = inputElement.value.split(';').filter(wkt => wkt.trim() !== '');
 
-    if (removePolygons) 
+    if (removePolygons)
         allWkt = allWkt.filter(wkt => wkt !== removePolygons);
 
 
@@ -192,7 +191,7 @@ function updateWktAndUI() {
         coordinates.push(`${latLng.lng()} ${latLng.lat()}`);
     });
     if (coordinates.length > 0) coordinates.push(coordinates[0]);
-    
+
     drawnPolygonWkt = `POLYGON((${coordinates.join(', ')}))`;
 
     if (wktOutputArea) wktOutputArea.value = drawnPolygonWkt;
@@ -218,7 +217,7 @@ function setupEventListeners() {
             updateWktAndUI();
 
             if (drawingManager) drawingManager.setOptions({ drawingControl: true });
-            
+
         });
     }
 
@@ -242,7 +241,7 @@ function setupEventListeners() {
 function initCityMaps() {
     // Set up listeners for modal show events
     document.querySelectorAll('.modal[data-wkt]').forEach(modal => {
-        modal.addEventListener('shown.bs.modal', function() {
+        modal.addEventListener('shown.bs.modal', function () {
             console.log("Modal shown, initializing map");
             const mapId = this.id.replace('editModal-', 'map-edit-');
             const mapContainer = this.querySelector(`#${mapId}`);
