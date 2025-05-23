@@ -66,14 +66,38 @@ namespace Mobishare.App.Pages
             TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
             return RedirectToPage();
         }
+        
+        public async Task<IActionResult> OnPostFreeVehicle(int vehicleId)
+        {
+            _logger.LogInformation("Liberazione confermata per veicolo {VehicleId}", vehicleId);
+            var vehicle = await _mediator.Send(new GetVehicleById { Id = vehicleId });
+            if (vehicle == null)
+            {
+                _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
+                return Page();
+            }
+            await _mediator.Send(new UpdateVehicle
+            {
+                Id = vehicle.Id,
+                Plate = vehicle.Plate,
+                Status = VehicleStatusType.Free.ToString(),
+                BatteryLevel = vehicle.BatteryLevel,
+                ParkingSlotId = vehicle.ParkingSlotId,
+                VehicleTypeId = vehicle.VehicleTypeId,
+                CreatedAt = vehicle.CreatedAt
+            });
+
+            TempData["SuccessMessage"] = $"Veicolo {vehicleId} liberato con successo!";
+            return RedirectToPage();
+        }
 
         public async Task<IActionResult> OnGet()
         {
-            if(User?.Identity == null || !User.Identity.IsAuthenticated)
+            if (User?.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToPage("/Index");
 
             var userId = _userManager.GetUserId(User);
-            
+
             if (userId == null)
             {
                 _logger.LogWarning("Authenticated user has null UserId.");
