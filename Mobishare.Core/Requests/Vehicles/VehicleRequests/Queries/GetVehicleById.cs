@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Mobishare.Core.Data;
 using Mobishare.Core.Models.Vehicles;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
+
 
 public class GetVehicleById : IRequest<Vehicle>
 {
@@ -36,5 +38,30 @@ public class GetVehicleByIdHandler : IRequestHandler<GetVehicleById, Vehicle>
             _logger.LogError(ex, "Error retrieving vehicle");
             return null;
         }
+    }
+}
+//-------------------------------------------------------------------------------------
+// Definition of the API controller
+[ApiController]
+[Route("api/vehicles")]
+public class VehiclesController : ControllerBase
+{
+    private readonly IMediator _mediator; // for comunication between the controller and the application layer
+
+    public VehiclesController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetVehicleById(int id)
+    {
+        var vehicle = await _mediator.Send(new GetVehicleById { Id = id }); // Send the request to the mediator
+        if (vehicle == null)
+        {
+            return NotFound();
+            
+        }
+        return Ok(vehicle);
     }
 }

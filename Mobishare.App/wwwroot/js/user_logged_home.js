@@ -18,7 +18,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const id = vehicle.vehicleId.toString();
     const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
-    
+
+    //--------------------------------------------------------------------------------------------------------
+    fetch(`/api/vehicles/${id}`)
+      .then(response => {
+        console.log()
+        if (!response.ok) {
+          console.error(`Veicolo con ID ${id} non trovato nel database.`);
+          return;
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (!data) return;
+        // Puoi gestire qui la logica se il veicolo esiste, ad esempio loggare o aggiornare UI
+        console.log(`Veicolo con ID ${id} trovato nel database.`, data);
+      })
+      .catch(error => {
+        console.error("Errore nel recupero del veicolo:", error);
+      });
+    /**
+     * Nota per chi lo vedrà:
+     * Attualmente non riesce ad eseguire la fetch su qella route, dando sempre 404.
+     * Ho provato a cambiare il controller, ma non riesco a capire il perchè.
+     * Se lo vedete e volete provare a dargli un'occhiata siete i benvenuti.
+     * (La route è stata definita nel file GetVehicleById.cs)
+     */
+    //--------------------------------------------------------------------------------------------------------
+
+
     if (vehicleMarkers[id]) {
       const marker = vehicleMarkers[id];
       const currentPos = marker.getPosition();
