@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
+using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.UiModels;
+using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.App.Pages
 {
@@ -39,15 +42,30 @@ namespace Mobishare.App.Pages
         }
 
 
-        /*public async Task<IActionResult> OnPostReserveVehicleAsync(int vehicleId)
+        public async Task<IActionResult> OnPostReserveVehicle(int vehicleId)
         {
             _logger.LogInformation("Prenotazione confermata per veicolo {VehicleId}", vehicleId);
+            var vehicle = await _mediator.Send(new GetVehicleById { Id = vehicleId });
+            if (vehicle == null)
+            {
+                _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
+                return Page();
+            }
+            await _mediator.Send(new UpdateVehicle{
+                Id = vehicle.Id,
+                Plate = vehicle.Plate,
+                Status = VehicleStatusType.Reserved.ToString(),
+                BatteryLevel = vehicle.BatteryLevel,
+                ParkingSlotId = vehicle.ParkingSlotId,
+                VehicleTypeId = vehicle.VehicleTypeId,
+                CreatedAt = vehicle.CreatedAt
+            });
 
-            await _mediator.Send(new ReserveVehicleCommand(vehicleId, User.Identity?.Name ?? "Anonimo"));
+
 
             TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
             return RedirectToPage();
-        }*/
+        }
 
         public async Task<IActionResult> OnGet()
         {
