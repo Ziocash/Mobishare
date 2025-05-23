@@ -17,7 +17,7 @@
                          Map With Current Location Here                    
                     </div> -->
                 <div id="map"></div>
-
+            <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
 
                 <!-- Current Location box-->
                 <div class="current-location" id="label">
@@ -135,6 +135,31 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
+            
+            <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
+                <input type="hidden" id="selectedVehicleId" name="vehicleId" />
+            </form>
+
+            <!-- Modale Bootstrap -->
+            <div class="modal fade" id="confirmReservationModal" tabindex="-1" aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content rounded-3 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                </div>
+                <div class="modal-body">
+                    Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-primary" id="confirmReservationBtn">Conferma</button>
+                </div>
+                </div>
+            </div>
+            </div>
+
+
         </div>
     </div>
 </div>
