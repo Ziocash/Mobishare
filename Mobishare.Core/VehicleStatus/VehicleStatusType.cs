@@ -5,5 +5,6 @@ public enum VehicleStatusType
     Free,
     Occupied,
     Unavailable,
+    Reserved,
     Suspended
 }
