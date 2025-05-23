@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
@@ -14,6 +15,8 @@ namespace Mobishare.App.Pages
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
+        private readonly UserManager<IdentityUser> _userManager;
+
         private readonly IGoogleGeocodingService _googleGeocoding;
 
         public List<RideDisplayInfo> AllRides { get; set; } = [];
@@ -23,13 +26,16 @@ namespace Mobishare.App.Pages
             IMediator mediator,
             IMapper mapper,
             IConfiguration configuration,
-            IGoogleGeocodingService googleGeocoding)
+            IGoogleGeocodingService googleGeocoding,
+            UserManager<IdentityUser> userManager
+            )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
 
@@ -48,8 +54,15 @@ namespace Mobishare.App.Pages
             if(User?.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToPage("/Index");
 
+            var userId = _userManager.GetUserId(User);
+            
+            if (userId == null)
+            {
+                _logger.LogWarning("Authenticated user has null UserId.");
+                return RedirectToPage("/Index");
+            }
 
-            var rides = await _mediator.Send(new GetAllRides());
+            var rides = await _mediator.Send(new GetAllUserRides(userId));
 
             foreach (var ride in rides)
             {
