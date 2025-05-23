@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const id = vehicle.vehicleId.toString();
     const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
-
+    
     if (vehicleMarkers[id]) {
       const marker = vehicleMarkers[id];
       const currentPos = marker.getPosition();
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
         marker.setPosition(newPosition);
       }
     } else {
-      // 🎯 Crea marker separato per ogni veicolo
+      // Crea marker separato per ogni veicolo
       const marker = new google.maps.Marker({
         position: newPosition,
         map: map,
@@ -38,10 +38,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
-      // 🔒 Salva il marker in una mappa con la chiave ID
+      // Salva il marker in una mappa con la chiave ID
       vehicleMarkers[id] = marker;
 
-      // 🎯 Listener separato per ogni marker
+      // Listener separato per ogni marker
       marker.addListener('click', () => {
         document.getElementById('selectedVehicleId').value = id;
         document.getElementById('vehicleIdDisplay').innerText = id;
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // ✅ Listener al bottone conferma (solo una volta)
+  // Listener al bottone conferma (solo una volta)
   const confirmBtn = document.getElementById('confirmReservationBtn');
   if (!confirmBtn.dataset.listenerAttached) {
     confirmBtn.addEventListener('click', () => {
