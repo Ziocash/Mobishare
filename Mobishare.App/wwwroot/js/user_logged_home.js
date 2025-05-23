@@ -16,26 +16,21 @@ document.addEventListener('DOMContentLoaded', function () {
   hub.on("ReceiveVehiclePositionUpdate", (vehicle) => {
     console.log("Messaggio ricevuto:", vehicle);
 
-    let id = vehicle.vehicleId.toString();
-    let newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
+    const id = vehicle.vehicleId.toString();
+    const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
 
     if (vehicleMarkers[id]) {
-
       const marker = vehicleMarkers[id];
       const currentPos = marker.getPosition();
 
-      // Se la posizione è diversa, aggiorna
       if (currentPos.lat() !== newPosition.lat || currentPos.lng() !== newPosition.lng) {
         marker.setPosition(newPosition);
       }
     } else {
-
-
-      // Veicolo nuovo → crea marker
-      marker = new google.maps.Marker({
+      // 🎯 Crea marker separato per ogni veicolo
+      const marker = new google.maps.Marker({
         position: newPosition,
         map: map,
-        id: id,
         title: `Veicolo ${id}`,
         icon: {
           url: "/img/vehicle/icon/bicycle.png",
@@ -43,26 +38,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
 
+      // 🔒 Salva il marker in una mappa con la chiave ID
+      vehicleMarkers[id] = marker;
 
+      // 🎯 Listener separato per ogni marker
       marker.addListener('click', () => {
-        // Imposta l’id del veicolo nel form e nella modale
-        document.getElementById('selectedVehicleId').value = marker.id;
-        document.getElementById('vehicleIdDisplay').innerText = marker.id;
+        document.getElementById('selectedVehicleId').value = id;
+        document.getElementById('vehicleIdDisplay').innerText = id;
 
-        // Mostra la modale
         const myModal = new bootstrap.Modal(document.getElementById('confirmReservationModal'));
         myModal.show();
       });
-
-      // Quando clicchi su "Conferma", invia il form
-      document.getElementById('confirmReservationBtn').addEventListener('click', () => {
-        document.getElementById('vehicleReservationForm').submit();
-      });
-
-
-      vehicleMarkers[id] = marker;
     }
   });
+
+  // ✅ Listener al bottone conferma (solo una volta)
+  const confirmBtn = document.getElementById('confirmReservationBtn');
+  if (!confirmBtn.dataset.listenerAttached) {
+    confirmBtn.addEventListener('click', () => {
+      document.getElementById('vehicleReservationForm').submit();
+    });
+    confirmBtn.dataset.listenerAttached = "true";
+  }
+
 
   btn.addEventListener('click', function () {
     const vehicleCode = code.value.trim();
