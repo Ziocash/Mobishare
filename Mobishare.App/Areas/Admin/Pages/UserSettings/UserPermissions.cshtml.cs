@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,7 +8,7 @@ using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Admin.Pages.UserSettings
 {
-    // [Authorize(Policy = PolicyNames.IsStaff)]
+    [Authorize(Policy = PolicyNames.IsAdmin)]
     public class UserPermissionsModel : PageModel
     {
         private readonly ILogger<UserPermissionsModel> _logger;

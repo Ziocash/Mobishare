@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,12 +10,14 @@ using Mobishare.Core.ParkingSlotClassification;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Queries;
+using Mobishare.Core.Security;
 using Mobishare.Core.ValidationAttributes;
 using NetTopologySuite.IO;
 
 
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
+    [Authorize(Policy = PolicyNames.IsStaff)]
     public class ManageParkingSlotModel : PageModel
     {
         private readonly ILogger<ManageParkingSlotModel> _logger;
