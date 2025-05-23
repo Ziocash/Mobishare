@@ -68,9 +68,13 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 
 #region Authorization policies
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
+    .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()))
+    .AddPolicy(PolicyNames.IsStaff, p => p.AddRequirements(new IsStaff()))
+    .AddPolicy(PolicyNames.IsTechnician, p=> p.AddRequirements(new IsTechnician()));
 
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
 var app = builder.Build();
