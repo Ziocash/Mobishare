@@ -7,6 +7,8 @@ using Mobishare.Core.Models.Vehicles;
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Mobishare.Infrastructure.Services.SignalR;
+using System.Numerics;
+using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.Infrastructure.Services.MQTT;
 
@@ -65,8 +67,9 @@ public class MqttMessageHandler : IDisposable
             await _mediator.Send(
                 _mapper.Map<CreatePosition>(vehiclePosition)
             );
-
-            await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehiclePosition);
+            
+            if(vehiclePosition.Vehicle.Status == VehicleStatusType.Free.ToString())
+                await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehiclePosition);
         }
         catch (Exception ex)
         {
