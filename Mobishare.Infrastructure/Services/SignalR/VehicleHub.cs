@@ -9,5 +9,4 @@ public class VehicleHub : Hub
     {
         await Clients.All.SendAsync("ReceivesVehicles", vehicles);    
     }
-    
 }
