@@ -12,12 +12,16 @@ using Mobishare.Infrastructure.Services.MQTT;
 using Mobishare.App.Services;
 using Mobishare.Core.Services.GoogleGeocoding;
 using Mobishare.Infrastructure.Services.SignalR;
+using PayPal.REST.Client;
+using PayPal.REST.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddControllers();
 
 #region SignalR configuration
 builder.Services.AddSignalR();
@@ -77,6 +81,17 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+
+#region PayPal configuration
+builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
+builder.Services.Configure<PayPalClientOptions>(options => 
+{ 
+    options.ClientId = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientId"]!;
+    options.ClientSecret = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientSecret"]!;
+    options.PayPalUrl = builder.Configuration.GetRequiredSection("Payments:PayPal")["PayPalUrl"]!;
+});
+#endregion
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -95,6 +110,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapControllers();
 
 app.MapHub<VehicleHub>("/vehicleHub");
 
