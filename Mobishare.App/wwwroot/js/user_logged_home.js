@@ -20,23 +20,31 @@ document.addEventListener('DOMContentLoaded', function () {
     const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
 
     //--------------------------------------------------------------------------------------------------------
-    fetch(`/api/vehicles/${id}`)
+    /*fetch(`/api/vehicles/${id}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
       .then(response => {
-        console.log()
         if (!response.ok) {
-          console.error(`Veicolo con ID ${id} non trovato nel database.`);
-          return;
+          if (response.status === 404) {
+            console.log("Veicolo non trovato.");
+          } else {
+            console.error(`Errore: ${response.status}`);
+          }
+          return null;
         }
         return response.json();
       })
-      .then(data => {
-        if (!data) return;
-        // Puoi gestire qui la logica se il veicolo esiste, ad esempio loggare o aggiornare UI
-        console.log(`Veicolo con ID ${id} trovato nel database.`, data);
+      .then(vehicle => {
+        if (vehicle) {
+          console.log("Dati del veicolo:", vehicle);
+        }
       })
       .catch(error => {
-        console.error("Errore nel recupero del veicolo:", error);
-      });
+        console.error("Errore durante la fetch:", error);
+      });*/
     /**
      * Nota per chi lo vedrà:
      * Attualmente non riesce ad eseguire la fetch su qella route, dando sempre 404.
