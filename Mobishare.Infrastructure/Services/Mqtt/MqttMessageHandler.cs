@@ -7,6 +7,7 @@ using Mobishare.Core.Models.Vehicles;
 using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Mobishare.Infrastructure.Services.SignalR;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 
 namespace Mobishare.Infrastructure.Services.MQTT;
 
@@ -61,11 +62,20 @@ public class MqttMessageHandler : IDisposable
                 _logger.LogWarning("Failed to retrieve position: lat: {Latitude}, lon {Longitude}", vehiclePosition.Latitude, vehiclePosition.Longitude);
                 return;
             }
+            
+            var vehicle = await _mediator.Send(new GetVehicleById(vehiclePosition.VehicleId));
+
+            if(vehicle == null)
+            {
+                _logger.LogWarning("Vehicle {VehicleId} does not exist.", vehiclePosition.VehicleId);
+                return;
+            }
 
             await _mediator.Send(
                 _mapper.Map<CreatePosition>(vehiclePosition)
             );
-
+            
+            
             await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehiclePosition);
         }
         catch (Exception ex)

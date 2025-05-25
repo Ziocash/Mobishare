@@ -45,7 +45,7 @@ namespace Mobishare.App.Pages
         public async Task<IActionResult> OnPostReserveVehicle(int vehicleId)
         {
             _logger.LogInformation("Prenotazione confermata per veicolo {VehicleId}", vehicleId);
-            var vehicle = await _mediator.Send(new GetVehicleById { Id = vehicleId });
+            var vehicle = await _mediator.Send(new GetVehicleById(vehicleId));
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
@@ -70,7 +70,7 @@ namespace Mobishare.App.Pages
         public async Task<IActionResult> OnPostFreeVehicle(int vehicleId)
         {
             _logger.LogInformation("Liberazione confermata per veicolo {VehicleId}", vehicleId);
-            var vehicle = await _mediator.Send(new GetVehicleById { Id = vehicleId });
+            var vehicle = await _mediator.Send(new GetVehicleById(vehicleId));
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);

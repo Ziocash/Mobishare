@@ -5,63 +5,68 @@ using Microsoft.Extensions.Logging;
 using Mobishare.Core.Data;
 using Mobishare.Core.Models.Vehicles;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 
 
 public class GetVehicleById : IRequest<Vehicle>
 {
-    public int Id { get; set; }
+    public int VehicleId { get; set; }
+
+    public GetVehicleById(int vehicleId)
+    {
+        if (vehicleId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(vehicleId));
+        VehicleId = vehicleId;
+    }
 }
 
 public class GetVehicleByIdHandler : IRequestHandler<GetVehicleById, Vehicle>
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<GetAllVehiclesHandler> _logger;
 
-    public GetVehicleByIdHandler(ApplicationDbContext dbContext, ILogger<GetAllVehiclesHandler> logger)
+    public GetVehicleByIdHandler(IServiceScopeFactory serviceScopeFactory, ILogger<GetAllVehiclesHandler> logger)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<Vehicle?> Handle(GetVehicleById request, CancellationToken cancellationToken)
+     public async Task<Vehicle?> Handle(GetVehicleById request, CancellationToken cancellationToken)
     {
-        try
-        {
-            _logger.LogDebug("Executing {method}", nameof(GetAllVehicles));
-            var vehicle = await _dbContext.Vehicles.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-            return vehicle;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving vehicle");
-            return null;
-        }
+        _logger.LogDebug("Looking for vehicle ID {id}", request.VehicleId);
+       
+        using var scope = _serviceScopeFactory.CreateScope();
+        var _dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var vehicle = await _dbContext.Vehicles
+            .FirstOrDefaultAsync(v => v.Id == request.VehicleId, cancellationToken);
+        return vehicle;
     }
 }
 //-------------------------------------------------------------------------------------
 // Definition of the API controller
-[ApiController]
-[Route("api/vehicles")]
-public class VehiclesController : ControllerBase
-{
-    private readonly IMediator _mediator; // for comunication between the controller and the application layer
+// [ApiController]
+// [Route("api/vehicles")]
+// public class VehiclesController : ControllerBase
+// {
+//     private readonly IMediator _mediator; // for comunication between the controller and the application layer
 
-    public VehiclesController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
+//     public VehiclesController(IMediator mediator)
+//     {
+//         _mediator = mediator;
+//     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetVehicleById(int id)
-    {
-        var vehicle = await _mediator.Send(new GetVehicleById { Id = id }); // Send the request to the mediator
-        if (vehicle == null)
-        {
-            return NotFound();
+//     [HttpGet("{id}")]
+//     public async Task<IActionResult> GetVehicleById(int id)
+//     {
+//         var vehicle = await _mediator.Send(new GetVehicleById(id)); // Send the request to the mediator
+//         if (vehicle == null)
+//         {
+//             return NotFound();
             
-        }
-        return Ok(vehicle);
-    }
-}
+//         }
+//         return Ok(vehicle);
+//     }
+// }
