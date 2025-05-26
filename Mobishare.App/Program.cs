@@ -92,6 +92,8 @@ builder.Services.Configure<PayPalClientOptions>(options =>
 });
 #endregion
 
+builder.Services.AddSingleton<TimerService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -101,6 +103,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -114,5 +118,7 @@ app.MapRazorPages();
 app.MapControllers();
 
 app.MapHub<VehicleHub>("/vehicleHub");
+
+app.MapHub<TimerHub>("/timerHub");
 
 app.Run();
