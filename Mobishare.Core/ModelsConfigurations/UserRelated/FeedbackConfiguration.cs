@@ -1,9 +1,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Mobishare.Core.Models.Users;
+using Mobishare.Core.Models.UserRelated;
 
-namespace Mobishare.Core.ModelsConfigurations.Users;
+namespace Mobishare.Core.ModelsConfigurations.UserRelated;
 
 //<summary>
 // This class is used to configure the Feedback table in the database.
@@ -12,7 +12,7 @@ public class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
 {
     public void Configure(EntityTypeBuilder<Feedback> builder)
     {
-        builder.ToTable("Feedback");
+        builder.ToTable("Feedbacks");
 
         builder.HasKey(x => x.Id);
 
