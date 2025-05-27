@@ -1,11 +1,11 @@
 using System;
 using Microsoft.AspNetCore.Identity;
 
-namespace Mobishare.Core.Models.Users;
+namespace Mobishare.Core.Models.UserRelated;
 
-//<summary>
-// This class is used to store the user's feedback about this website services.
-//</summary>
+///<summary>
+/// This class is used to store the user's feedback about this website services.
+///</summary>
 public class Feedback
 {
     public int Id {get; set;}
