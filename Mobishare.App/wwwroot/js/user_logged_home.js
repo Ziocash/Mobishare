@@ -1,3 +1,37 @@
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('vehicleReservationForm');
+  form.addEventListener('submit', function(event) {
+    event.preventDefault(); // Evita il reload della pagina
+
+    const vehicleId = document.getElementById('selectedVehicleId').value;
+
+    fetch('?handler=ReserveVehicle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value // se usi antiforgery
+      },
+      body: `vehicleId=${encodeURIComponent(vehicleId)}`
+    })
+    .then(response => response.ok ? response.text() : Promise.reject('Errore nella prenotazione'))
+    .then(data => {
+      const myModal = bootstrap.Modal.getInstance(document.getElementById('confirmReservationModal'));
+      if (myModal) {
+        myModal.hide();
+      }
+
+      const selectedId = document.getElementById('selectedVehicleId').value;
+      if (vehicleMarkers[selectedId]) {
+        vehicleMarkers[selectedId].setMap(null);
+        delete vehicleMarkers[selectedId];
+      }
+    })
+    .catch(error => {
+      alert(error);
+    });
+  });
+});
+
 let map; // Mappa globale
 let vehicleMarkers = {};
 let marker;
@@ -88,14 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Listener al bottone conferma (solo una volta)
-  const confirmBtn = document.getElementById('confirmReservationBtn');
-  if (!confirmBtn.dataset.listenerAttached) {
-    confirmBtn.addEventListener('click', () => {
-      document.getElementById('vehicleReservationForm').submit();
-    });
-    confirmBtn.dataset.listenerAttached = "true";
-  }
+
 
 
   btn.addEventListener('click', function () {
@@ -185,5 +212,42 @@ function initMap() {
   } else {
     document.getElementById('locationLabel').innerText = "Geolocalizzazione non supportata.";
   }
+}
+
+//------------------------------------------------------------------------------------------------------
+function hidePopup() {
+  const popup = document.getElementById('mapPopup');
+  const showBtn = document.getElementById('showPopupBtn');
+
+  popup.style.display = 'none';
+  showBtn.style.display = 'block';
+}
+
+function showPopup() {
+  const popup = document.getElementById('mapPopup');
+
+  popup.style.display = 'flex';
+
+  startTimer();
+}
+
+async function startTimer() {
+    if (typeof signalR === "undefined") {
+        alert("SignalR non è stato caricato correttamente.");
+        return;
+    }
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/timerHub")
+        .build();
+
+    connection.on("ReceiveTime", seconds => {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+        document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
+    });
+
+    connection.start()
+        .then(() => connection.invoke("StartTimer"))
+        .catch(err => console.error(err.toString()));
 }
 

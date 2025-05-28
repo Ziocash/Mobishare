@@ -11,7 +11,8 @@
 <!-- #region  Test del timer (rimuovere) -->
 <!-- Sposta lo script SignalR PRIMA di questo blocco oppure usa window.onload per garantire che sia caricato -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--
+
 
 <script>
     async function startTimer() {
@@ -37,6 +38,8 @@
 
 <button onclick="startTimer()">Avvia Timer</button>
 <div id="timerDisplay">--:--</div>
+
+-->
 <!-- ------------------------------------------------------------------------------ -->
 
 <div class="container-fluid p-0 app-container">
@@ -49,7 +52,19 @@
                          Map With Current Location Here                    
                     </div> -->
                 <div id="map"></div>
-            <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
+                <!-- Map Popup with Red and Green Buttons -->
+                <div class="map-popup" id="mapPopup" style="">
+                    <div class="popup-header">
+                        <!--<button class="btn-close-popup" onclick="hidePopup()" title="Chiudi popup">×</button>-->
+                        Il Mezzo rimarrà prenotato ancora per&nbsp;<span id="timerDisplay">--:--</span>
+                    </div>
+                    <div class="popup-buttons">
+                        <button class="btn btn-danger btn-red" onclick="deleteReservation()">Annulla Prenotazione</button>
+                        <button class="btn btn-success">Avvia Viaggio</button>
+                    </div>
+                </div>
+                
+                <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
 
                 <!-- Current Location box-->
                 <div class="current-location" id="label">
@@ -170,33 +185,34 @@
             
             <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
                 <input type="hidden" id="selectedVehicleId" name="vehicleId" />
-            </form>
+            
 
-            <!-- Modale Bootstrap -->
-            <div class="modal fade" id="confirmReservationModal" tabindex="-1" aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content rounded-3 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                <!-- Modale Bootstrap -->
+                <div class="modal fade" id="confirmReservationModal" tabindex="-1" aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content rounded-3 shadow">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                        </div>
+                        <div class="modal-body">
+                            Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                            <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma" onclick="showPopup()">
+                        </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="btn btn-primary" id="confirmReservationBtn">Conferma</button>
-                </div>
-                </div>
-            </div>
-            </div>
+            </form>
 
 
         </div>
     </div>
 </div>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="~/js/user_logged_home.js" type="text/javascript"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&callback=initMap" async
