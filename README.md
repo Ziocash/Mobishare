@@ -1,7 +1,5 @@
 # 🚲 Mobishare
 **A smart and green solution to move around the city.**
-# 🚲 Mobishare
-**A smart and green solution to move around the city.**
 
 ![.NET Core](https://img.shields.io/badge/.NET%20Core-8.0-blue) ![Platform](https://img.shields.io/badge/platform-Web%20App-lightgrey) ![License](https://img.shields.io/badge/License-Apache%202.0-green) ![Status](https://img.shields.io/badge/status-In%20Development-orange) ![Made with ❤️](https://img.shields.io/badge/made%20with-%E2%9D%A4-red)
 
