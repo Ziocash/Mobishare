@@ -44,7 +44,7 @@ namespace Mobishare.App.Pages
                         [
                             new()
                             {
-                               Name = "Balance payment",
+                                Name = "Balance payment",
                                 Description = $"Payment for balance",
                                 Quantity = "1",
                                 UnitAmount = new()
@@ -121,6 +121,8 @@ namespace Mobishare.App.Pages
                     _logger.LogWarning("No balance record found for user {UserId}", userId);
                     return RedirectToPage("Wallet");
                 }
+
+                // TODO: add payment history
 
                 await _mediator.Send(new UpdateBalance
                 {
