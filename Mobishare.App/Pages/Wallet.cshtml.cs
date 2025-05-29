@@ -1,11 +1,18 @@
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Mobishare.Core.Enums.Balance;
+using Mobishare.Core.Enums.Balance;
+using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
 using Mobishare.Core.Requests.Users.BalanceRequest.Queries;
+using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
+using Mobishare.Core.Requests.Users.HistoryCreditRequest.Queries;
 using PayPal.REST.Client;
 using PayPal.REST.Models.Orders;
 using PayPal.REST.Models.PaymentSources;
@@ -19,6 +26,8 @@ namespace Mobishare.App.Pages
         private readonly IMapper _mapper;
         private readonly ILogger<WalletModel> _logger;
         private readonly UserManager<IdentityUser> _userManager;
+        public Balance UserBalance { get; set; }
+        public List<HistoryCredit> HistoryCredit { get; set; }
 
         public WalletModel(IPayPalClient payPalClient, IMediator mediator, IMapper mapper, ILogger<WalletModel> logger, UserManager<IdentityUser> userManager)
         {
@@ -29,9 +38,27 @@ namespace Mobishare.App.Pages
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public async Task<IActionResult> OnPostDeposit(float cost)
+        [BindProperty]
+        public InputWalletModel Input{ get; set; }
+        public class InputWalletModel
         {
-            cost = 20;
+            [Required(ErrorMessage = "Please enter an an amount.")]
+            [Range(5, double.MaxValue, ErrorMessage = "Please enter an amount of at least 5.")]
+            public double CreditAmount { get; set; }
+        }
+
+        public async Task<IActionResult> OnPostDeposit()
+        {
+            if(!ModelState.IsValid)
+            {
+                var userId = _userManager.GetUserId(User);
+
+                UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
+                HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
+                return Page();
+            }
+
+            double cost = Input.CreditAmount;
             var url = "https://localhost:7027/Wallet";
 
             var res = await _payPalClient.CreateOrder(new OrderRequest
@@ -122,7 +149,14 @@ namespace Mobishare.App.Pages
                     return RedirectToPage("Wallet");
                 }
 
-                // TODO: add payment history
+                await _mediator.Send(new CreateHistoryCredit
+                {
+                    UserId = userId,
+                    Credit = double.Parse(res.PurchaseUnits.First().Amount.Value, CultureInfo.InvariantCulture),
+                    TransactionType = CreditTransactionType.Deposit.ToString(),
+                    CreatedAt = DateTime.UtcNow,
+                    BalanceId = balance.Id
+                });
 
                 await _mediator.Send(new UpdateBalance
                 {
@@ -136,8 +170,12 @@ namespace Mobishare.App.Pages
             return RedirectToPage("Wallet");
         }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
+            var userId = _userManager.GetUserId(User);
+
+            UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
+            HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
         }
     }
 }
