@@ -64,7 +64,7 @@ namespace Mobishare.App.Pages
 
 
             TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
-            return RedirectToPage();
+            return Page();
         }
         
         public async Task<IActionResult> OnPostFreeVehicle(int vehicleId)
