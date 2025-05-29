@@ -5,6 +5,7 @@ using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
+using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
@@ -50,6 +51,8 @@ public class MappingProfile : Profile
         // Balance requests
         CreateMap<CreateBalance, Balance>().ReverseMap();
         CreateMap<UpdateBalance, Balance>().ReverseMap();
+
+        CreateMap<CreateHistoryCredit, HistoryCredit>().ReverseMap();
         //-------------------------------
     }
 }
