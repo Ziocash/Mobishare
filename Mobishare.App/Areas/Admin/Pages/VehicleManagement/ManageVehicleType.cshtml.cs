@@ -3,16 +3,19 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
+using Mobishare.Core.Security;
 using Mobishare.Core.ValidationAttributes;
 using Mobishare.Core.VehicleClassification;
 
 namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
 {
+    [Authorize(Policy = PolicyNames.IsStaff)]
     public class ManageVehicleTypeModel : PageModel
     {
         private readonly ILogger<ManageVehicleTypeModel> _logger;
@@ -62,7 +65,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                 return Page();
             }
 
-          
+
 
             await _mediator.Send(_mapper.Map<CreateVehicleType>(
                 new VehicleType
@@ -72,7 +75,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
                     PricePerMinute = Input.PricePerMinute ?? 0.0m,
                     CreatedAt = DateTime.UtcNow
                 }));
-            
+
             _logger.LogInformation("Vehicle Type succesfully added.");
             TempData["SuccessMessage"] = "Vehicle Type succesfully added.";
 

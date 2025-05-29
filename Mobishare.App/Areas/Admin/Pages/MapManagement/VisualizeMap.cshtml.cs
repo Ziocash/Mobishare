@@ -1,14 +1,17 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Queries;
+using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
+    [Authorize(Policy = PolicyNames.IsStaff)]
     public class VisualizeMapModel : PageModel
     {
         private readonly ILogger<VisualizeMapModel> _logger;

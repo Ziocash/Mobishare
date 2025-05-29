@@ -23,10 +23,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Mobishare.Core\Mobishare.Core.csproj" />
     <ProjectReference Include="..\Mobishare.Infrastructure\Mobishare.Infrastructure.csproj" />
+    <ProjectReference Include="..\PayPal.REST\PayPal.REST.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot/img/instruction/" />
+    <Folder Include="wwwroot\img\vehicle\icon\" />
   </ItemGroup>
 
 </Project>

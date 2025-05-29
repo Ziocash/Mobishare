@@ -274,7 +274,7 @@ namespace Mobishare.Core.Migrations
                     b.ToTable("ParkingSlots");
                 });
 
-            modelBuilder.Entity("Mobishare.Core.Models.Users.Balance", b =>
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.Balance", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -297,7 +297,7 @@ namespace Mobishare.Core.Migrations
                     b.ToTable("Balances");
                 });
 
-            modelBuilder.Entity("Mobishare.Core.Models.Users.Feedback", b =>
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.Feedback", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -321,7 +321,71 @@ namespace Mobishare.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Feedback");
+                    b.ToTable("Feedbacks");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.HistoryCredit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BalanceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Credit")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BalanceId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("HistoryCredits");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.HistoryPoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BalanceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Point")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BalanceId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("HistoryPoints");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Position", b =>
@@ -371,10 +435,8 @@ namespace Mobishare.Core.Migrations
                     b.Property<decimal>("Status")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId1")
+                    b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VehicleId")
@@ -382,7 +444,7 @@ namespace Mobishare.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.HasIndex("VehicleId");
 
@@ -428,10 +490,8 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId1")
+                    b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VehicleId")
@@ -439,7 +499,7 @@ namespace Mobishare.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.HasIndex("VehicleId");
 
@@ -455,16 +515,20 @@ namespace Mobishare.Core.Migrations
                     b.Property<DateTime>("EndDateTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PositionEndId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PositionStartId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<double>("Price")
                         .HasColumnType("REAL");
 
                     b.Property<DateTime>("StartDateTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId1")
+                    b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VehicleId")
@@ -472,7 +536,11 @@ namespace Mobishare.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("PositionEndId");
+
+                    b.HasIndex("PositionStartId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("VehicleId");
 
@@ -620,7 +688,7 @@ namespace Mobishare.Core.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Mobishare.Core.Models.Users.Balance", b =>
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.Balance", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
@@ -631,13 +699,51 @@ namespace Mobishare.Core.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Mobishare.Core.Models.Users.Feedback", b =>
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.Feedback", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.HistoryCredit", b =>
+                {
+                    b.HasOne("Mobishare.Core.Models.UserRelated.Balance", "Balance")
+                        .WithMany()
+                        .HasForeignKey("BalanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Balance");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.UserRelated.HistoryPoint", b =>
+                {
+                    b.HasOne("Mobishare.Core.Models.UserRelated.Balance", "Balance")
+                        .WithMany()
+                        .HasForeignKey("BalanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Balance");
 
                     b.Navigation("User");
                 });
@@ -657,7 +763,9 @@ namespace Mobishare.Core.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
                         .WithMany()
@@ -693,7 +801,9 @@ namespace Mobishare.Core.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
                         .WithMany()
@@ -708,15 +818,29 @@ namespace Mobishare.Core.Migrations
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Ride", b =>
                 {
+                    b.HasOne("Mobishare.Core.Models.Vehicles.Position", "PositionEnd")
+                        .WithMany()
+                        .HasForeignKey("PositionEndId");
+
+                    b.HasOne("Mobishare.Core.Models.Vehicles.Position", "PositionStart")
+                        .WithMany()
+                        .HasForeignKey("PositionStartId");
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
                         .WithMany()
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("PositionEnd");
+
+                    b.Navigation("PositionStart");
 
                     b.Navigation("User");
 

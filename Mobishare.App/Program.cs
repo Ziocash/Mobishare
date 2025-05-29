@@ -9,14 +9,30 @@ using Mobishare.Core.Requests;
 using Mobishare.Infrastructure.Services.HostedServices;
 using System.Reflection;
 using Mobishare.Infrastructure.Services.MQTT;
+using Mobishare.App.Services;
+using Mobishare.Core.Services.GoogleGeocoding;
+using Mobishare.Infrastructure.Services.SignalR;
+using PayPal.REST.Client;
+using PayPal.REST.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+builder.Services.AddControllers();
+
+#region SignalR configuration
+builder.Services.AddSignalR();
+#endregion
+
+#region Google geocoding service configuration
+builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
+#endregion
+
 #region Connection to the database
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -56,10 +72,27 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 
 #region Authorization policies
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()));
+    .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()))
+    .AddPolicy(PolicyNames.IsStaff, p => p.AddRequirements(new IsStaff()))
+    .AddPolicy(PolicyNames.IsTechnician, p=> p.AddRequirements(new IsTechnician()));
 
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
+
+
+#region PayPal configuration
+builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
+builder.Services.Configure<PayPalClientOptions>(options => 
+{ 
+    options.ClientId = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientId"]!;
+    options.ClientSecret = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientSecret"]!;
+    options.PayPalUrl = builder.Configuration.GetRequiredSection("Payments:PayPal")["PayPalUrl"]!;
+});
+#endregion
+
+builder.Services.AddSingleton<TimerService>();
 
 var app = builder.Build();
 
@@ -71,6 +104,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -79,5 +114,11 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapControllers();
+
+app.MapHub<VehicleHub>("/vehicleHub");
+
+app.MapHub<TimerHub>("/timerHub");
 
 app.Run();

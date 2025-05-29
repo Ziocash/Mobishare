@@ -25,6 +25,14 @@ public class RideConfiguration : IEntityTypeConfiguration<Ride>
         builder.Property(x => x.Price)
                 .IsRequired();
 
+        builder.HasOne(r => r.PositionStart)
+                .WithMany()
+                .HasForeignKey(r => r.PositionStartId);
+
+        builder.HasOne(r => r.PositionEnd)
+                .WithMany()
+                .HasForeignKey(r => r.PositionEndId);
+
         builder.HasOne(x => x.User)
                .WithMany()
                .HasForeignKey(x => x.UserId)

@@ -2,16 +2,19 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Maps.CityRequests.Queries;
+using Mobishare.Core.Security;
 using Mobishare.Core.ValidationAttributes;
 
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
+    [Authorize(Policy = PolicyNames.IsStaff)]
     public class ManageCityModel : PageModel
     {
         private readonly ILogger<ManageCityModel> _logger;

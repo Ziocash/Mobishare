@@ -5,7 +5,7 @@ using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Admin.Pages.UserSettings
 {
-    // [Authorize(Policy = PolicyNames.IsStaff)]
+    [Authorize(Policy = PolicyNames.IsAdmin)]
     public class UserActivityModel : PageModel
     {
         public void OnGet()

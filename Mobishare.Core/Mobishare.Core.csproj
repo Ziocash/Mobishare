@@ -4,7 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>f2a62686-e01b-495a-a988-3ed627642846</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Enums\Balance\PointTransactionType.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
@@ -22,8 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Requests/Users/" />
+    <Folder Include="Migrations\" />
     <Folder Include="Requests/Vehicles/PositionRequests/Queries/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Enums\Balance\PointTransactionType.cs" />
   </ItemGroup>
 
 </Project>

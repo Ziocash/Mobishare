@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Maps;
@@ -10,10 +11,12 @@ using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
+using Mobishare.Core.Security;
 using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
 {
+    [Authorize(Policy = PolicyNames.IsStaff)]
     public class ManageVehicleModel : PageModel
     {
         private readonly ILogger<ManageVehicleModel> _logger;
@@ -22,7 +25,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
         public IEnumerable<VehicleType> AllVehicleTypes { get; set; }
         public IEnumerable<ParkingSlot> AllParkingSlot { get; set; }
         public IEnumerable<Vehicle> AllVehicles { get; set; }
-        
+
         public ManageVehicleModel(ILogger<ManageVehicleModel> logger, IMediator mediator, IMapper mapper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -47,7 +50,7 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
             [Required(ErrorMessage = "Select a valid city.")]
             public int ParkingSlotId { get; set; }
         }
-        
+
         public async Task<IActionResult> OnPostAddVehicle()
         {
             if (!ModelState.IsValid)

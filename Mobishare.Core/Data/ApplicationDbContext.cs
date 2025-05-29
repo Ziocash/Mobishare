@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Mobishare.Core.Models.Maps;
-using Mobishare.Core.Models.Users;
+using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Models.Vehicles;
 
 namespace Mobishare.Core.Data
@@ -10,7 +10,7 @@ namespace Mobishare.Core.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         public DbSet<Balance> Balances { get; set; }
-        public DbSet<Feedback> Feedback { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<ParkingSlot> ParkingSlots { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
@@ -20,5 +20,7 @@ namespace Mobishare.Core.Data
         public DbSet<RepairAssignment> RepairAssignments { get; set; }
         public DbSet<VehicleType> VehicleTypes { get; set; }
         public DbSet<Position> Positions { get; set; }
+        public DbSet<HistoryCredit> HistoryCredits { get; set; }
+        public DbSet<HistoryPoint> HistoryPoints { get; set; }
     }
 }

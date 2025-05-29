@@ -1,0 +1,84 @@
+﻿@page
+@model Mobishare.App.Pages.WalletModel
+@{
+    ViewData["Title"] = "Wallet";
+}
+
+<div class="container mt-4">
+    <h3 class="mb-4">Your Wallet</h3>
+
+    <div class="row mb-3">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card shadow-sm">
+                <div class="card-body pb-2">
+                    <h5 class="card-title">Current Balance</h5>
+                    <p class="card-text display-6">€ @Model.UserBalance.Credit</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body mb-2">
+                    <h5 class="card-title">Points</h5>
+                    <p class="card-text display-6">@Model.UserBalance.Points</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-3">
+        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addFunds">
+            Add Funds
+        </button>
+        <button type="button" class="btn btn-warning">
+            Use points
+        </button>
+    </div>
+    <span asp-validation-for="Input.CreditAmount" class="text-danger"></span>
+
+    <!-- Modale per ricaricare -->
+    <div class="modal fade" id="addFunds" tabindex="-1" aria-labelledby="addFundsLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Deposit">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addFundsLabel">Add Funds</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label asp-for="Input.CreditAmount" class="form-label"></label>
+                            <input asp-for="Input.CreditAmount" type="number" value="0" step="0.01" min="5" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Recent Transactions</h5>
+        <ul class="list-group">
+            @foreach (var transaction in Model.HistoryCredit)
+            {
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>@transaction.TransactionType</strong><br />
+                            <small class="text-muted">@transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <span class="fw-bold @(
+                            transaction.TransactionType == "RidePayment" ? "text-danger" :
+                            transaction.TransactionType == "Deposit" ? "text-success" : ""
+                        )">
+                            @(transaction.TransactionType == "RidePayment" ? "-" : "")@transaction.Credit.ToString("C")
+                        </span>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

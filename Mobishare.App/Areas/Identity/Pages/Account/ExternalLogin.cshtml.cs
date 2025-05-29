@@ -18,6 +18,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Mobishare.Core.Security;
+using MediatR;
+using AutoMapper;
+using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
+using Mobishare.Core.Models.UserRelated;
 
 namespace Mobishare.App.Areas.Identity.Pages.Account
 {
@@ -30,12 +34,16 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
+        private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             ILogger<ExternalLoginModel> logger,
+            IMediator mediator,
+            IMapper mapper,
             IEmailSender emailSender)
         {
             _signInManager = signInManager;
@@ -44,6 +52,8 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
             _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -169,11 +179,21 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
                             // new Claim(ClaimNames.FirstName, Input.FirstName),
                             // new Claim(ClaimNames.LastName, Input.LastName)
                         ]);
-
+                        
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        _logger.LogInformation("User id {userId}: ", userId);
+                        
+                        await _mediator.Send(_mapper.Map<CreateBalance>(
+                            new Balance
+                            {
+                                UserId = userId,
+                                Credit = 0.0,
+                                Points = 0
+                            }));
+
                         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                         var callbackUrl = Url.Page(
                             "/Account/ConfirmEmail",

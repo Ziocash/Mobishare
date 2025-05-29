@@ -11,6 +11,8 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +21,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Mobishare.Core.Models.UserRelated;
+using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
 using Mobishare.Core.Security;
 
 namespace Mobishare.App.Areas.Identity.Pages.Account
@@ -31,12 +35,16 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
+            IMediator mediator,
+            IMapper mapper,
             IEmailSender emailSender)
         {
             _userManager = userManager;
@@ -45,6 +53,8 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -139,6 +149,15 @@ namespace Mobishare.App.Areas.Identity.Pages.Account
                             // new Claim(ClaimNames.FirstName, Input.FirstName),
                             // new Claim(ClaimNames.LastName, Input.LastName)
                         ]);
+
+                    //TODO: create wallet
+                    await _mediator.Send(_mapper.Map<CreateBalance>(
+                        new Balance
+                        {
+                            UserId = userId,
+                            Credit = 0.0,
+                            Points = 0
+                        }));
 
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");

@@ -52,59 +52,58 @@
                     <tr>
                         <td>@user.User.Email</td>
                         <td>@user.Claim.Value</td>
-                        <td>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
-                                        data-bs-target="#editRoleModal-@user.User.Id" data-user-id="@user.User.Id"
-                                        data-current-role="@user.Claim?.Value ?? " No Role"">
-                                        Edit Role
-                                    </button>
+                        <td> 
+                            @if(!user.Claim.Value.Equals(UserRole.Admin.ToString()))
+                            {
+                                <div class="row">
+                                    <div class="col-6">
+                                        <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                                            data-bs-target="#editRoleModal-@user.User.Id" data-user-id="@user.User.Id"
+                                            data-current-role="@user.Claim?.Value ?? " No Role"">
+                                            Edit Role
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button
+                                            class="btn btn-sm btn-outline-danger w-100 @(user.User.LockoutEnd.HasValue ? "disabled" : "")"
+                                            @(user.User.LockoutEnd.HasValue ? "disabled" : "") data-bs-toggle="modal"
+                                            data-bs-target="#suspendModal-@user.User.Id" data-user-id="@user.User.Id"
+                                            data-current-role="@user.Claim?.Value ?? " No Role"">
+                                            Suspend
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <button
-                                        class="btn btn-sm btn-outline-danger w-100 @(user.User.LockoutEnd.HasValue ? "disabled" : "")"
-                                        @(user.User.LockoutEnd.HasValue ? "disabled" : "") data-bs-toggle="modal"
-                                        data-bs-target="#suspendModal-@user.User.Id" data-user-id="@user.User.Id"
-                                        data-current-role="@user.Claim?.Value ?? " No Role"">
-                                        Suspend
-                                    </button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
 
-                    <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <form method="post" asp-page-handler="Suspend">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="editRoleModalLabel">Suspend User</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
-                                        <div class="mb-3">
-                                            <label for="currentRoleInput" class="form-label">Current User</label>
-                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email"
-                                                readonly />
+                                <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
+                            aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <form method="post" asp-page-handler="Suspend">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="editRoleModalLabel">Suspend User</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" id="userIdInput" name="id" value="@user.User.Id" />
+                                                    <div class="mb-3">
+                                                        <label for="currentRoleInput" class="form-label">Current User</label>
+                                                        <input type="text" id="currentRoleInput" class="form-control" value="@user.User.Email" readonly />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="currentRoleInput" class="form-label">Current Role</label>
+                                                <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
+                                                    readonly />
+                                                </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-outline-secondary"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-outline-danger">Suspend</button>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="currentRoleInput" class="form-label">Current Role</label>
-                                            <input type="text" id="currentRoleInput" class="form-control" value="@user.Claim.Value"
-                                                readonly />
-                                        </div>
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-outline-danger">Suspend</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                                </div>
 
                     <div class="modal fade" id="editRoleModal-@user.User.Id" tabindex="-1" aria-labelledby="editRoleModalLabel"
                         aria-hidden="true">
@@ -144,8 +143,13 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                    </div>
+                            </div>
+                            </div>
+                            } else {
+                                <p class="mb-0">No possible actions.</p>
+                            }
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
@@ -183,6 +187,8 @@ else
                     <td>@user.User.Email</td>
                     <td>@user.Claim.Value</td>
                     <td>
+                    @if(!user.Claim.Value.Equals(UserRole.Admin.ToString()))
+                    {
                         <div class="row">
                             <div class="col-6">
                                 <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
@@ -201,11 +207,8 @@ else
                                 </button>
                             </div>
                         </div>
-                    </td>
-                </tr>
 
-                <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="suspendModalLabel"
-                    aria-hidden="true">
+                        <div class="modal fade" id="suspendModal-@user.User.Id" tabindex="-1" aria-labelledby="suspendModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <form method="post" asp-page-handler="Suspend">
@@ -275,7 +278,12 @@ else
                             </form>
                         </div>
                     </div>
-                </div>
+                        </div>
+                        } else {
+                            <p class="mb-0">No possible actions.</p>
+                        }
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

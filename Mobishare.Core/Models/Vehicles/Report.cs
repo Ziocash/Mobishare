@@ -15,7 +15,7 @@ public class Report
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
     public string Image {get; set;}
     public IdentityUser User {get; set;}
-    public int UserId {get; set;}
+    public string UserId {get; set;}
     public Vehicle Vehicle {get; set;}
     public int VehicleId {get; set;}
 }

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mobishare.App\Mobishare.App.csproj" />
+    <ProjectReference Include="..\Mobishare.Core\Mobishare.Core.csproj" />
+    <ProjectReference Include="..\Mobishare.Infrastructure\Mobishare.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Integration/" />
+    <Folder Include="Integration/Maps/" />
+    <Folder Include="Integration/Maps/City/" />
+    <Folder Include="Integration/Maps/City/Commands/" />
+    <Folder Include="Integration/Maps/City/Queries/" />
+    <Folder Include="Integration/Maps/ParkingSlot/" />
+    <Folder Include="Integration/Users/" />
+    <Folder Include="Integration/Vehicles/" />
+    <Folder Include="Integration/Vehicles/Position/" />
+    <Folder Include="Integration/Vehicles/Ride/" />
+    <Folder Include="Integration/Vehicles/Vehicle/" />
+    <Folder Include="Integration/Vehicles/VehicleType/" />
+    <Folder Include="Unit/" />
+    <Folder Include="Utilities/" />
+  </ItemGroup>
+
+</Project>
