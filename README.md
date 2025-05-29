@@ -164,7 +164,7 @@ By following this workflow, everyone can enjoy a smooth and smart urban mobility
 
 This project was developed by the dedicated Mobishare team:
 
-- **Me** – Full Stack Developer | [GitHub](https://github.com/BeastOfShadow) | [LinkedIn](https://www.linkedin.com/in/negro-simone-babb88238/)
+- **BeastOfShadow** – Full Stack Developer | [GitHub](https://github.com/BeastOfShadow) | [LinkedIn](https://www.linkedin.com/in/negro-simone-babb88238/)
 - **Cosimo Daniele** – Full Stack Developer | [GitHub](https://github.com/The-Forest03) | [LinkedIn](https://www.linkedin.com/in/cosimo-daniele-a24a13238/)
 - **Matteo Schintu** – UX/UI Designer | [GitHub](https://github.com/SkennyCMD) 
 
