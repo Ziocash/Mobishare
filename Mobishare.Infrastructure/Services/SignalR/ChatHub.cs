@@ -41,14 +41,15 @@ public class ChatHub : Hub
 
             await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
             var completeResponse = string.Empty;
-            
+
             await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), prompt))
             {
                 completeResponse += partialResponse;
                 await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
             }
 
-            var aiResponse = await _mediatr.Send(new CreateChatMessage {
+            var aiResponse = await _mediatr.Send(new CreateChatMessage
+            {
                 ConversationId = int.Parse(conversationId),
                 Message = completeResponse,
                 Sender = MessageSenderType.AiAgent.ToString(),
@@ -57,8 +58,14 @@ public class ChatHub : Hub
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Errore interno: {ex.Message}");
-            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "Si è verificato un errore interno.");
+            _logger.LogError($"Errore interno: {ex.Message}");
+            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An internal error has occurred.", DateTime.UtcNow.ToLocalTime().ToString("g"));
+            var aiResponse = await _mediatr.Send(new CreateChatMessage {
+                ConversationId = int.Parse(conversationId),
+                Message = "An internal error has occurred.",
+                Sender = MessageSenderType.AiAgent.ToString(),
+                CreatedAt = DateTime.UtcNow
+            });
         }
     }
 
