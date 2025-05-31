@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Mobishare.Core.Models.Chats;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Models.Vehicles;
@@ -22,5 +23,7 @@ namespace Mobishare.Core.Data
         public DbSet<Position> Positions { get; set; }
         public DbSet<HistoryCredit> HistoryCredits { get; set; }
         public DbSet<HistoryPoint> HistoryPoints { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
     }
 }
