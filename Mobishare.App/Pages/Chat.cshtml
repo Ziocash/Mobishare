@@ -40,16 +40,44 @@
         .build();
 
     let currentBotMessage = null;
-
     let currentBotTimeout = null;
     let currentBotDateTime = null;
+    let typingIndicator = null;
+
+    // Funzione per mostrare l'indicatore di typing
+    function showTypingIndicator() {
+        if (typingIndicator) return; // Se già presente, non crearne un altro
+
+        typingIndicator = document.createElement("div");
+        typingIndicator.classList.add("ai-message", "typing-indicator");
+        typingIndicator.innerHTML = `
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+        chatBox.appendChild(typingIndicator);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Funzione per nascondere l'indicatore di typing
+    function hideTypingIndicator() {
+        if (typingIndicator) {
+            typingIndicator.remove();
+            typingIndicator = null;
+        }
+    }
 
     connection.on("ReceiveMessage", (user, message, dateTime) => {
         if (user === "MobishareBot") {
             if (!currentBotMessage) {
+                // Nascondi l'indicatore di typing appena arriva il primo token
+                hideTypingIndicator();
+
                 currentBotMessage = document.createElement("div");
                 currentBotMessage.classList.add("ai-message");
-                currentBotMessage.innerHTML = ` <span class="content"></span>`;
+                currentBotMessage.innerHTML = `<span class="content"></span>`;
                 chatBox.appendChild(currentBotMessage);
                 currentBotDateTime = dateTime;
             }
@@ -65,7 +93,6 @@
                 const timeElem = document.createElement("small");
                 timeElem.innerHTML = `<br /><em>${currentBotDateTime}</em>`;
                 currentBotMessage.appendChild(timeElem);
-
                 currentBotMessage = null;
                 currentBotTimeout = null;
                 currentBotDateTime = null;
@@ -77,11 +104,13 @@
             ${message}
             <br />
             <small><em>${dateTime}</em></small>
-        `;
+            `;
             chatBox.appendChild(userMsg);
             currentBotMessage = null;
-        }
 
+            // Mostra l'indicatore di typing dopo aver mostrato il messaggio utente
+            showTypingIndicator();
+        }
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 
@@ -94,13 +123,19 @@
         }
     });
 
-
     function sendMessage() {
         const input = document.getElementById("userInput");
         const msg = input.value.trim();
         const id = document.getElementById("conversationId").value;
+
         if (!msg) return;
-        connection.invoke("SendMessage", id, msg).catch(err => console.error(err.toString()));
+
+        connection.invoke("SendMessage", id, msg).catch(err => {
+            console.error(err.toString());
+            // Nascondi l'indicatore in caso di errore
+            hideTypingIndicator();
+        });
+
         input.value = "";
         currentBotMessage = null; // resetta ogni volta che invii
     }
