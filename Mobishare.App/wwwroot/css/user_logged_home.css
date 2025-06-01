@@ -11,7 +11,7 @@ header {
     z-index: 2000;
 }
 main {
-    margin-top: 106px; /* stessa altezza della navbar */
+    margin-top: 9vh; /* stessa altezza della navbar */
 }
 
 .row{
@@ -25,6 +25,7 @@ main {
 }
 
 .app-container {
+    margin-top: 106px;
     height: calc(100vh - 106px);
     overflow: hidden;
 }
@@ -40,11 +41,11 @@ main {
     position: relative;
     z-index: 0;
     width: 100%;
-    height: 87vh;
+    height: 85vh;
 }
 
 .map-container {
-    height: 87vh;
+    height: 85vh;
     background-color: #e9ecef;
     position: relative;
     overflow: hidden;
@@ -317,4 +318,9 @@ main {
 
 .popup-body-reserved{
     margin: 15px;
+}
+
+.navbar{
+    padding-top: 0;
+    padding-bottom: 0;
 }
