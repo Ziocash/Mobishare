@@ -5,6 +5,7 @@ using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Chats.ChatMessageRequests.Commands;
 using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
+using Mobishare.Core.Requests.Chats.MessagePairRequests.Commands;
 using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
@@ -59,6 +60,9 @@ public class MappingProfile : Profile
         //-------------------------------
 
         CreateMap<CreateConversation, Conversation>().ReverseMap();
+        
         CreateMap<CreateChatMessage, ChatMessage>().ReverseMap();
+
+        CreateMap<CreateMessagePair, MessagePair>().ReverseMap();
     }
 }

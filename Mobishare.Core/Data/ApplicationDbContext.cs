@@ -25,5 +25,6 @@ namespace Mobishare.Core.Data
         public DbSet<HistoryPoint> HistoryPoints { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<MessagePair> MessagePairs { get; set; }
     }
 }

@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Requests/Chats/MessagePairRequests/Queries/" />
     <Folder Include="Requests/Vehicles/PositionRequests/Queries/" />
   </ItemGroup>
 
