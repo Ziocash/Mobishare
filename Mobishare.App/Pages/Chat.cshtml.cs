@@ -1,4 +1,5 @@
 using AutoMapper;
+using Markdig;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -42,10 +43,11 @@ namespace Mobishare.App.Pages
 
             var conversations = await _mediator.Send(new GetAllConversationsByUserId(userId));
             conversations = conversations.OrderBy(c => c.CreatedAt);
-            
-            if(conversations == null || !conversations.Any())
+
+            if (conversations == null || !conversations.Any())
             {
-                var response = await _mediator.Send(new CreateConversation{
+                var response = await _mediator.Send(new CreateConversation
+                {
                     UserId = userId,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
@@ -54,18 +56,33 @@ namespace Mobishare.App.Pages
                 {
                     CurrentConversation = response;
                     _logger.LogInformation("New conversation created with ID: {ConversationId}", response.Id);
-                } 
+                }
                 else
                 {
                     _logger.LogError("Failed to create a new conversation for user ID: {UserId}", userId);
                     return RedirectToPage("/LandingPage");
                 }
-            } else if (conversations.Count() > 0)
+            }
+            else if (conversations.Count() > 0)
             {
                 CurrentConversation = conversations.FirstOrDefault();
                 _logger.LogInformation("Existing conversation found with ID: {ConversationId}", CurrentConversation.Id);
-                Messages = await _mediator.Send(new GetMessagesByConversationId(CurrentConversation.Id));
-                Messages = Messages.OrderBy(m => m.CreatedAt);
+                var messages = await _mediator.Send(new GetMessagesByConversationId(CurrentConversation.Id));
+                messages = messages.OrderBy(m => m.CreatedAt).ToList();
+
+                var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+                Messages = messages.Select(m =>
+                {
+                    return new ChatMessage
+                    {
+                        Id = m.Id,
+                        ConversationId = m.ConversationId,
+                        CreatedAt = m.CreatedAt,
+                        Sender = m.Sender,
+                        Message = Markdig.Markdown.ToHtml(m.Message ?? string.Empty, pipeline)
+                    };
+                }).ToList();
             }
 
             return Page();

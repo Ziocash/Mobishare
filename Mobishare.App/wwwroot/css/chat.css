@@ -23,7 +23,7 @@ body {
 .user-message,
 .ai-message {
     max-width: 75%;
-    padding: 12px 16px;
+    padding: 0px 12px 16px 16px;
     border-radius: 16px;
     line-height: 1.4;
     position: relative;
@@ -50,6 +50,8 @@ body {
     font-size: 0.75rem;
     color: #555;
     margin-top: 4px;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
 }
 
 /* Stili per l'indicatore di typing */
