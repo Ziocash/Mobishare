@@ -85,6 +85,10 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+#region Ollama configuration
+builder.Services.AddScoped<IOllamaService, OllamaService>();
+# endregion
+
 
 #region PayPal configuration
 builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
