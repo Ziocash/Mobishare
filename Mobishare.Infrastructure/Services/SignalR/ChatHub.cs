@@ -1,4 +1,6 @@
 using AutoMapper;
+using Ganss.Xss;
+using Markdig;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -25,6 +27,8 @@ public class ChatHub : Hub
 
     public async Task SendMessage(string conversationId, string message)
     {
+        var sanitizer = new HtmlSanitizer();
+        message = sanitizer.Sanitize(message);
         _logger.LogInformation($"Ricevuto messaggio: {message} nella conversazione {conversationId}");
         var response = await _mediatr.Send(new CreateChatMessage {
             ConversationId = int.Parse(conversationId),
@@ -48,6 +52,8 @@ public class ChatHub : Hub
                 await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
             }
 
+            completeResponse = sanitizer.Sanitize(completeResponse);
+            
             var aiResponse = await _mediatr.Send(new CreateChatMessage
             {
                 ConversationId = int.Parse(conversationId),
@@ -71,12 +77,12 @@ public class ChatHub : Hub
 
     private string BuildPrompt(string userMessage)
     {
-        return $@"Sei un assistente virtuale per Mobishare, servizio di car sharing simile a Lime.
-                Rispondi alle domande in modo chiaro e cortese.
+        return $@"You are a virtual assistant for Mobishare, a car sharing service similar to Lime.
+                Answer questions clearly and politely.
+                If you don't know the answer to a question, don't provide inaccurate or made-up information. Instead, politely respond with: 'I can't answer that question. If you have any other questions, I'm here to help!' Only respond when you are sure and have enough information.
+                the message below will be the user's message, respond clearly and concisely, without repeating the user's message.
 
-                quello che verra scritto subito sotto sarà il messaggio dell'utente, rispondi in modo chiaro e conciso, senza ripetere il messaggio dell'utente.
-
-                messagio dell' Utente: {userMessage}
+                User's message: {userMessage}
                 ";
     }
 }
