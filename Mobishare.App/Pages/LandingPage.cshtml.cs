@@ -63,7 +63,7 @@ namespace Mobishare.App.Pages
 
 
 
-            TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
+            TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!"; 
             return Page();
         }
         

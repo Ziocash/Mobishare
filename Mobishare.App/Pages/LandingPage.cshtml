@@ -52,7 +52,7 @@
                          Map With Current Location Here                    
                     </div> -->
                 <div id="map"></div>
-                <!-- Map Popup with Red and Green Buttons -->
+                <!-- Popup for the reservation -->
                 <div class="map-popup" id="mapPopup" style="">
                     <div class="popup-header">
                         <!--<button class="btn-close-popup" onclick="hidePopup()" title="Chiudi popup">×</button>-->
@@ -62,6 +62,20 @@
                         <button class="btn btn-danger btn-red" onclick="deleteReservation()">Annulla
                             Prenotazione</button>
                         <button class="btn btn-success">Avvia Viaggio</button>
+                    </div>
+                </div>
+
+                <!-- Popup for reservation already applied -->
+                <div class="map-popup" id="alreadyReservedPopup" style="display: none;">
+                    <div class="popup-header-reserved">
+                        <span>Hai già una prenotazione attiva!</span>
+                        <button class="btn-close-popup ms-2" style="float: right;" onclick="hideAlreadyReservedPopup()" title="Chiudi popup">×</button>
+                    </div>
+                    <div class="popup-body-reserved">
+                        <p>Per prenotare un altro veicolo devi prima annullare la prenotazione attuale.</p>
+                    </div>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div id="alreadyReservedProgress" class="progress-bar" role="progressbar" style="width: 100%; transition: width 0.1s;"></div>
                     </div>
                 </div>
 

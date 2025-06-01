@@ -1,3 +1,5 @@
+let reserverd=null;
+
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('vehicleReservationForm');
   form.addEventListener('submit', function(event) {
@@ -5,11 +7,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const vehicleId = document.getElementById('selectedVehicleId').value;
 
+    if(reserverd != null){
+      showAlreadyReservedPopup();
+      const modalEl = document.getElementById('confirmReservationModal');
+      const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+      myModal.hide();
+      return;
+    }
+
+    reserverd = vehicleId;
+
     fetch('?handler=ReserveVehicle', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value // se usi antiforgery
+        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
       },
       body: `vehicleId=${encodeURIComponent(vehicleId)}`
     })
@@ -231,23 +243,92 @@ function showPopup() {
   startTimer();
 }
 
+let timer_conn = null;
+
+function deleteReservation(){
+  const popup = document.getElementById('mapPopup');
+
+  timer_conn.stop();
+
+  popup.style.display = 'none';
+
+  freeVehicle(reserverd);
+  reserverd = null;
+}
+
 async function startTimer() {
     if (typeof signalR === "undefined") {
         alert("SignalR non è stato caricato correttamente.");
         return;
     }
-    const connection = new signalR.HubConnectionBuilder()
+    timer_conn = new signalR.HubConnectionBuilder()
         .withUrl("/timerHub")
         .build();
 
-    connection.on("ReceiveTime", seconds => {
+    timer_conn.on("ReceiveTime", seconds => {
         const min = Math.floor(seconds / 60);
         const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
         document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
     });
 
-    connection.start()
-        .then(() => connection.invoke("StartTimer"))
+    timer_conn.start()
+        .then(() => timer_conn.invoke("StartTimer"))
         .catch(err => console.error(err.toString()));
 }
 
+function freeVehicle(id){
+  fetch('?handler=FreeVehicle', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+    },
+    body: `vehicleId=${encodeURIComponent(id)}`
+    })
+    .then(response => response.ok ? response.text() : Promise.reject('Errore nella liberazione'))
+    .then(data => {
+      /* Inserire messaggio per dire che la prenotazione è cancellata */
+      hidePopup();
+      if (vehicleMarkers[id]) {
+        vehicleMarkers[id].setMap(null);
+        delete vehicleMarkers[id];
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+}
+
+let alreadyReservedTimeout = null;
+let alreadyReservedInterval = null;
+
+
+function showAlreadyReservedPopup() {
+    const popup = document.getElementById('alreadyReservedPopup');
+    const progressBar = document.getElementById('alreadyReservedProgress');
+    popup.style.display = 'flex';
+    progressBar.style.width = '100%';
+
+    let duration = 10; // secondi
+    let elapsed = 0;
+
+    // Aggiorna la barra ogni 100ms
+    alreadyReservedInterval = setInterval(() => {
+        elapsed += 0.1;
+        let percent = Math.max(0, 100 - (elapsed / duration) * 100);
+        progressBar.style.width = percent + "%";
+    }, 100);
+
+    // Nascondi dopo 5 secondi
+    alreadyReservedTimeout = setTimeout(() => {
+        hideAlreadyReservedPopup();
+    }, duration * 1000);
+}
+
+function hideAlreadyReservedPopup() {
+    document.getElementById('alreadyReservedPopup').style.display = 'none';
+    // Ferma la progress bar e resetta
+    clearTimeout(alreadyReservedTimeout);
+    clearInterval(alreadyReservedInterval);
+    document.getElementById('alreadyReservedProgress').style.width = '100%';
+}

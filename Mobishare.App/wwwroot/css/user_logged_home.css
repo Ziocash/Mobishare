@@ -197,6 +197,7 @@
     gap: 10px;
     position: absolute;
     transition: opacity 0.3s ease, transform 0.3s ease;
+    width: 370px;
 }
 
 .map-popup.hidden {
@@ -266,4 +267,26 @@
 .btn-red:hover {
     background-color: #c82333;
     color: white;
+}
+
+#alreadyReservedPopup {
+    top: 125px !important;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#alreadyReservedProgress {
+    background-color: #28a745 !important; /* verde Bootstrap */
+    height: 100%;
+    border-radius: 0 0 8px 8px;
+    transition: width 0.1s;
+}
+
+.popup-header-reserved{
+    margin: 15px;
+}
+
+.popup-body-reserved{
+    margin: 15px;
 }
