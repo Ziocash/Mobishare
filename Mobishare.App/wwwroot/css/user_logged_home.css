@@ -11,7 +11,7 @@ header {
     z-index: 2000;
 }
 main {
-    margin-top: 9vh; /* stessa altezza della navbar */
+    margin-top: 106px; /* stessa altezza della navbar */
 }
 
 .row{
@@ -25,7 +25,7 @@ main {
 }
 
 .app-container {
-    height: calc(100vh - 56px);
+    height: calc(100vh - 106px);
     overflow: hidden;
 }
 
