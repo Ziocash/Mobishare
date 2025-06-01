@@ -90,6 +90,13 @@ builder.Services.AddScoped<IOllamaService, OllamaService>();
 # endregion
 
 
+
+
+builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
+builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
+
+
+
 #region PayPal configuration
 builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
 builder.Services.Configure<PayPalClientOptions>(options => 
