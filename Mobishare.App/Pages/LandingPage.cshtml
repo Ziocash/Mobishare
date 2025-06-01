@@ -7,6 +7,7 @@
     ViewData["Title"] = "Main Page";
 }
 
+
 <div class="container-fluid p-0 app-container">
     <div class="row g-0 h-100">
         <!-- Left Column (Map + Form) -->
@@ -16,7 +17,9 @@
                 <!--<div class="map-placeholder" id="map-placeholder">
                          Map With Current Location Here                    
                     </div> -->
-                <div id="map"></div>
+                <div id="map">
+                    
+                </div>
                 <!-- Popup for the reservation -->
                 <div class="map-popup" id="mapPopup" style="">
                     <div class="popup-header">
@@ -162,38 +165,36 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
-
-            <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
-                <input type="hidden" id="selectedVehicleId" name="vehicleId" />
-
-
-                <!-- Modale Bootstrap -->
-                <div class="modal fade" id="confirmReservationModal" tabindex="-1"
-                    aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content rounded-3 shadow">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Chiudi"></button>
-                            </div>
-                            <div class="modal-body">
-                                Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                                <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma"
-                                    onclick="showPopup()">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
-
         </div>
     </div>
 </div>
+
+<form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
+    <input type="hidden" id="selectedVehicleId" name="vehicleId" />
+
+
+    <!-- Modale Bootstrap -->
+    <div class="modal fade" id="confirmReservationModal" tabindex="-1"
+        aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Chiudi"></button>
+                </div>
+                <div class="modal-body">
+                    Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma"
+                        onclick="showPopup()">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
 
 <div id="chatBubble"
     style=" position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; ">

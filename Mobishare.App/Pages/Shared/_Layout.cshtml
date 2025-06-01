@@ -14,12 +14,14 @@
 </head>
 
 <body>
+    
     <header>
         @if (!Context.Request.Path.StartsWithSegments("/Identity/Account"))
         {
             <partial name="_NavbarPartial" />
         }
     </header>
+    
 
     <main role="main" class="pb-3">
         @RenderBody()
