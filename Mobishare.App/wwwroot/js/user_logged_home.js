@@ -65,42 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const id = vehicle.vehicleId.toString();
     const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
 
-    //--------------------------------------------------------------------------------------------------------
-    /*fetch(`/api/vehicles/${id}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 404) {
-            console.log("Veicolo non trovato.");
-          } else {
-            console.error(`Errore: ${response.status}`);
-          }
-          return null;
-        }
-        return response.json();
-      })
-      .then(vehicle => {
-        if (vehicle) {
-          console.log("Dati del veicolo:", vehicle);
-        }
-      })
-      .catch(error => {
-        console.error("Errore durante la fetch:", error);
-      });*/
-    /**
-     * Nota per chi lo vedrà:
-     * Attualmente non riesce ad eseguire la fetch su qella route, dando sempre 404.
-     * Ho provato a cambiare il controller, ma non riesco a capire il perchè.
-     * Se lo vedete e volete provare a dargli un'occhiata siete i benvenuti.
-     * (La route è stata definita nel file GetVehicleById.cs)
-     */
-    //--------------------------------------------------------------------------------------------------------
-
-
     if (vehicleMarkers[id]) {
       const marker = vehicleMarkers[id];
       const currentPos = marker.getPosition();
@@ -332,3 +296,4 @@ function hideAlreadyReservedPopup() {
     clearInterval(alreadyReservedInterval);
     document.getElementById('alreadyReservedProgress').style.width = '100%';
 }
+
