@@ -14,6 +14,7 @@ using Mobishare.Core.Services.GoogleGeocoding;
 using Mobishare.Infrastructure.Services.SignalR;
 using PayPal.REST.Client;
 using PayPal.REST.Models;
+using Mobishare.Infrastructure.Services.ChatBotAIService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +24,12 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddControllers();
 
+
 #region SignalR configuration
 builder.Services.AddSignalR();
 #endregion
+
+builder.Services.AddSingleton<IOllamaService, OllamaService>();
 
 #region Google geocoding service configuration
 builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
@@ -81,6 +85,10 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+#region Ollama configuration
+builder.Services.AddScoped<IOllamaService, OllamaService>();
+# endregion
+
 
 #region PayPal configuration
 builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
@@ -104,8 +112,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -116,6 +122,8 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapHub<VehicleHub>("/vehicleHub");
 

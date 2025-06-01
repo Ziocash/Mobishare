@@ -1,4 +1,4 @@
-namespace Mobishare.Core.Enums.Points;
+namespace Mobishare.Core.Enums.Balance;
 
 public enum PointTransactionType
 {

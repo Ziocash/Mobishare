@@ -13,9 +13,7 @@ public class GetAllHistoryCreditByUserId : IRequest<List<HistoryCredit>>
 
     public GetAllHistoryCreditByUserId(string userId)
     {
-        if (userId == null)
-            throw new ArgumentNullException(nameof(userId));
-        UserId = userId;
+        UserId = userId ?? throw new ArgumentNullException(nameof(userId));
     }
 }
 
