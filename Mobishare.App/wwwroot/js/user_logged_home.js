@@ -1,13 +1,13 @@
-let reserverd=null;
+let reserved = null;
 
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('vehicleReservationForm');
-  form.addEventListener('submit', function(event) {
+  form.addEventListener('submit', function (event) {
     event.preventDefault(); // Evita il reload della pagina
 
     const vehicleId = document.getElementById('selectedVehicleId').value;
 
-    if(reserverd != null){
+    if (reserved != null) {
       showAlreadyReservedPopup();
       const modalEl = document.getElementById('confirmReservationModal');
       const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    reserverd = vehicleId;
+    reserved = vehicleId;
 
     fetch('?handler=ReserveVehicle', {
       method: 'POST',
@@ -25,22 +25,22 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: `vehicleId=${encodeURIComponent(vehicleId)}`
     })
-    .then(response => response.ok ? response.text() : Promise.reject('Errore nella prenotazione'))
-    .then(data => {
-      const myModal = bootstrap.Modal.getInstance(document.getElementById('confirmReservationModal'));
-      if (myModal) {
-        myModal.hide();
-      }
-
-      const selectedId = document.getElementById('selectedVehicleId').value;
-      if (vehicleMarkers[selectedId]) {
-        vehicleMarkers[selectedId].setMap(null);
-        delete vehicleMarkers[selectedId];
-      }
-    })
-    .catch(error => {
-      alert(error);
-    });
+      .then(response => response.ok ? response.text() : Promise.reject('Errore nella prenotazione'))
+      .then(data => {
+        const myModal = bootstrap.Modal.getInstance(document.getElementById('confirmReservationModal'));
+        if (myModal) {
+          myModal.hide();
+        }
+        
+        const selectedId = document.getElementById('selectedVehicleId').value;
+        if (vehicleMarkers[selectedId]) {
+          vehicleMarkers[selectedId].setMap(null);
+          delete vehicleMarkers[selectedId];
+        }
+      })
+      .catch(error => {
+        alert(error);
+      });
   });
 });
 
@@ -193,10 +193,8 @@ function initMap() {
 //------------------------------------------------------------------------------------------------------
 function hidePopup() {
   const popup = document.getElementById('mapPopup');
-  const showBtn = document.getElementById('showPopupBtn');
-
+  
   popup.style.display = 'none';
-  showBtn.style.display = 'block';
 }
 
 function showPopup() {
@@ -209,38 +207,44 @@ function showPopup() {
 
 let timer_conn = null;
 
-function deleteReservation(){
+function deleteReservation() {
   const popup = document.getElementById('mapPopup');
 
   timer_conn.stop();
 
   popup.style.display = 'none';
 
-  freeVehicle(reserverd);
-  reserverd = null;
+  freeVehicle(reserved);
+  reserved = null;
 }
 
 async function startTimer() {
-    if (typeof signalR === "undefined") {
-        alert("SignalR non è stato caricato correttamente.");
-        return;
+  if (typeof signalR === "undefined") {
+    alert("SignalR non è stato caricato correttamente.");
+    return;
+  }
+  timer_conn = new signalR.HubConnectionBuilder()
+    .withUrl("/timerHub")
+    .build();
+
+  timer_conn.on("ReceiveTime", seconds => {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+    document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
+    console.log('Test secondi: ', seconds);
+
+    if (parseInt(seconds) === 0) {
+      freeVehicle(reserved);
+      reserved = null;
     }
-    timer_conn = new signalR.HubConnectionBuilder()
-        .withUrl("/timerHub")
-        .build();
+  });
 
-    timer_conn.on("ReceiveTime", seconds => {
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
-        document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
-    });
-
-    timer_conn.start()
-        .then(() => timer_conn.invoke("StartTimer"))
-        .catch(err => console.error(err.toString()));
+  timer_conn.start()
+    .then(() => timer_conn.invoke("StartTimer"))
+    .catch(err => console.error(err.toString()));
 }
 
-function freeVehicle(id){
+function freeVehicle(id) {
   fetch('?handler=FreeVehicle', {
     method: 'POST',
     headers: {
@@ -248,7 +252,7 @@ function freeVehicle(id){
       'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
     },
     body: `vehicleId=${encodeURIComponent(id)}`
-    })
+  })
     .then(response => response.ok ? response.text() : Promise.reject('Errore nella liberazione'))
     .then(data => {
       /* Inserire messaggio per dire che la prenotazione è cancellata */
@@ -268,32 +272,32 @@ let alreadyReservedInterval = null;
 
 
 function showAlreadyReservedPopup() {
-    const popup = document.getElementById('alreadyReservedPopup');
-    const progressBar = document.getElementById('alreadyReservedProgress');
-    popup.style.display = 'flex';
-    progressBar.style.width = '100%';
+  const popup = document.getElementById('alreadyReservedPopup');
+  const progressBar = document.getElementById('alreadyReservedProgress');
+  popup.style.display = 'flex';
+  progressBar.style.width = '100%';
 
-    let duration = 10; // secondi
-    let elapsed = 0;
+  let duration = 10; // secondi
+  let elapsed = 0;
 
-    // Aggiorna la barra ogni 100ms
-    alreadyReservedInterval = setInterval(() => {
-        elapsed += 0.1;
-        let percent = Math.max(0, 100 - (elapsed / duration) * 100);
-        progressBar.style.width = percent + "%";
-    }, 100);
+  // Aggiorna la barra ogni 100ms
+  alreadyReservedInterval = setInterval(() => {
+    elapsed += 0.1;
+    let percent = Math.max(0, 100 - (elapsed / duration) * 100);
+    progressBar.style.width = percent + "%";
+  }, 100);
 
-    // Nascondi dopo 5 secondi
-    alreadyReservedTimeout = setTimeout(() => {
-        hideAlreadyReservedPopup();
-    }, duration * 1000);
+  // Nascondi dopo 5 secondi
+  alreadyReservedTimeout = setTimeout(() => {
+    hideAlreadyReservedPopup();
+  }, duration * 1000);
 }
 
 function hideAlreadyReservedPopup() {
-    document.getElementById('alreadyReservedPopup').style.display = 'none';
-    // Ferma la progress bar e resetta
-    clearTimeout(alreadyReservedTimeout);
-    clearInterval(alreadyReservedInterval);
-    document.getElementById('alreadyReservedProgress').style.width = '100%';
+  document.getElementById('alreadyReservedPopup').style.display = 'none';
+  // Ferma la progress bar e resetta
+  clearTimeout(alreadyReservedTimeout);
+  clearInterval(alreadyReservedInterval);
+  document.getElementById('alreadyReservedProgress').style.width = '100%';
 }
 

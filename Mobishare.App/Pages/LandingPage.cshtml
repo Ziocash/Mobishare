@@ -29,7 +29,11 @@
                     <div class="popup-buttons">
                         <button class="btn btn-danger btn-red" onclick="deleteReservation()">Annulla
                             Prenotazione</button>
-                        <button class="btn btn-success">Avvia Viaggio</button>
+                            <form method="post" asp-page-handler="StartRide">
+                            <button type='submit' class="btn btn-success">Avvia Viaggio</button>
+                                <input type="hidden" id="selectedVehicleId" name="vehicleId" />
+                            </form>
+                        
                     </div>
                 </div>
 
