@@ -30,11 +30,11 @@ public class CreateChatMessageHandler : IRequestHandler<CreateChatMessage, ChatM
             _logger.LogDebug("Executing {method}", nameof(CreateChatMessage));
             _dbContext.ChatMessages.Entry(newChatMessage).State = Microsoft.EntityFrameworkCore.EntityState.Added;
             await _dbContext.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("City {city} created successfully", newChatMessage);
+            _logger.LogInformation("Chat message {chatMessage} created successfully", newChatMessage);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating city");
+            _logger.LogError(ex, "Error creating chat message");
         }
 
         return newChatMessage;
