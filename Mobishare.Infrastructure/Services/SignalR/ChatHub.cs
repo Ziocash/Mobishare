@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Mobishare.Core.Enums.Chat;
 using Mobishare.Core.Models.Chats;
 using Mobishare.Core.Requests.Chats.ChatMessageRequests.Commands;
+using Mobishare.Core.Requests.Chats.ConversationRequests.Queries;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
 using System.Diagnostics;
 
@@ -16,6 +17,8 @@ public class ChatHub : Hub
     private readonly IMediator _mediatr;
     private readonly IMapper _mapper;
     private readonly ILogger<ChatHub> _logger;
+    private static readonly Dictionary<int, Timer> _inactivityTimers = new();
+    private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(1);
 
     public ChatHub(IOllamaService ollamaService, IMediator mediator, IMapper mapper, ILogger<ChatHub> logger)
     {
@@ -30,13 +33,14 @@ public class ChatHub : Hub
         var sanitizer = new HtmlSanitizer();
         message = sanitizer.Sanitize(message);
         _logger.LogInformation($"Ricevuto messaggio: {message} nella conversazione {conversationId}");
-        var response = await _mediatr.Send(new CreateChatMessage {
+        var response = await _mediatr.Send(new CreateChatMessage
+        {
             ConversationId = int.Parse(conversationId),
             Message = message,
             Sender = MessageSenderType.User.ToString(),
             CreatedAt = DateTime.UtcNow
         });
-        
+
         Console.WriteLine($"Messaggio ricevuto da te: {message}");
 
         try
@@ -53,7 +57,7 @@ public class ChatHub : Hub
             }
 
             completeResponse = sanitizer.Sanitize(completeResponse);
-            
+
             var aiResponse = await _mediatr.Send(new CreateChatMessage
             {
                 ConversationId = int.Parse(conversationId),
@@ -66,13 +70,16 @@ public class ChatHub : Hub
         {
             _logger.LogError($"Errore interno: {ex.Message}");
             await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An internal error has occurred.", DateTime.UtcNow.ToLocalTime().ToString("g"));
-            var aiResponse = await _mediatr.Send(new CreateChatMessage {
+            var aiResponse = await _mediatr.Send(new CreateChatMessage
+            {
                 ConversationId = int.Parse(conversationId),
                 Message = "An internal error has occurred.",
                 Sender = MessageSenderType.AiAgent.ToString(),
                 CreatedAt = DateTime.UtcNow
             });
         }
+
+        ResetInactivityTimer(conversationId);
     }
 
     private string BuildPrompt(string userMessage)
@@ -84,5 +91,48 @@ public class ChatHub : Hub
 
                 User's message: {userMessage}
                 ";
+    }
+
+    private void ResetInactivityTimer(string conversationId)
+    {
+        int parsedConversationId = int.Parse(conversationId);
+
+        if (_inactivityTimers.TryGetValue(parsedConversationId, out var existingTimer))
+        {
+            existingTimer.Change(InactivityLimit, Timeout.InfiniteTimeSpan);
+        }
+        else
+        {
+            var timer = new Timer(async _ =>
+            {
+                try
+                {
+                    _logger.LogInformation($"Close chat {conversationId} for inactivity.");
+
+                    await _mediatr.Send(new CloseConversationById(parsedConversationId));
+
+                    var message = "La conversazione è stata chiusa automaticamente per inattività. Se hai bisogno, scrivi un nuovo messaggio per riaprirla.";
+                    await _mediatr.Send(new CreateChatMessage
+                    {
+                        ConversationId = parsedConversationId,
+                        Message = message,
+                        Sender = MessageSenderType.AiAgent.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    if (_inactivityTimers.TryGetValue(parsedConversationId, out var expiredTimer))
+                    {
+                        expiredTimer.Dispose();
+                        _inactivityTimers.Remove(parsedConversationId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Errore durante la chiusura automatica della conversazione {conversationId}");
+                }
+            }, null, InactivityLimit, Timeout.InfiniteTimeSpan);
+
+            _inactivityTimers[parsedConversationId] = timer;
+        }
     }
 }
