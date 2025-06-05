@@ -13,6 +13,8 @@ using Mobishare.Core.Requests.Chats.MessagePairRequests.Commands;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
 using OllamaSharp;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
 
 public class ChatHub : Hub
 {
@@ -21,10 +23,12 @@ public class ChatHub : Hub
     private readonly IMediator _mediatr;
     private readonly IMapper _mapper;
     private readonly ILogger<ChatHub> _logger;
-    private static readonly Dictionary<int, Timer> _inactivityTimers = new();
-    private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(1);
     private readonly IEmbeddingService _embeddingService;
     private readonly IKnowledgeBaseRetriever _knowledgeBaseRetriever;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IHubContext<ChatHub> _hubContext;
+    private static readonly Dictionary<int, Timer> _inactivityTimers = new();
+    private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(1);
 
     public ChatHub
     (
@@ -33,7 +37,9 @@ public class ChatHub : Hub
         ILogger<ChatHub> logger,
         IConfiguration configuration,
         IEmbeddingService embeddingService,
-        IKnowledgeBaseRetriever knowledgeBaseRetriever
+        IKnowledgeBaseRetriever knowledgeBaseRetriever,
+        IServiceScopeFactory scopeFactory,
+        IHubContext<ChatHub> hubContext
     )
     {
         _knowledgeBaseRetriever = knowledgeBaseRetriever ?? throw new ArgumentNullException(nameof(knowledgeBaseRetriever));
@@ -43,10 +49,39 @@ public class ChatHub : Hub
         _mediatr = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+        _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
     }
 
     public async Task SendMessage(string conversationId, string message)
     {
+        var conversations = await _mediatr.Send(new GetAllConversationsByUserId(Context.UserIdentifier));
+        var activeConversations = false;
+        var currentConversation = null as Conversation;
+
+        foreach (var conversation in conversations)
+        {
+            if (conversation.IsActive)
+            {
+                activeConversations = true;
+                currentConversation = conversation;
+                break;
+            }
+        }
+        
+        if (!activeConversations)
+        {
+            var userId = Context.UserIdentifier;
+            var newConversation = await _mediatr.Send(new CreateConversation
+            {
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId
+            });
+
+            conversationId = newConversation.Id.ToString();
+        }
+
         ChatMessage aiResponse;
         bool answered = false;
         var sanitizer = new HtmlSanitizer();
@@ -63,7 +98,7 @@ public class ChatHub : Hub
             Sender = MessageSenderType.User.ToString(),
             CreatedAt = DateTime.UtcNow,
             Embedding = deserializeEmbedResponse
-        }); 
+        });
 
         Console.WriteLine($"Messaggio ricevuto da te: {message}");
 
@@ -112,8 +147,6 @@ public class ChatHub : Hub
             });
         }
 
-        ResetInactivityTimer(conversationId);
-        
         if (userResponse != null && aiResponse != null)
         {
             var messagePair = await _mediatr.Send(new CreateMessagePair
@@ -126,6 +159,8 @@ public class ChatHub : Hub
                 Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
             });
         }
+
+        ResetInactivityTimer(conversationId, Context.ConnectionId);
     }
 
     private string BuildPrompt(string userMessage)
@@ -139,7 +174,12 @@ public class ChatHub : Hub
                 ";
     }
 
-    private void ResetInactivityTimer(string conversationId)
+    private string InactivityPrompt()
+    {
+        return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, transalte it in English.";
+    }
+
+    private void ResetInactivityTimer(string conversationId, string connectionId)
     {
         int parsedConversationId = int.Parse(conversationId);
 
@@ -151,19 +191,48 @@ public class ChatHub : Hub
         {
             var timer = new Timer(async _ =>
             {
+                using var scope = _scopeFactory.CreateScope();
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var completeResponse = string.Empty;
+                var sanitizer = new HtmlSanitizer();
+
                 try
                 {
                     _logger.LogInformation($"Close chat {conversationId} for inactivity.");
 
-                    await _mediatr.Send(new CloseConversationById(parsedConversationId));
+                    await mediator.Send(new CloseConversationById(parsedConversationId));
 
-                    var message = "La conversazione è stata chiusa automaticamente per inattività. Se hai bisogno, scrivi un nuovo messaggio per riaprirla.";
-                    await _mediatr.Send(new CreateChatMessage
+                    await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), InactivityPrompt()))
+                    {
+                        completeResponse += partialResponse;
+                        await _hubContext.Clients.Client(connectionId)
+                            .SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
+
+                    }
+
+                    completeResponse = sanitizer.Sanitize(completeResponse);
+
+                    var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
+                    var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
+
+                    var aiMessage = await mediator.Send(new CreateChatMessage
                     {
                         ConversationId = parsedConversationId,
-                        Message = message,
+                        Message = completeResponse,
                         Sender = MessageSenderType.AiAgent.ToString(),
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        Embedding = deserializeAiEmbedResponse
+                    });
+
+                    _logger.LogDebug("Creating MessagePair with aiId={AiId}", aiMessage?.Id);
+
+                    await mediator.Send(new CreateMessagePair
+                    {
+                        AiMessageId = aiMessage.Id,
+                        IsForRag = false,
+                        SourceType = SourceType.Chatbot.ToString(),
+                        Answered = true,
+                        Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
                     });
 
                     if (_inactivityTimers.TryGetValue(parsedConversationId, out var expiredTimer))
