@@ -28,7 +28,7 @@ public class ChatHub : Hub
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<ChatHub> _hubContext;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
-    private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
 
     public ChatHub
     (
@@ -55,31 +55,58 @@ public class ChatHub : Hub
 
     public async Task SendMessage(string conversationId, string message)
     {
-        var conversations = await _mediatr.Send(new GetAllConversationsByUserId(Context.UserIdentifier));
-        var activeConversations = false;
-        var currentConversation = null as Conversation;
-
-        foreach (var conversation in conversations)
+        if(Context.UserIdentifier == null)
         {
-            if (conversation.IsActive)
-            {
-                activeConversations = true;
-                currentConversation = conversation;
-                break;
-            }
+            _logger.LogWarning("User identifier is null. Cannot process message.");
+            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "You must be logged in to send messages.", DateTime.UtcNow.ToLocalTime().ToString("g"));
+            return;
         }
-        
-        if (!activeConversations)
+
+        var userId = Context.UserIdentifier;
+        var conversations = await _mediatr.Send(new GetAllConversationsByUserId(userId));
+
+        if (conversations == null || !conversations.Any())
         {
-            var userId = Context.UserIdentifier;
+            _logger.LogWarning("No conversations found for user ID {UserId}. Creating a new conversation.", userId);
             var newConversation = await _mediatr.Send(new CreateConversation
             {
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UserId = userId
             });
-
             conversationId = newConversation.Id.ToString();
+        }
+        else
+        {
+            var activeConversations = false;
+            var currentConversation = null as Conversation;
+
+            foreach (var conversation in conversations)
+            {
+                if (conversation.IsActive)
+                {
+                    activeConversations = true;
+                    currentConversation = conversation;
+                    break;
+                }
+            }
+
+            if (!activeConversations)
+            {
+                var newConversation = await _mediatr.Send(new CreateConversation
+                {
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UserId = userId
+                });
+
+                conversationId = newConversation.Id.ToString();
+            }
+            else if (currentConversation != null && currentConversation.Id.ToString() != conversationId)
+            {
+                _logger.LogInformation($"Switching to existing conversation {currentConversation.Id}");
+                conversationId = currentConversation.Id.ToString();
+            }
         }
 
         ChatMessage aiResponse;
@@ -176,7 +203,7 @@ public class ChatHub : Hub
 
     private string InactivityPrompt()
     {
-        return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, transalte it in English.";
+        return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, write the sentence: The conversation has been automatically closed due to inactivity.";
     }
 
     private void ResetInactivityTimer(string conversationId, string connectionId)
