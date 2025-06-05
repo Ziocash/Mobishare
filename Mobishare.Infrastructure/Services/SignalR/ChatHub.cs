@@ -15,6 +15,9 @@ using OllamaSharp;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
+using AngleSharp.Css.Dom;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 
 public class ChatHub : Hub
 {
@@ -27,6 +30,8 @@ public class ChatHub : Hub
     private readonly IKnowledgeBaseRetriever _knowledgeBaseRetriever;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<ChatHub> _hubContext;
+    private readonly IIntentClassificationService _intentClassification;
+    private readonly IIntentRouterService _intentRouter;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
     private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
 
@@ -39,7 +44,9 @@ public class ChatHub : Hub
         IEmbeddingService embeddingService,
         IKnowledgeBaseRetriever knowledgeBaseRetriever,
         IServiceScopeFactory scopeFactory,
-        IHubContext<ChatHub> hubContext
+        IHubContext<ChatHub> hubContext,
+        IIntentClassificationService intentClassification,
+        IIntentRouterService intentRouter
     )
     {
         _knowledgeBaseRetriever = knowledgeBaseRetriever ?? throw new ArgumentNullException(nameof(knowledgeBaseRetriever));
@@ -51,6 +58,8 @@ public class ChatHub : Hub
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        _intentClassification = intentClassification ?? throw new ArgumentNullException(nameof(intentClassification));
+        _intentRouter = intentRouter ?? throw new ArgumentNullException(nameof(intentRouter));
     }
 
     public async Task SendMessage(string conversationId, string message)
@@ -114,7 +123,36 @@ public class ChatHub : Hub
         var sanitizer = new HtmlSanitizer();
         message = sanitizer.Sanitize(message);
 
-        _logger.LogInformation($"Ricevuto messaggio: {message} nella conversazione {conversationId}");
+        _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
+
+        // 1. Invoca Ollama (con tools disponibili) →  
+        // 2. Ollama decide:                            √
+        //    - Risponde direttamente?                  √
+        //    - Oppure chiama un tool?                  √
+        // 2.1 Se serve un tool →
+        // 2.2 .NET lo esegue (es. prenota veicolo) →
+        // 3. Risultato → mandato a Ollama →               
+        // 4. Ollama genera risposta finale →           √
+        // 5. .NET la mostra all’utente                 √
+        using var scope = _scopeFactory.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var intent = await _intentClassification.ClassifyMessageAsync(message);
+
+        if (intent == "none")
+        {
+            
+        }
+        else if (Enum.IsDefined(typeof(ToolsClassification), intent))
+        {
+            _intentRouter.Route(intent);
+        }
+        else
+        {
+            
+        }
+
+        return;
+
         var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
         var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
 
