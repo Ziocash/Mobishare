@@ -1,6 +1,7 @@
 ﻿@page
 @model Mobishare.App.Pages.TravelModel
 @{
+    ViewData["NoLayoutCss"] = true;
 }
 @inject IConfiguration Configuration
 
@@ -36,7 +37,7 @@
                     </svg>
                     <div class="detail-content">
                         <p>Orario di Inizio</p>
-                        <p>14:30</p>
+                        <p>@Model.Ride.StartDateTime</p>
                     </div>
                 </div>
             </div>
@@ -51,7 +52,7 @@
                     </svg>
                     <div class="detail-content">
                         <p>Luogo di Partenza</p>
-                        <p>Stazione Centrale - Via Roma 123</p>
+                        <p>@Model.StartLocationName</p>
                     </div>
                 </div>
             </div>

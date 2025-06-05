@@ -160,14 +160,14 @@ namespace Mobishare.App.Pages
             {
                 var rideInfo = new RideDisplayInfo { Ride = ride };
 
-                if (ride.PositionEnd != null)
+                if (ride.PositionEndId != null)
                 {
                     _logger.LogDebug("Location end: lat={Lat}, lon={Lon}", ride.PositionEnd.Latitude, ride.PositionEnd.Longitude);
                     rideInfo.EndLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)ride.PositionEnd.Latitude, (double)ride.PositionEnd.Longitude);
 
                     _logger.LogDebug("Address result: {Address}", rideInfo.EndLocationName);
                 }
-                if (ride.PositionStart != null) rideInfo.StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)ride.PositionStart.Latitude, (double)ride.PositionStart.Longitude);
+                if (ride.PositionStartId != null) rideInfo.StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)ride.PositionStart.Latitude, (double)ride.PositionStart.Longitude);
 
                 AllRides.Add(rideInfo);
             }
