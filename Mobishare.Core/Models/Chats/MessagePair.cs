@@ -6,7 +6,7 @@ public class MessagePair
 {
     public int Id { get; set; }
     public ChatMessage UserMessage { get; set; } 
-    public int UserMessageId { get; set; } 
+    public int? UserMessageId { get; set; } 
     public ChatMessage AiMessage { get; set; }
     public int AiMessageId { get; set; }
     public bool IsForRag { get; set; } // if true, the message is used for RAG (Retrieval-Augmented Generation)
