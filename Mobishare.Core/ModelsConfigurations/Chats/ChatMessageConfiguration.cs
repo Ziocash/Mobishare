@@ -13,6 +13,9 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Embedding)
+            .IsRequired();
+
         builder.Property(x => x.CreatedAt)
                 .IsRequired();
 
