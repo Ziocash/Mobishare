@@ -15,6 +15,9 @@ using Mobishare.Infrastructure.Services.SignalR;
 using PayPal.REST.Client;
 using PayPal.REST.Models;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +31,6 @@ builder.Services.AddControllers();
 #region SignalR configuration
 builder.Services.AddSignalR();
 #endregion
-
-builder.Services.AddSingleton<IOllamaService, OllamaService>();
 
 #region Google geocoding service configuration
 builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
@@ -95,6 +96,11 @@ builder.Services.AddScoped<IOllamaService, OllamaService>();
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
+
+
+builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
+builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
+builder.Services.AddScoped<IToolExecutionService, ToolExecutionService>();
 
 
 #region PayPal configuration
