@@ -5,12 +5,20 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
 
+/// <summary>
+/// Service responsible for creating text embeddings by calling an external API.
+/// </summary>
 public class EmbeddingService : IEmbeddingService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<EmbeddingService> _logger;
     private readonly string _modelName;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="EmbeddingService"/>.
+    /// </summary>
+    /// <param name="logger">Logger instance for logging purposes.</param>
+    /// <param name="configuration">Application configuration for retrieving API settings.</param>
     public EmbeddingService(ILogger<EmbeddingService> logger, IConfiguration configuration)
     {
         _httpClient = new HttpClient
@@ -21,6 +29,15 @@ public class EmbeddingService : IEmbeddingService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Asynchronously creates an embedding vector for the provided input text.
+    /// </summary>
+    /// <param name="input">The input text to generate the embedding for.</param>
+    /// <returns>
+    /// A <see cref="Task{TResult}"/> that resolves to an array of floats representing the embedding vector.
+    /// </returns>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP response is unsuccessful.</exception>
+    /// <exception cref="Exception">Thrown when the embedding is not found in the API response.</exception>
     public async Task<float[]> CreateEmbeddingAsync(string input)
     {
         var requestBody = new
@@ -41,6 +58,6 @@ public class EmbeddingService : IEmbeddingService
             return embedding;
         }
 
-        throw new Exception("Embedding non trovato nella risposta.");
+        throw new Exception("Embedding not found in the answer.");
     }
 }

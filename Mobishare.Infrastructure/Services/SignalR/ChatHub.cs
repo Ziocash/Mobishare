@@ -18,6 +18,7 @@ using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
 using AngleSharp.Css.Dom;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
+using RTools_NTS.Util;
 
 public class ChatHub : Hub
 {
@@ -137,18 +138,21 @@ public class ChatHub : Hub
         using var scope = _scopeFactory.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var intent = await _intentClassification.ClassifyMessageAsync(message);
-
+        // Assuming you have an IOllamaApiClient instance available, e.g. via DI or from _ollamaService
+        // var client = new OllamaApiClient("http://localhost:11434");
+        // var chat = new Chat(client, "llama3");
+        
         if (intent == "none")
         {
             
         }
         else if (Enum.IsDefined(typeof(ToolsClassification), intent))
         {
-            _intentRouter.Route(intent);
+            var response = await _intentRouter.Route(intent, message);
         }
         else
         {
-            
+            // non capisco il contesto, spiega meglio
         }
 
         return;
