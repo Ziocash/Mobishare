@@ -5,5 +5,5 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
 
 public interface IToolExecutionService
 {
-    Task<ToolResult> ExecuteToolAsync(ToolsClassification toolIntent);
+    Task<ToolResult> ExecuteToolAsync(string intent, string message);
 }

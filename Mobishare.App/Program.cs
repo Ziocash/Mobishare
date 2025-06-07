@@ -18,6 +18,8 @@ using Mobishare.Infrastructure.Services.ChatBotAIService;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
+using Mobishare.Core.Services.UserContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,12 +93,13 @@ builder.Services.AddScoped<IOllamaService, OllamaService>();
 # endregion
 
 
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 
 
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
-
+builder.Services.AddScoped<IVehicleTool, VehicleTool>();
 
 builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
 builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();

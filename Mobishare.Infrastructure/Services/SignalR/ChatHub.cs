@@ -15,13 +15,15 @@ using OllamaSharp;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
-using AngleSharp.Css.Dom;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
-using RTools_NTS.Util;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
+using OllamaSharp.Tools;
+using Mobishare.Core.Services.UserContext;
 
 public class ChatHub : Hub
 {
+    private readonly OllamaApiClient _client;
     private readonly IOllamaService _ollamaService;
     private readonly IConfiguration _configuration;
     private readonly IMediator _mediatr;
@@ -31,8 +33,7 @@ public class ChatHub : Hub
     private readonly IKnowledgeBaseRetriever _knowledgeBaseRetriever;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<ChatHub> _hubContext;
-    private readonly IIntentClassificationService _intentClassification;
-    private readonly IIntentRouterService _intentRouter;
+    private readonly IUserContextService _userContext;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
     private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
 
@@ -47,7 +48,9 @@ public class ChatHub : Hub
         IServiceScopeFactory scopeFactory,
         IHubContext<ChatHub> hubContext,
         IIntentClassificationService intentClassification,
-        IIntentRouterService intentRouter
+        IIntentRouterService intentRouter,
+        IVehicleTool vehicleTool,
+        IUserContextService userContext
     )
     {
         _knowledgeBaseRetriever = knowledgeBaseRetriever ?? throw new ArgumentNullException(nameof(knowledgeBaseRetriever));
@@ -59,13 +62,15 @@ public class ChatHub : Hub
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
-        _intentClassification = intentClassification ?? throw new ArgumentNullException(nameof(intentClassification));
-        _intentRouter = intentRouter ?? throw new ArgumentNullException(nameof(intentRouter));
+        _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+
+        _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
+        _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
     }
 
     public async Task SendMessage(string conversationId, string message)
     {
-        if(Context.UserIdentifier == null)
+        if (Context.UserIdentifier == null)
         {
             _logger.LogWarning("User identifier is null. Cannot process message.");
             await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "You must be logged in to send messages.", DateTime.UtcNow.ToLocalTime().ToString("g"));
@@ -137,24 +142,20 @@ public class ChatHub : Hub
         // 5. .NET la mostra all’utente                 √
         using var scope = _scopeFactory.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        _userContext.UserId = userId;
+
+        var chat = new Chat(_client);
         
-        /*var intent = await _intentClassification.ClassifyMessageAsync(message);
-        // Assuming you have an IOllamaApiClient instance available, e.g. via DI or from _ollamaService
-        // var client = new OllamaApiClient("http://localhost:11434");
-        // var chat = new Chat(client, "llama3");
-        
-        if (intent == "none")
+        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool() };
+        var aus = "";
+
+        await foreach (var response in chat.SendAsync(message, tools))
         {
-            
+            aus += response;
         }
-        else if (Enum.IsDefined(typeof(ToolsClassification), intent))
-        {
-            var response = await _intentRouter.Route(intent, message);
-        }
-        else
-        {
-            // non capisco il contesto, spiega meglio
-        }*/
+
+        Console.WriteLine(aus);
 
         return;
 

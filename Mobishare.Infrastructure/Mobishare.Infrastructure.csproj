@@ -19,8 +19,4 @@
     <ProjectReference Include="..\Mobishare.Core\Mobishare.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services/ChatBotAIService/ToolExecutor/Tools/" />
-  </ItemGroup>
-
 </Project>
