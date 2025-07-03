@@ -26,14 +26,14 @@ public class VehicleTool : IVehicleTool
     public Task<string> ReportVehicleIssueAsync(string description)
     {
         // implementa con il db
-        _logger.LogInformation("Segnalazione veicolo ricevuta: {description}", description);
+        // _logger.LogInformation("Segnalazione veicolo ricevuta: {description}", description);
         return Task.FromResult($"Segnalazione ricevuta: {description}");
     }
 
     public Task<string> ReserveVehicleAsync()
     {
-        _logger.LogInformation(UserId);
-        _logger.LogInformation("Reserve");
+        // _logger.LogInformation(UserId);
+        // _logger.LogInformation("Reserve");
         return Task.FromResult("Veicolo riservato con successo.");
     }
 }

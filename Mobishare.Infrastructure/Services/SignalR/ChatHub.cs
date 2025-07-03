@@ -18,8 +18,8 @@ using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
-using OllamaSharp.Tools;
 using Mobishare.Core.Services.UserContext;
+using Mobishare.Core.Requests.Chats.ChatMessageRequests.Queries;
 
 public class ChatHub : Hub
 {
@@ -129,8 +129,28 @@ public class ChatHub : Hub
         var sanitizer = new HtmlSanitizer();
         message = sanitizer.Sanitize(message);
 
+        await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
+        
+        var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
+        var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
+
+        var userResponse = await _mediatr.Send(new CreateChatMessage
+        {
+            ConversationId = int.Parse(conversationId),
+            Message = message,
+            Sender = MessageSenderType.User.ToString(),
+            CreatedAt = DateTime.UtcNow,
+            Embedding = deserializeEmbedResponse
+        });
+
+
         _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
 
+        using var scope = _scopeFactory.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var messages = await mediator.Send(new GetMessagesByConversationId(int.Parse(conversationId)));
+        var lastMessages = messages.Take(10);
         // 1. Invoca Ollama (con tools disponibili) →  
         // 2. Ollama decide:                            √
         //    - Risponde direttamente?                  √
@@ -140,9 +160,7 @@ public class ChatHub : Hub
         // 3. Risultato → mandato a Ollama →               
         // 4. Ollama genera risposta finale →           √
         // 5. .NET la mostra all’utente                 √
-        using var scope = _scopeFactory.CreateScope();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
+       
         _userContext.UserId = userId;
 
         var chat = new Chat(_client);
@@ -159,19 +177,19 @@ public class ChatHub : Hub
 
         return;
 
-        var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
-        var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
+        // var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
+        // var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
 
-        var userResponse = await _mediatr.Send(new CreateChatMessage
-        {
-            ConversationId = int.Parse(conversationId),
-            Message = message,
-            Sender = MessageSenderType.User.ToString(),
-            CreatedAt = DateTime.UtcNow,
-            Embedding = deserializeEmbedResponse
-        });
+        // var userResponse = await _mediatr.Send(new CreateChatMessage
+        // {
+        //     ConversationId = int.Parse(conversationId),
+        //     Message = message,
+        //     Sender = MessageSenderType.User.ToString(),
+        //     CreatedAt = DateTime.UtcNow,
+        //     Embedding = deserializeEmbedResponse
+        // });
 
-        Console.WriteLine($"Messaggio ricevuto da te: {message}");
+        // Console.WriteLine($"Messaggio ricevuto da te: {message}");
 
         // TODO: da mettere nel prompt
         var relevantMessages = await _knowledgeBaseRetriever.GetRelevantPairsAsync(userEmbedResponse, 3);

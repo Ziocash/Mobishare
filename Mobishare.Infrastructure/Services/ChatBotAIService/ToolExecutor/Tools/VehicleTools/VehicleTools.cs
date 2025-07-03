@@ -6,7 +6,7 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.
 public class VehicleTools
 {
     public string? UserId { get; set; }
-    
+
     private static readonly IVehicleTool _vehicleTool = new VehicleTool();
 
     [OllamaTool]
