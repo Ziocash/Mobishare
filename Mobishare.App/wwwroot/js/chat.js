@@ -2,7 +2,9 @@ const chatBox = document.getElementById("chatBox");
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("/chathub")
     .build();
-
+connection.on("RedirectTo", (route) => {
+    window.location.href = route;
+});
 let currentBotMessage = null;
 let currentBotTimeout = null;
 let currentBotDateTime = null;

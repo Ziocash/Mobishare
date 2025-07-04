@@ -17,9 +17,10 @@ using PayPal.REST.Models;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
+using Microsoft.SemanticKernel;
+using Mobishare.Infrastructure.Services.ChatBotAIService.Pulgins;
+using Mobishare.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,9 +41,9 @@ builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
 
 #region Connection to the database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+options.UseSqlite(connectionString));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 #endregion
 
 #region Identity configuration
@@ -81,7 +82,7 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.IsAdmin, p => p.AddRequirements(new IsAdmin()))
     .AddPolicy(PolicyNames.IsStaff, p => p.AddRequirements(new IsStaff()))
-    .AddPolicy(PolicyNames.IsTechnician, p=> p.AddRequirements(new IsTechnician()));
+    .AddPolicy(PolicyNames.IsTechnician, p => p.AddRequirements(new IsTechnician()));
 
 builder.Services.AddScoped<IAuthorizationHandler, IsAdminAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>();
@@ -93,23 +94,44 @@ builder.Services.AddScoped<IOllamaService, OllamaService>();
 # endregion
 
 
+builder.Services.AddScoped<SemanticRouterService>(); // servizio routing AI
+
+builder.Services.AddScoped<Kernel>(sp =>
+{
+    var config = builder.Configuration.GetSection("Ollama:Llm");
+    var urlApiClient = config["UrlApiClient"] ?? throw new Exception("Manca l'URL per Ollama");
+    var modelName = config["ModelName"] ?? throw new Exception("Manca il nome del modello");
+
+    #pragma warning disable SKEXP0070 // disabilita warning sperimentali
+    var kernelBuilder = Kernel.CreateBuilder();
+
+    // Aggiungi Ollama come completamento
+    kernelBuilder.AddOllamaChatCompletion(
+        modelId: modelName,
+        endpoint: new Uri(urlApiClient),
+        serviceId: "ollama"
+    );
+
+    // Aggiungi plugin di routing
+    kernelBuilder.Plugins.AddFromType<RoutingPagePlugin>("Routing");
+
+    return kernelBuilder.Build();
+});
+
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 
 
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
-builder.Services.AddScoped<IVehicleTool, VehicleTool>();
-
 builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
 builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
-builder.Services.AddScoped<IToolExecutionService, ToolExecutionService>();
 
 
 #region PayPal configuration
 builder.Services.AddSingleton<IPayPalClient, PayPalClient>();
-builder.Services.Configure<PayPalClientOptions>(options => 
-{ 
+builder.Services.Configure<PayPalClientOptions>(options =>
+{
     options.ClientId = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientId"]!;
     options.ClientSecret = builder.Configuration.GetRequiredSection("Payments:PayPal")["ClientSecret"]!;
     options.PayPalUrl = builder.Configuration.GetRequiredSection("Payments:PayPal")["PayPalUrl"]!;

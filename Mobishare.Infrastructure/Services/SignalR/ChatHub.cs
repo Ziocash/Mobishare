@@ -17,10 +17,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
 using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
 using Mobishare.Core.Requests.Chats.ChatMessageRequests.Queries;
-
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.Text;
+using Mobishare.Infrastructure.Services;
 public class ChatHub : Hub
 {
     private readonly OllamaApiClient _client;
@@ -34,6 +37,8 @@ public class ChatHub : Hub
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IUserContextService _userContext;
+    private readonly Kernel _kernel;
+    private readonly SemanticRouterService _router;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
     private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
 
@@ -49,8 +54,9 @@ public class ChatHub : Hub
         IHubContext<ChatHub> hubContext,
         IIntentClassificationService intentClassification,
         IIntentRouterService intentRouter,
-        IVehicleTool vehicleTool,
-        IUserContextService userContext
+        IUserContextService userContext,
+        Kernel kernel,
+        SemanticRouterService router
     )
     {
         _knowledgeBaseRetriever = knowledgeBaseRetriever ?? throw new ArgumentNullException(nameof(knowledgeBaseRetriever));
@@ -63,7 +69,8 @@ public class ChatHub : Hub
         _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
-
+        _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        _router = router ?? throw new ArgumentNullException(nameof(router));
         _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
         _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
     }
@@ -114,7 +121,6 @@ public class ChatHub : Hub
                     CreatedAt = DateTime.UtcNow,
                     UserId = userId
                 });
-
                 conversationId = newConversation.Id.ToString();
             }
             else if (currentConversation != null && currentConversation.Id.ToString() != conversationId)
@@ -124,13 +130,11 @@ public class ChatHub : Hub
             }
         }
 
-        ChatMessage aiResponse;
-        bool answered = false;
+        // Salvataggio messaggio utente
         var sanitizer = new HtmlSanitizer();
         message = sanitizer.Sanitize(message);
-
         await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
-        
+
         var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
         var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
 
@@ -143,91 +147,68 @@ public class ChatHub : Hub
             Embedding = deserializeEmbedResponse
         });
 
-
-        _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
-
+        // Preparazione contesto conversazione
         using var scope = _scopeFactory.CreateScope();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
         var messages = await mediator.Send(new GetMessagesByConversationId(int.Parse(conversationId)));
         var lastMessages = messages.Take(10);
-        // 1. Invoca Ollama (con tools disponibili) →  
-        // 2. Ollama decide:                            √
-        //    - Risponde direttamente?                  √
-        //    - Oppure chiama un tool?                  √
-        // 2.1 Se serve un tool →
-        // 2.2 .NET lo esegue (es. prenota veicolo) →
-        // 3. Risultato → mandato a Ollama →               
-        // 4. Ollama genera risposta finale →           √
-        // 5. .NET la mostra all’utente                 √
-       
-        _userContext.UserId = userId;
-
-        var chat = new Chat(_client);
-        
-        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool() };
-        var aus = "";
-
-        await foreach (var response in chat.SendAsync(message, tools))
-        {
-            aus += response;
-        }
-
-        Console.WriteLine(aus);
-
-        return;
-
-        // var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
-        // var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
-
-        // var userResponse = await _mediatr.Send(new CreateChatMessage
-        // {
-        //     ConversationId = int.Parse(conversationId),
-        //     Message = message,
-        //     Sender = MessageSenderType.User.ToString(),
-        //     CreatedAt = DateTime.UtcNow,
-        //     Embedding = deserializeEmbedResponse
-        // });
-
-        // Console.WriteLine($"Messaggio ricevuto da te: {message}");
-
-        // TODO: da mettere nel prompt
-        var relevantMessages = await _knowledgeBaseRetriever.GetRelevantPairsAsync(userEmbedResponse, 3);
 
         try
         {
-            string prompt = BuildPrompt(message);
+            var route = await _router.RouteFromUserInputAsync(message);
 
-            await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
-            var completeResponse = string.Empty;
+            if (route != "/home") // Se diverso da default, esegui routing
+            {
+                await Clients.Caller.SendAsync("RedirectTo", route);
+                return;
+            }
+
+            // 2. Se non c'è routing, procediamo con la generazione della risposta
+            var prompt = BuildPromptWithTools(message, lastMessages);
+            var completeResponse = new StringBuilder();
 
             await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), prompt))
             {
-                completeResponse += partialResponse;
+                completeResponse.Append(partialResponse);
                 await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
             }
 
-            completeResponse = sanitizer.Sanitize(completeResponse);
-
-            var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
-            var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
-
-            aiResponse = await _mediatr.Send(new CreateChatMessage
+            // 3. Salvataggio risposta AI
+            var aiResponseContent = completeResponse.ToString();
+            if (!string.IsNullOrEmpty(aiResponseContent))
             {
-                ConversationId = int.Parse(conversationId),
-                Message = completeResponse,
-                Sender = MessageSenderType.AiAgent.ToString(),
-                CreatedAt = DateTime.UtcNow,
-                Embedding = deserializeAiEmbedResponse
-            });
+                var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(aiResponseContent);
+                var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
 
-            answered = true;
+                var aiResponse = await _mediatr.Send(new CreateChatMessage
+                {
+                    ConversationId = int.Parse(conversationId),
+                    Message = aiResponseContent,
+                    Sender = MessageSenderType.AiAgent.ToString(),
+                    CreatedAt = DateTime.UtcNow,
+                    Embedding = deserializeAiEmbedResponse
+                });
+
+                if (userResponse != null && aiResponse != null)
+                {
+                    await _mediatr.Send(new CreateMessagePair
+                    {
+                        UserMessageId = userResponse.Id,
+                        AiMessageId = aiResponse.Id,
+                        IsForRag = false,
+                        SourceType = SourceType.Chatbot.ToString(),
+                        Answered = true,
+                        Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
+                    });
+                }
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError($"Errore interno: {ex.Message}");
             await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An internal error has occurred.", DateTime.UtcNow.ToLocalTime().ToString("g"));
-            aiResponse = await _mediatr.Send(new CreateChatMessage
+
+            var aiResponse = await _mediatr.Send(new CreateChatMessage
             {
                 ConversationId = int.Parse(conversationId),
                 Message = "An internal error has occurred.",
@@ -236,31 +217,36 @@ public class ChatHub : Hub
             });
         }
 
-        if (userResponse != null && aiResponse != null)
-        {
-            var messagePair = await _mediatr.Send(new CreateMessagePair
-            {
-                UserMessageId = userResponse.Id,
-                AiMessageId = aiResponse.Id,
-                IsForRag = true, // TODO: cambiare a FALSE!
-                SourceType = SourceType.Chatbot.ToString(),
-                Answered = answered,
-                Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
-            });
-        }
-
         ResetInactivityTimer(conversationId, Context.ConnectionId);
     }
 
-    private string BuildPrompt(string userMessage)
+    private string BuildPromptWithTools(string userMessage, IEnumerable<ChatMessage> history)
     {
-        return $@"You are a virtual assistant for Mobishare, a car sharing service similar to Lime.
-                Answer questions clearly and politely.
-                If you don't know the answer to a question, don't provide inaccurate or made-up information. Instead, politely respond with: 'I can't answer that question. If you have any other questions, I'm here to help!' Only respond when you are sure and have enough information.
-                the message below will be the user's message, respond clearly and concisely, without repeating the user's message.
+        var sb = new StringBuilder();
+        sb.AppendLine("You are a virtual assistant for Mobishare, a car sharing service similar to Lime.");
+        sb.AppendLine("Available tools (you MUST use if needed):");
+        sb.AppendLine("- RouteToPageAsync: Use when user wants to navigate to specific pages (account, wallet, profile, rental, support)");
+        sb.AppendLine();
+        sb.AppendLine("Answer rules:");
+        sb.AppendLine("- Be clear and polite");
+        sb.AppendLine("- If you don't know the answer, say: 'I can't answer that question. If you have any other questions, I'm here to help!'");
+        sb.AppendLine("- When user asks about account, wallet, profile, rental or support, use RouteToPageAsync tool");
+        sb.AppendLine();
 
-                User's message: {userMessage}
-                ";
+        if (history.Any())
+        {
+            sb.AppendLine("Conversation history:");
+            foreach (var msg in history)
+            {
+                sb.AppendLine($"{msg.Sender}: {msg.Message}");
+            }
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"User's message: {userMessage}");
+        sb.AppendLine("Assistant:");
+
+        return sb.ToString();
     }
 
     private string InactivityPrompt()
