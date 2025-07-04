@@ -2,13 +2,12 @@ const chatBox = document.getElementById("chatBox");
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("/chathub")
     .build();
-connection.on("RedirectTo", (route) => {
-    window.location.href = route;
-});
+
 let currentBotMessage = null;
 let currentBotTimeout = null;
 let currentBotDateTime = null;
 let typingIndicator = null;
+let isRedirecting = false;
 
 // Funzione per mostrare l'indicatore di typing
 function showTypingIndicator() {
@@ -34,6 +33,30 @@ function hideTypingIndicator() {
         typingIndicator = null;
     }
 }
+
+connection.on("RedirectTo", (route) => {
+    if (isRedirecting) return;
+    isRedirecting = true;
+    
+    // Nascondi l'indicatore di typing
+    hideTypingIndicator();
+    
+    // Aggiungi un messaggio di sistema
+    const systemMsg = document.createElement("div");
+    systemMsg.classList.add("system-message");
+    systemMsg.innerHTML = `
+        Reindirizzamento alla pagina ${route.split('/').pop()}...
+        <br />
+        <small><em>${new Date().toLocaleTimeString()}</em></small>
+    `;
+    chatBox.appendChild(systemMsg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    // Ritardo per permettere all'utente di leggere il messaggio
+    setTimeout(() => {
+        window.location.href = route;
+    }, 1500);
+});
 
 connection.on("ReceiveMessage", (user, message, dateTime) => {
     if (user === "MobishareBot") {
@@ -100,7 +123,9 @@ function sendMessage() {
     const input = document.getElementById("userInput");
     const msg = input.value.trim();
     const id = document.getElementById("conversationId").value;
-
+    
+    // Reset stato redirect
+    isRedirecting = false;
     if (!msg) return;
 
     connection.invoke("SendMessage", id, msg).catch(err => {

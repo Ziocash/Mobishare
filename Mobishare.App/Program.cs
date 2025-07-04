@@ -15,8 +15,8 @@ using Mobishare.Infrastructure.Services.SignalR;
 using PayPal.REST.Client;
 using PayPal.REST.Models;
 using Mobishare.Infrastructure.Services.ChatBotAIService;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
+// using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
+// using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Core.Services.UserContext;
 using Microsoft.SemanticKernel;
 using Mobishare.Infrastructure.Services.ChatBotAIService.Pulgins;
@@ -89,23 +89,23 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
-#region Ollama configuration
-builder.Services.AddScoped<IOllamaService, OllamaService>();
-# endregion
 
-
-builder.Services.AddScoped<SemanticRouterService>(); // servizio routing AI
+builder.Services.AddScoped<SemanticRouterService>(sp => 
+    new SemanticRouterService(
+        sp.GetRequiredService<Kernel>(), 
+        sp.GetRequiredService<ILogger<SemanticRouterService>>()
+    )
+);
 
 builder.Services.AddScoped<Kernel>(sp =>
 {
     var config = builder.Configuration.GetSection("Ollama:Llm");
     var urlApiClient = config["UrlApiClient"] ?? throw new Exception("Manca l'URL per Ollama");
     var modelName = config["ModelName"] ?? throw new Exception("Manca il nome del modello");
-
+   
     #pragma warning disable SKEXP0070 // disabilita warning sperimentali
     var kernelBuilder = Kernel.CreateBuilder();
-
-    // Aggiungi Ollama come completamento
+    // Usa Ollama come servizio di completamento
     kernelBuilder.AddOllamaChatCompletion(
         modelId: modelName,
         endpoint: new Uri(urlApiClient),
@@ -124,8 +124,8 @@ builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
-builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
-builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
+// builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
+// builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
 
 
 #region PayPal configuration

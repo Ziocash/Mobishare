@@ -41,6 +41,7 @@ public class ChatHub : Hub
     private readonly SemanticRouterService _router;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
     private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
+    private readonly IChatCompletionService _chatService;
 
     public ChatHub
     (
@@ -155,23 +156,54 @@ public class ChatHub : Hub
 
         try
         {
-            var route = await _router.RouteFromUserInputAsync(message);
+            var chatHistory = new ChatHistory();
+        
+        // Aggiungi contesto conversazione
+        foreach (var msg in lastMessages)
+        {
+            var role = msg.Sender == MessageSenderType.User.ToString() 
+                ? AuthorRole.User 
+                : AuthorRole.Assistant;
+            chatHistory.Add(new ChatMessageContent(role, msg.Message));
+        }
 
-            if (route != "/home") // Se diverso da default, esegui routing
+        chatHistory.AddUserMessage(message);
+
+        var settings = new OpenAIPromptExecutionSettings
+        {
+            ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+            Temperature = 0.3
+        };
+
+        var completeResponse = new StringBuilder();
+
+        await foreach (var chunk in _chatService.GetStreamingChatMessageContentsAsync(
+            chatHistory, 
+            settings, 
+            _kernel))
+        {
+            if (chunk.Content is not null)
             {
-                await Clients.Caller.SendAsync("RedirectTo", route);
-                return;
+                completeResponse.Append(chunk.Content);
+                await Clients.Caller.SendAsync("ReceiveMessage", 
+                    "MobishareBot", 
+                    chunk.Content, 
+                    DateTime.UtcNow.ToLocalTime().ToString("g"));
             }
+        }
 
-            // 2. Se non c'è routing, procediamo con la generazione della risposta
-            var prompt = BuildPromptWithTools(message, lastMessages);
-            var completeResponse = new StringBuilder();
+        // Aggiungi log per debugging
+        _logger.LogInformation("Inizio routing per: {Message}", message);
+        
+        var route = await _router.RouteFromUserInputAsync(message);
+        
+        _logger.LogInformation("Risultato routing: {Route} per: {Message}", route, message);
 
-            await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), prompt))
-            {
-                completeResponse.Append(partialResponse);
-                await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
-            }
+        if (route != "/home")
+        {
+            await Clients.Caller.SendAsync("RedirectTo", route);
+            return;
+        }
 
             // 3. Salvataggio risposta AI
             var aiResponseContent = completeResponse.ToString();

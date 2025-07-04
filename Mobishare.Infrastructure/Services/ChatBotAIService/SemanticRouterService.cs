@@ -1,15 +1,18 @@
-using System;
 using Microsoft.SemanticKernel;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace Mobishare.Infrastructure.Services;
 
 public class SemanticRouterService
 {
     private readonly Kernel _kernel;
+    private readonly ILogger<SemanticRouterService> _logger;
 
-    public SemanticRouterService(Kernel kernel)
+    public SemanticRouterService(Kernel kernel, ILogger<SemanticRouterService> logger)
     {
         _kernel = kernel;
+        _logger = logger;
     }
 
     public async Task<string> RouteFromUserInputAsync(string userInput)
@@ -24,18 +27,43 @@ public class SemanticRouterService
             Messaggio utente: {userInput}
             Funzione da chiamare:";
 
-        var result = await _kernel.InvokePromptAsync(prompt);
-
-        var functionName = result?.ToString()?.Trim();
-
-        var plugin = _kernel.Plugins["Routing"];
-
-        if (functionName != null && plugin.TryGetFunction(functionName, out var skFunction))
+        try
         {
-            var routeResult = await skFunction.InvokeAsync(_kernel);
-            return routeResult.ToString() ?? "/home";
-        }
+            var result = await _kernel.InvokePromptAsync(prompt);
+            var functionName = result.ToString()?.Trim();
 
+            if (string.IsNullOrEmpty(functionName))
+            {
+                _logger.LogWarning("Nessuna funzione di routing identificata per: {UserInput}", userInput);
+                return "/home";
+            }
+
+            _logger.LogInformation("Funzione selezionata: {FunctionName} per: {UserInput}", functionName, userInput);
+
+            // Correzione: accesso corretto al plugin
+            if (!_kernel.Plugins.TryGetPlugin("Routing", out var plugin))
+            {
+                _logger.LogError("Plugin 'Routing' non trovato");
+                return "/home";
+            }
+
+            // Correzione: invocazione corretta della funzione
+            if (plugin.TryGetFunction(functionName, out var function))
+            {
+                var context = new KernelArguments();
+                var resultValue = await function.InvokeAsync(_kernel, context);
+                return resultValue.GetValue<string>() ?? "/home";
+            }
+            else
+            {
+                _logger.LogWarning("Funzione {FunctionName} non trovata nel plugin", functionName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore nel routing semantico per: {UserInput}", userInput);
+        }
+        
         return "/home";
     }
 }
