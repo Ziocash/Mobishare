@@ -1,8 +1,9 @@
 using System;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
 
-public class IRoutingTool
+public interface IRoutingTool
 {
-
+    Task<IActionResult> SimplePageRoutingAsync(string route);
 }
