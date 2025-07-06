@@ -20,6 +20,7 @@ using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,6 +100,7 @@ builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
+builder.Services.AddScoped<IRoutingTool, RoutingTool>();
 builder.Services.AddScoped<IVehicleTool, VehicleTool>();
 
 builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();

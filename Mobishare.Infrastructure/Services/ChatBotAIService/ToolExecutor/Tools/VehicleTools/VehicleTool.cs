@@ -32,6 +32,7 @@ public class VehicleTool : IVehicleTool
 
     public Task<string> ReserveVehicleAsync()
     {
+        UserId = UserContext.UserId;
         // _logger.LogInformation(UserId);
         // _logger.LogInformation("Reserve");
         return Task.FromResult("Veicolo riservato con successo.");

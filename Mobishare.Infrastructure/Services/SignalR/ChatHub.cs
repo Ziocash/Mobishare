@@ -20,6 +20,8 @@ using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
 using Mobishare.Core.Requests.Chats.ChatMessageRequests.Queries;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools;
+using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
 
 public class ChatHub : Hub
 {
@@ -161,11 +163,11 @@ public class ChatHub : Hub
         // 4. Ollama genera risposta finale →           √
         // 5. .NET la mostra all’utente                 √
        
-        _userContext.UserId = userId;
-
+        UserContext.UserId = userId;
+    
         var chat = new Chat(_client);
         
-        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool() };
+        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
         var aus = "";
 
         await foreach (var response in chat.SendAsync(message, tools))
