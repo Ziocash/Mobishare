@@ -3,6 +3,10 @@ const connection = new signalR.HubConnectionBuilder()
     .withUrl("/chathub")
     .build();
 
+const conKernel = new signalR.HubConnectionBuilder()
+    .withUrl("/chathub")
+    .build();    
+
 let currentBotMessage = null;
 let currentBotTimeout = null;
 let currentBotDateTime = null;
@@ -34,13 +38,14 @@ function hideTypingIndicator() {
     }
 }
 
-connection.on("RedirectTo", (route) => {
+
+conKernel.on("RedirectTo", (route) => {
     if (isRedirecting) return;
     isRedirecting = true;
-    
+
     // Nascondi l'indicatore di typing
     hideTypingIndicator();
-    
+
     // Aggiungi un messaggio di sistema
     const systemMsg = document.createElement("div");
     systemMsg.classList.add("system-message");
@@ -51,7 +56,7 @@ connection.on("RedirectTo", (route) => {
     `;
     chatBox.appendChild(systemMsg);
     chatBox.scrollTop = chatBox.scrollHeight;
-    
+
     // Ritardo per permettere all'utente di leggere il messaggio
     setTimeout(() => {
         window.location.href = route;
@@ -123,7 +128,7 @@ function sendMessage() {
     const input = document.getElementById("userInput");
     const msg = input.value.trim();
     const id = document.getElementById("conversationId").value;
-    
+
     // Reset stato redirect
     isRedirecting = false;
     if (!msg) return;

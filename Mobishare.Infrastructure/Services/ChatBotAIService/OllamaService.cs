@@ -17,7 +17,10 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService
         private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public OllamaService(ILogger<OllamaService> logger, IConfiguration configuration, IServiceScopeFactory scopeFactory)
+        public OllamaService(
+            ILogger<OllamaService> logger,
+            IConfiguration configuration,
+            IServiceScopeFactory scopeFactory)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -63,7 +66,7 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService
                 }
             }
         }
-        
+
         public async Task<string> GetResponseAsync(string prompt)
         {
             // var req = new ChatRequest

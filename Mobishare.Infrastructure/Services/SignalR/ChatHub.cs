@@ -45,19 +45,18 @@ public class ChatHub : Hub
 
     public ChatHub
     (
-        IOllamaService ollamaService,
-        IMediator mediator, IMapper mapper,
-        ILogger<ChatHub> logger,
-        IConfiguration configuration,
-        IEmbeddingService embeddingService,
-        IKnowledgeBaseRetriever knowledgeBaseRetriever,
-        IServiceScopeFactory scopeFactory,
-        IHubContext<ChatHub> hubContext,
-        IIntentClassificationService intentClassification,
-        IIntentRouterService intentRouter,
-        IUserContextService userContext,
-        Kernel kernel,
-        SemanticRouterService router
+ IOllamaService ollamaService,
+    IMediator mediator,
+    IMapper mapper,
+    ILogger<ChatHub> logger,
+    IConfiguration configuration,
+    IEmbeddingService embeddingService,
+    IKnowledgeBaseRetriever knowledgeBaseRetriever,
+    IServiceScopeFactory scopeFactory,
+    IHubContext<ChatHub> hubContext,
+    IUserContextService userContext,
+    Kernel kernel,
+    SemanticRouterService router
     )
     {
         _knowledgeBaseRetriever = knowledgeBaseRetriever ?? throw new ArgumentNullException(nameof(knowledgeBaseRetriever));
@@ -72,9 +71,7 @@ public class ChatHub : Hub
         _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _router = router ?? throw new ArgumentNullException(nameof(router));
-        _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
-        _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
-    }
+}
 
     public async Task SendMessage(string conversationId, string message)
     {
@@ -157,7 +154,7 @@ public class ChatHub : Hub
         try
         {
             var chatHistory = new ChatHistory();
-        
+
         // Aggiungi contesto conversazione
         foreach (var msg in lastMessages)
         {
@@ -176,8 +173,7 @@ public class ChatHub : Hub
         };
 
         var completeResponse = new StringBuilder();
-
-        await foreach (var chunk in _chatService.GetStreamingChatMessageContentsAsync(
+  /*await foreach (var chunk in _chatService.GetStreamingChatMessageContentsAsync(
             chatHistory, 
             settings, 
             _kernel))
@@ -190,13 +186,13 @@ public class ChatHub : Hub
                     chunk.Content, 
                     DateTime.UtcNow.ToLocalTime().ToString("g"));
             }
-        }
-
-        // Aggiungi log per debugging
+        
+        }*/
+   // Aggiungi log per debugging
         _logger.LogInformation("Inizio routing per: {Message}", message);
-        
+
         var route = await _router.RouteFromUserInputAsync(message);
-        
+
         _logger.LogInformation("Risultato routing: {Route} per: {Message}", route, message);
 
         if (route != "/home")

@@ -21,6 +21,8 @@ using Mobishare.Core.Services.UserContext;
 using Microsoft.SemanticKernel;
 using Mobishare.Infrastructure.Services.ChatBotAIService.Pulgins;
 using Mobishare.Infrastructure.Services;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
+using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,10 +91,27 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+#region Ollama configuration
+builder.Services.AddScoped<IOllamaService, OllamaService>(); // Aggiungi questa linea
+#endregion
 
-builder.Services.AddScoped<SemanticRouterService>(sp => 
+#region Embedding e KnowledgeBase
+builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
+builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
+#endregion
+
+#region Intent Services
+builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
+builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
+#endregion
+
+#region User Context
+builder.Services.AddScoped<IUserContextService, UserContextService>();
+#endregion
+
+builder.Services.AddScoped<SemanticRouterService>(sp =>
     new SemanticRouterService(
-        sp.GetRequiredService<Kernel>(), 
+	 sp.GetRequiredService<Kernel>(),
         sp.GetRequiredService<ILogger<SemanticRouterService>>()
     )
 );
@@ -102,9 +121,11 @@ builder.Services.AddScoped<Kernel>(sp =>
     var config = builder.Configuration.GetSection("Ollama:Llm");
     var urlApiClient = config["UrlApiClient"] ?? throw new Exception("Manca l'URL per Ollama");
     var modelName = config["ModelName"] ?? throw new Exception("Manca il nome del modello");
-   
-    #pragma warning disable SKEXP0070 // disabilita warning sperimentali
+
+
+#pragma warning disable SKEXP0070
     var kernelBuilder = Kernel.CreateBuilder();
+
     // Usa Ollama come servizio di completamento
     kernelBuilder.AddOllamaChatCompletion(
         modelId: modelName,
