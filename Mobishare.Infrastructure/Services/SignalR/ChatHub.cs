@@ -15,8 +15,6 @@ using OllamaSharp;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Mobishare.Core.Requests.Chats.ConversationRequests.Commands;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
 using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
 using Mobishare.Core.Requests.Chats.ChatMessageRequests.Queries;
@@ -36,6 +34,7 @@ public class ChatHub : Hub
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHubContext<ChatHub> _hubContext;
     private readonly IUserContextService _userContext;
+    private readonly Chat _chat;
     private static readonly Dictionary<int, Timer> _inactivityTimers = new();
     private static readonly TimeSpan InactivityLimit = TimeSpan.FromMinutes(30);
 
@@ -49,9 +48,6 @@ public class ChatHub : Hub
         IKnowledgeBaseRetriever knowledgeBaseRetriever,
         IServiceScopeFactory scopeFactory,
         IHubContext<ChatHub> hubContext,
-        IIntentClassificationService intentClassification,
-        IIntentRouterService intentRouter,
-        IVehicleTool vehicleTool,
         IUserContextService userContext
     )
     {
@@ -68,18 +64,279 @@ public class ChatHub : Hub
 
         _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
         _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
+        _chat = new Chat(_client);
     }
 
     public async Task SendMessage(string conversationId, string message)
     {
-        if (Context.UserIdentifier == null)
+        var userId = Context.UserIdentifier;
+
+        if (userId == null)
         {
             _logger.LogWarning("User identifier is null. Cannot process message.");
             await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "You must be logged in to send messages.", DateTime.UtcNow.ToLocalTime().ToString("g"));
             return;
         }
 
-        var userId = Context.UserIdentifier;
+        int newConversationId = await ConversationAssignmentAsync(conversationId, userId);
+
+        if (newConversationId == 0)
+        {
+            _logger.LogWarning("Failed to assign a conversation ID. Cannot process message.");
+            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An error occurred while processing your request. Please try again later.", DateTime.UtcNow.ToLocalTime().ToString("g"));
+            return;
+        }
+
+        ChatMessage aiResponse;
+        bool answered = false;
+        var sanitizer = new HtmlSanitizer();
+        message = sanitizer.Sanitize(message);
+
+        await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
+
+        var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
+        var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
+
+        using var scope = _scopeFactory.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var messages = await mediator.Send(new GetMessagesByConversationId(newConversationId));
+        var lastMessages = messages.Take(10);
+        var windowMessages = lastMessages.Select(m => $"{m.Sender}: {m.Message} - {m.CreatedAt}").ToList();
+
+        var userResponse = await _mediatr.Send(new CreateChatMessage
+        {
+            ConversationId = newConversationId,
+            Message = message,
+            Sender = MessageSenderType.User.ToString(),
+            CreatedAt = DateTime.UtcNow,
+            Embedding = deserializeEmbedResponse
+        });
+
+        var prompt = BuildPrompt(windowMessages, message);
+
+        _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
+
+        // 1. Invoca Ollama (con tools disponibili) →  
+        // 2. Ollama decide:                            √
+        //    - Risponde direttamente?                  √
+        //    - Oppure chiama un tool?                  √
+        // 2.1 Se serve un tool →
+        // 2.2 .NET lo esegue (es. prenota veicolo) →
+        // 3. Risultato → mandato a Ollama →               
+        // 4. Ollama genera risposta finale →           √
+        // 5. .NET la mostra all’utente                 √
+
+        UserContext.UserId = userId;
+
+        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
+        var aiPromtMessage = "";
+        
+        await foreach (var response in _chat.SendAsync(prompt, tools))
+        {
+            aiPromtMessage += response;
+            if (aiPromtMessage != "")
+                await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", response, DateTime.UtcNow.ToLocalTime().ToString("g"));
+        }
+
+        var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(aiPromtMessage);
+        var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
+
+        aiResponse = await _mediatr.Send(new CreateChatMessage
+        {
+            ConversationId = newConversationId,
+            Message = aiPromtMessage,
+            Sender = MessageSenderType.AiAgent.ToString(),
+            CreatedAt = DateTime.UtcNow,
+            Embedding = deserializeAiEmbedResponse
+        });
+
+        answered = true;
+
+        if (userResponse != null && aiResponse != null)
+        {
+            var messagePair = await _mediatr.Send(new CreateMessagePair
+            {
+                UserMessageId = userResponse.Id,
+                AiMessageId = aiResponse.Id,
+                IsForRag = false,
+                SourceType = SourceType.Chatbot.ToString(),
+                Answered = answered,
+                Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
+            });
+        }
+
+        ResetInactivityTimer(newConversationId, Context.ConnectionId);
+
+        // Console.WriteLine(aus);
+
+        // var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
+        // var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
+
+        // var userResponse = await _mediatr.Send(new CreateChatMessage
+        // {
+        //     ConversationId = newConversationId,
+        //     Message = message,
+        //     Sender = MessageSenderType.User.ToString(),
+        //     CreatedAt = DateTime.UtcNow,
+        //     Embedding = deserializeEmbedResponse
+        // });
+
+        // Console.WriteLine($"Messaggio ricevuto da te: {message}");
+
+        // TODO: da mettere nel prompt
+        // var relevantMessages = await _knowledgeBaseRetriever.GetRelevantPairsAsync(userEmbedResponse, 3);
+
+        // try
+        // {
+        // string prompt = BuildPrompt(message);
+
+        // await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
+        // var completeResponse = string.Empty;
+
+        // await foreach (var partialResponse in _ollamaService.StreamResponseAsync(newConversationId, prompt))
+        // {
+        //     completeResponse += partialResponse;
+        //     await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
+        // }
+
+        //completeResponse = sanitizer.Sanitize(completeResponse);
+
+        //var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
+        //var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
+
+        //     aiResponse = await _mediatr.Send(new CreateChatMessage
+        //     {
+        //         ConversationId = newConversationId,
+        //         Message = aiPromtMessage,
+        //         Sender = MessageSenderType.AiAgent.ToString(),
+        //         CreatedAt = DateTime.UtcNow,
+        //         Embedding = deserializeAiEmbedResponse
+        //     });
+
+        //     answered = true;
+        // }
+        // catch (Exception ex)
+        // {
+        //     _logger.LogError($"Errore interno: {ex.Message}");
+        //     await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An internal error has occurred.", DateTime.UtcNow.ToLocalTime().ToString("g"));
+        //     aiResponse = await _mediatr.Send(new CreateChatMessage
+        //     {
+        //         ConversationId = newConversationId,
+        //         Message = "An internal error has occurred.",
+        //         Sender = MessageSenderType.AiAgent.ToString(),
+        //         CreatedAt = DateTime.UtcNow
+        //     });
+        // }
+    }
+
+    private string BuildPrompt(List<string> userMessages, string promptMessage)
+    {
+        var messages = "";
+
+        foreach (var message in userMessages) messages += $"{message}\n";
+
+        return $@"
+                You are a helpful and polite virtual assistant for Mobishare, a green vehicle sharing service.
+
+                Your job is to answer user questions clearly, concisely, and professionally.
+
+                Context:
+                - The conversation history is shown below in the format 'Sender: Message - Timestamp'.
+                - Use this history to understand the context, but respond only to the latest user message.
+
+                Guidelines:
+                - If you are unsure or lack enough information, respond with:
+                ""I'm not sure how to answer that. If you have any other questions, I'm here to help!""
+                - Do **not** make up information.
+                - Do **not** repeat the user's message in your reply.
+                - Be direct, clear, and informative.
+
+                Conversation history:
+                {messages}
+
+                Latest user message:
+                {promptMessage}
+            ";
+    }
+
+    private string InactivityPrompt()
+    {
+        return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, write the sentence: The conversation has been automatically closed due to inactivity.";
+    }
+
+    private void ResetInactivityTimer(int conversationId, string connectionId)
+    {
+        if (_inactivityTimers.TryGetValue(conversationId, out var existingTimer))
+        {
+            existingTimer.Change(InactivityLimit, Timeout.InfiniteTimeSpan);
+        }
+        else
+        {
+            var timer = new Timer(async _ =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var completeResponse = string.Empty;
+                var sanitizer = new HtmlSanitizer();
+
+                try
+                {
+                    _logger.LogInformation($"Close chat {conversationId} for inactivity.");
+
+                    await mediator.Send(new CloseConversationById(conversationId));
+
+                    await foreach (var partialResponse in _ollamaService.StreamResponseAsync(conversationId, InactivityPrompt()))
+                    {
+                        completeResponse += partialResponse;
+                        await _hubContext.Clients.Client(connectionId)
+                            .SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
+
+                    }
+
+                    completeResponse = sanitizer.Sanitize(completeResponse);
+
+                    var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
+                    var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
+
+                    var aiMessage = await mediator.Send(new CreateChatMessage
+                    {
+                        ConversationId = conversationId,
+                        Message = completeResponse,
+                        Sender = MessageSenderType.AiAgent.ToString(),
+                        CreatedAt = DateTime.UtcNow,
+                        Embedding = deserializeAiEmbedResponse
+                    });
+
+                    _logger.LogDebug("Creating MessagePair with aiId={AiId}", aiMessage?.Id);
+
+                    await mediator.Send(new CreateMessagePair
+                    {
+                        AiMessageId = aiMessage.Id,
+                        IsForRag = false,
+                        SourceType = SourceType.Chatbot.ToString(),
+                        Answered = true,
+                        Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
+                    });
+
+                    if (_inactivityTimers.TryGetValue(conversationId, out var expiredTimer))
+                    {
+                        expiredTimer.Dispose();
+                        _inactivityTimers.Remove(conversationId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Errore durante la chiusura automatica della conversazione {conversationId}");
+                }
+            }, null, InactivityLimit, Timeout.InfiniteTimeSpan);
+
+            _inactivityTimers[conversationId] = timer;
+        }
+    }
+
+    private async Task<int> ConversationAssignmentAsync(string conversationId, string userId)
+    {
         var conversations = await _mediatr.Send(new GetAllConversationsByUserId(userId));
 
         if (conversations == null || !conversations.Any())
@@ -116,7 +373,6 @@ public class ChatHub : Hub
                     CreatedAt = DateTime.UtcNow,
                     UserId = userId
                 });
-
                 conversationId = newConversation.Id.ToString();
             }
             else if (currentConversation != null && currentConversation.Id.ToString() != conversationId)
@@ -126,219 +382,6 @@ public class ChatHub : Hub
             }
         }
 
-        ChatMessage aiResponse;
-        bool answered = false;
-        var sanitizer = new HtmlSanitizer();
-        message = sanitizer.Sanitize(message);
-
-        await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
-        
-        var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
-        var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
-
-        var userResponse = await _mediatr.Send(new CreateChatMessage
-        {
-            ConversationId = int.Parse(conversationId),
-            Message = message,
-            Sender = MessageSenderType.User.ToString(),
-            CreatedAt = DateTime.UtcNow,
-            Embedding = deserializeEmbedResponse
-        });
-
-
-        _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
-
-        using var scope = _scopeFactory.CreateScope();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        var messages = await mediator.Send(new GetMessagesByConversationId(int.Parse(conversationId)));
-        var lastMessages = messages.Take(10);
-        // 1. Invoca Ollama (con tools disponibili) →  
-        // 2. Ollama decide:                            √
-        //    - Risponde direttamente?                  √
-        //    - Oppure chiama un tool?                  √
-        // 2.1 Se serve un tool →
-        // 2.2 .NET lo esegue (es. prenota veicolo) →
-        // 3. Risultato → mandato a Ollama →               
-        // 4. Ollama genera risposta finale →           √
-        // 5. .NET la mostra all’utente                 √
-       
-        UserContext.UserId = userId;
-    
-        var chat = new Chat(_client);
-        
-        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
-        var aus = "";
-
-        await foreach (var response in chat.SendAsync(message, tools))
-        {
-            aus += response;
-        }
-
-        Console.WriteLine(aus);
-
-        return;
-
-        // var userEmbedResponse = await _embeddingService.CreateEmbeddingAsync(message);
-        // var deserializeEmbedResponse = JsonSerializer.Serialize(userEmbedResponse);
-
-        // var userResponse = await _mediatr.Send(new CreateChatMessage
-        // {
-        //     ConversationId = int.Parse(conversationId),
-        //     Message = message,
-        //     Sender = MessageSenderType.User.ToString(),
-        //     CreatedAt = DateTime.UtcNow,
-        //     Embedding = deserializeEmbedResponse
-        // });
-
-        // Console.WriteLine($"Messaggio ricevuto da te: {message}");
-
-        // TODO: da mettere nel prompt
-        var relevantMessages = await _knowledgeBaseRetriever.GetRelevantPairsAsync(userEmbedResponse, 3);
-
-        try
-        {
-            string prompt = BuildPrompt(message);
-
-            await Clients.Caller.SendAsync("ReceiveMessage", "User", message, DateTime.UtcNow.ToLocalTime().ToString("g"));
-            var completeResponse = string.Empty;
-
-            await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), prompt))
-            {
-                completeResponse += partialResponse;
-                await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
-            }
-
-            completeResponse = sanitizer.Sanitize(completeResponse);
-
-            var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
-            var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
-
-            aiResponse = await _mediatr.Send(new CreateChatMessage
-            {
-                ConversationId = int.Parse(conversationId),
-                Message = completeResponse,
-                Sender = MessageSenderType.AiAgent.ToString(),
-                CreatedAt = DateTime.UtcNow,
-                Embedding = deserializeAiEmbedResponse
-            });
-
-            answered = true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Errore interno: {ex.Message}");
-            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", "An internal error has occurred.", DateTime.UtcNow.ToLocalTime().ToString("g"));
-            aiResponse = await _mediatr.Send(new CreateChatMessage
-            {
-                ConversationId = int.Parse(conversationId),
-                Message = "An internal error has occurred.",
-                Sender = MessageSenderType.AiAgent.ToString(),
-                CreatedAt = DateTime.UtcNow
-            });
-        }
-
-        if (userResponse != null && aiResponse != null)
-        {
-            var messagePair = await _mediatr.Send(new CreateMessagePair
-            {
-                UserMessageId = userResponse.Id,
-                AiMessageId = aiResponse.Id,
-                IsForRag = true, // TODO: cambiare a FALSE!
-                SourceType = SourceType.Chatbot.ToString(),
-                Answered = answered,
-                Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
-            });
-        }
-
-        ResetInactivityTimer(conversationId, Context.ConnectionId);
-    }
-
-    private string BuildPrompt(string userMessage)
-    {
-        return $@"You are a virtual assistant for Mobishare, a car sharing service similar to Lime.
-                Answer questions clearly and politely.
-                If you don't know the answer to a question, don't provide inaccurate or made-up information. Instead, politely respond with: 'I can't answer that question. If you have any other questions, I'm here to help!' Only respond when you are sure and have enough information.
-                the message below will be the user's message, respond clearly and concisely, without repeating the user's message.
-
-                User's message: {userMessage}
-                ";
-    }
-
-    private string InactivityPrompt()
-    {
-        return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, write the sentence: The conversation has been automatically closed due to inactivity.";
-    }
-
-    private void ResetInactivityTimer(string conversationId, string connectionId)
-    {
-        int parsedConversationId = int.Parse(conversationId);
-
-        if (_inactivityTimers.TryGetValue(parsedConversationId, out var existingTimer))
-        {
-            existingTimer.Change(InactivityLimit, Timeout.InfiniteTimeSpan);
-        }
-        else
-        {
-            var timer = new Timer(async _ =>
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                var completeResponse = string.Empty;
-                var sanitizer = new HtmlSanitizer();
-
-                try
-                {
-                    _logger.LogInformation($"Close chat {conversationId} for inactivity.");
-
-                    await mediator.Send(new CloseConversationById(parsedConversationId));
-
-                    await foreach (var partialResponse in _ollamaService.StreamResponseAsync(int.Parse(conversationId), InactivityPrompt()))
-                    {
-                        completeResponse += partialResponse;
-                        await _hubContext.Clients.Client(connectionId)
-                            .SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
-
-                    }
-
-                    completeResponse = sanitizer.Sanitize(completeResponse);
-
-                    var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(completeResponse);
-                    var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
-
-                    var aiMessage = await mediator.Send(new CreateChatMessage
-                    {
-                        ConversationId = parsedConversationId,
-                        Message = completeResponse,
-                        Sender = MessageSenderType.AiAgent.ToString(),
-                        CreatedAt = DateTime.UtcNow,
-                        Embedding = deserializeAiEmbedResponse
-                    });
-
-                    _logger.LogDebug("Creating MessagePair with aiId={AiId}", aiMessage?.Id);
-
-                    await mediator.Send(new CreateMessagePair
-                    {
-                        AiMessageId = aiMessage.Id,
-                        IsForRag = false,
-                        SourceType = SourceType.Chatbot.ToString(),
-                        Answered = true,
-                        Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
-                    });
-
-                    if (_inactivityTimers.TryGetValue(parsedConversationId, out var expiredTimer))
-                    {
-                        expiredTimer.Dispose();
-                        _inactivityTimers.Remove(parsedConversationId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Errore durante la chiusura automatica della conversazione {conversationId}");
-                }
-            }, null, InactivityLimit, Timeout.InfiniteTimeSpan);
-
-            _inactivityTimers[parsedConversationId] = timer;
-        }
+        return int.TryParse(conversationId, out var parsedConversationId) ? parsedConversationId : 0;
     }
 }
