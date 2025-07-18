@@ -31,8 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers/" />
-    <Folder Include="Controllers/Chats/" />
     <Folder Include="Controllers/Maps/" />
     <Folder Include="Migrations\" />
     <Folder Include="Requests/Chats/MessagePairRequests/Queries/" />
