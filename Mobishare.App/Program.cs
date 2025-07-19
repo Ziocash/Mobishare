@@ -30,7 +30,6 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddControllers();
 
-
 #region SignalR configuration
 builder.Services.AddSignalR();
 #endregion
@@ -120,6 +119,27 @@ builder.Services.Configure<PayPalClientOptions>(options =>
 
 builder.Services.AddSingleton<TimerService>();
 
+builder.Services.AddEndpointsApiExplorer();  // Necessario per .NET 7+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Mobishare API",
+        Version = "v1",
+        Description = "API documentation for Mobishare"
+    });
+
+    c.EnableAnnotations();
+    
+    // Aggiungi i commenti XML (opzionale ma consigliato)
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -134,6 +154,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mobishare API v1");
+});
+
 
 app.UseAuthorization();
 

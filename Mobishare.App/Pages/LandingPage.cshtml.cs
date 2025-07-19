@@ -9,6 +9,7 @@ using Mobishare.Core.Requests.Maps.CityRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
@@ -64,8 +65,6 @@ namespace Mobishare.App.Pages
                 VehicleTypeId = vehicle.VehicleTypeId,
                 CreatedAt = vehicle.CreatedAt
             });
-
-
 
             TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
             return Page();
