@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Models.Vehicles;
+using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
 using Mobishare.Core.UiModels;
 
@@ -21,6 +22,7 @@ namespace Mobishare.App.Pages
         private readonly IGoogleGeocodingService _googleGeocoding;
         public String? StartLocationName;
         public Ride Ride;
+        public Position? StartPosition;
 
         public TravelModel(
             ILogger<LandingPageModel> logger,
@@ -52,14 +54,17 @@ namespace Mobishare.App.Pages
             }
 
             Ride = await _mediator.Send(new GetRideByUserId(userId));
+
             if (Ride == null)
             {
                 _logger.LogWarning("No ride found for user with ID: {UserId}", userId);
                 return RedirectToPage("/Index");
             }
 
-            if (Ride.PositionStartId != null)
-                StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)Ride.PositionStart.Latitude, (double)Ride.PositionStart.Longitude);
+            StartPosition = await _mediator.Send(new GetPositionByVehicleId(Ride.VehicleId));
+            
+            if (StartPosition != null)
+                StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
             return Page();
         }
     }
