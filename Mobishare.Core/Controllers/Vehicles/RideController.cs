@@ -19,7 +19,7 @@ public class RideController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("createRide")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new ride",
         Description = "This endpoint allows you to create a new ride for a vehicle."
@@ -89,10 +89,10 @@ public class RideController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("GetRide/{userId}")]
+    [HttpGet("{userId}")]
     [SwaggerOperation(
-        Summary = "Get a specific ride for a user",
-        Description = "This endpoint retrieves a specific ride for a user.",
+        Summary = "Get the last ride for a specific user",
+        Description = "This endpoint retrieves the last ride for a specific user.",
         OperationId = "GetRideByUserId"
     )]
     [SwaggerResponse(200, "Ride retrieved successfully", typeof(Ride))]

@@ -19,7 +19,7 @@ public class VehicleController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("createVehicle")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new vehicle",
         Description = "This endpoint allows you to create a new vehicle.",
@@ -47,7 +47,7 @@ public class VehicleController : ControllerBase
     }
 
 
-    [HttpPut("updateVehicle")]
+    [HttpPut()]
     [SwaggerOperation(
         Summary = "Update an existing vehicle",
         Description = "This endpoint allows you to update an existing vehicle.",
@@ -90,7 +90,7 @@ public class VehicleController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("Vehicle/{id}")]
+    [HttpGet("{id}")]
     [SwaggerOperation(
         Summary = "Get vehicle by ID",
         Description = "This endpoint retrieves a vehicle by its ID.",

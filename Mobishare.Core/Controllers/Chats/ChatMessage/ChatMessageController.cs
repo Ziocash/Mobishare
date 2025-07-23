@@ -18,7 +18,7 @@ public class ChatMessageController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateChatMessage")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new chat message",
         Description = "Creates and stores a new message in the specified conversation",

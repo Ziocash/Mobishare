@@ -20,7 +20,7 @@ public class ParkingSlotController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateParkingSlot")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a Parking Slot",
         Description = "Creates a new parking slot in the system."
@@ -47,7 +47,7 @@ public class ParkingSlotController : ControllerBase
         return CreatedAtAction(nameof(CreateParkingSlot), new { id = response.Id }, response);
     }
 
-    [HttpPut("UpdateParkingSlot")]
+    [HttpPut()]
     [SwaggerOperation(
         Summary = "Update a Parking Slot",
         Description = "Updates an existing parking slot in the system.",
@@ -79,7 +79,7 @@ public class ParkingSlotController : ControllerBase
         return Ok(response);
     }
 
-    [HttpDelete("DeleteParkingSlot/{id}")]
+    [HttpDelete("{id}")]
     [SwaggerOperation(
         Summary = "Delete a Parking Slot",
         Description = "Deletes a parking slot from the system.",

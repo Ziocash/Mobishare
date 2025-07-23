@@ -20,7 +20,7 @@ public class PositionController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreatePosition")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new position for a vehicle",
         Description = "Crreates a new position for a vehicle based on the provided details."
@@ -44,7 +44,7 @@ public class PositionController : ControllerBase
         return CreatedAtAction(nameof(CreatePosition), new { id = result.Id }, result);
     }
 
-    [HttpGet("GetPosition/{VehicleId}")]
+    [HttpGet("{vehicleId}")]
     [SwaggerOperation(
         Summary = "Get the current position of a vehicle",
         Description = "Retrieves the current position of a vehicle based on its ID."

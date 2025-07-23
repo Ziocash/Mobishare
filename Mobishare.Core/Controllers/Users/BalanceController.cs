@@ -18,7 +18,7 @@ public class BalanceController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateBalance")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new balance",
         Description = "Creates and stores a new balance",
@@ -43,7 +43,7 @@ public class BalanceController : ControllerBase
         return CreatedAtAction(nameof(GetBalanceByUserId), new { userId = result.UserId }, result);
     }
 
-    [HttpPut("UpdateBalance")]
+    [HttpPut()]
     [SwaggerOperation(
         Summary = "Update an existing balance",
         Description = "Updates an existing balance",
@@ -70,7 +70,7 @@ public class BalanceController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("GetBalance/{userId}")]
+    [HttpGet("{userId}")]
     [SwaggerOperation(
         Summary = "Get balance by user ID",
         Description = "Retrieves the balance for a specific user",

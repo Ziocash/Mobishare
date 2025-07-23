@@ -19,7 +19,7 @@ public class CityController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateCity")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new city",
         Description = "Creates and stores a new message in the specified conversation",
@@ -44,7 +44,7 @@ public class CityController : ControllerBase
         return CreatedAtAction(nameof(CreateCity), new { id = response.Id }, response);
     }
 
-    [HttpPut("UpdateCity")]
+    [HttpPut()]
     [SwaggerOperation(
         Summary = "Update an existing city",
         Description = "Updates the details of an existing city",
@@ -73,7 +73,7 @@ public class CityController : ControllerBase
         return Ok(response);
     }
 
-    [HttpDelete("DeleteCity/{id}")]
+    [HttpDelete("{id}")]
     [SwaggerOperation(
         Summary = "Delete a city",
         Description = "Deletes a city by its ID",

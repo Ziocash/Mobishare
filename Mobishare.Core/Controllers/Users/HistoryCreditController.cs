@@ -19,7 +19,7 @@ public class HistoryCreditController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateHistoryCredit")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create History Credit",
         Description = "Creates a new history credit record.")]

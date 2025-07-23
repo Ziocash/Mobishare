@@ -19,7 +19,7 @@ public class ConversationController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost("CreateConversation")]
+    [HttpPost()]
     [SwaggerOperation(
         Summary = "Create a new conversation",
         Description = "Creates and stores a new conversation",
@@ -43,7 +43,7 @@ public class ConversationController : ControllerBase
         return CreatedAtAction(nameof(GetMessagesByConversationId), new { conversationId = result.Id }, result);
     }
 
-    [HttpGet("CloseConversation/{conversationId}")]
+    [HttpGet("Close/{conversationId}")]
     [SwaggerOperation(
         Summary = "Close a conversation",
         Description = "Closes a conversation by its ID.",
@@ -86,7 +86,7 @@ public class ConversationController : ControllerBase
         return Ok(conversations);
     }
 
-    [HttpGet("AllConversationsByUserId/{conversationId}")]
+    [HttpGet("AllConversationsByUserId/{userId}")]
     [SwaggerOperation(
         Summary = "Get all conversations by user ID",
         Description = "Retrieves all conversations for a specific user.",
