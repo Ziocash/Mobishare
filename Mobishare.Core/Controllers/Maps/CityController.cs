@@ -19,7 +19,7 @@ public class CityController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
-    [HttpPost()]
+    [HttpPost]
     [SwaggerOperation(
         Summary = "Create a new city",
         Description = "Creates and stores a new message in the specified conversation",

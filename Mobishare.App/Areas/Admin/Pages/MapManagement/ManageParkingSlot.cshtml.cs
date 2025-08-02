@@ -14,7 +14,6 @@ using Mobishare.Core.Security;
 using Mobishare.Core.ValidationAttributes;
 using NetTopologySuite.IO;
 
-
 namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 {
     [Authorize(Policy = PolicyNames.IsStaff)]
@@ -23,19 +22,12 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         private readonly ILogger<ManageParkingSlotModel> _logger;
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
         private readonly UserManager<IdentityUser> _userManager;
         public IEnumerable<ParkingSlot> AllParkingSlots { get; set; }
         public IEnumerable<City> AllCities { get; set; }
         public string AllParkingSlotsPerimeter { get; set; }
         public string AllCitiesPerimeter { get; set; }
-
-        public ManageParkingSlotModel(ILogger<ManageParkingSlotModel> logger, IMediator mediator, IMapper mapper, UserManager<IdentityUser> userManager)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        }
 
         [BindProperty]
         public InputParkingSlot Input { get; set; }
@@ -51,31 +43,33 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             public ParkingSlotTypes Type { get; set; }
         }
 
+        public ManageParkingSlotModel(ILogger<ManageParkingSlotModel> logger,
+            IMediator mediator,
+            IMapper mapper,
+            IHttpClientFactory httpClientFactory,
+            UserManager<IdentityUser> userManager)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        }
+
         public async Task<IActionResult> OnPostAddNewParkingSlot()
         {
             var userId = _userManager.GetUserId(User);
 
             if (userId == null)
             {
-                AllCities = await _mediator.Send(new GetAllCities());
-                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-                foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
+                await LoadAllDataAsync();
                 _logger.LogWarning("User ID is null. Unable to process the request.");
                 return Page();
             }
 
             if (!ModelState.IsValid)
             {
-                AllCities = await _mediator.Send(new GetAllCities());
-                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-                foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
-                _logger.LogWarning("Model state is invalid. Unable to process the request.");
+                await LoadAllDataAsync();
                 return Page();
             }
 
@@ -85,10 +79,9 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             bool contained = false;
             var cityId = 0;
 
-            foreach (var cityToCheck in citiesToCheck)
+            foreach (var cityToCheck in citiesToCheck ?? new List<City>())
             {
                 var cityGeometryToCheck = reader.Read(cityToCheck.PerimeterLocation);
-
                 contained = cityGeometryToCheck.Contains(newParkingSlotGeometry);
                 if (contained)
                 {
@@ -100,12 +93,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             if (!contained)
             {
                 ModelState.AddModelError("Input.ParkingArea", "Parking slot area is not in the city.");
-                AllCities = await _mediator.Send(new GetAllCities());
-                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-                foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
+                await LoadAllDataAsync();
                 return Page();
             }
 
@@ -119,7 +107,6 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                     Type = Input.Type.ToString()
                 }));
 
-            _logger.LogInformation("Parking slot successfully added");
             TempData["SuccessMessage"] = "Parking slot successfully added";
             return RedirectToPage();
         }
@@ -130,12 +117,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
 
             if (!ModelState.IsValid)
             {
-                AllCities = await _mediator.Send(new GetAllCities());
-                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-                foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
+                await LoadAllDataAsync();
                 return Page();
             }
 
@@ -144,10 +126,10 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             var newParkingSlotGeometry = reader.Read(Input.ParkingArea);
             bool contained = false;
             var cityId = 0;
-            foreach (var cityToCheck in citiesToCheck)
+
+            foreach (var cityToCheck in citiesToCheck ?? new List<City>())
             {
                 var cityGeometryToCheck = reader.Read(cityToCheck.PerimeterLocation);
-
                 contained = cityGeometryToCheck.Contains(newParkingSlotGeometry);
                 if (contained)
                 {
@@ -156,15 +138,10 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                 }
             }
 
-            if(!contained)
+            if (!contained)
             {
                 ModelState.AddModelError("Input.ParkingArea", "Parking slot area is not in the city.");
-                AllCities = await _mediator.Send(new GetAllCities());
-                foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-                foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
+                await LoadAllDataAsync();
                 return Page();
             }
 
@@ -178,7 +155,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
                     CreatedAt = DateTime.UtcNow,
                     Type = Input.Type.ToString()
                 }));
-            _logger.LogInformation("Parking slot successfully updated");
+
             TempData["SuccessMessage"] = "Parking slot successfully updated";
             return RedirectToPage();
         }
@@ -186,29 +163,31 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
         public async Task<IActionResult> OnPostDeleteParkingSlot(int id)
         {
             await _mediator.Send(new DeleteParkingSlot { Id = id });
-            
-            _logger.LogInformation("Parking slot successfully deleted");
             TempData["SuccessMessage"] = "Parking slot successfully deleted";
-            
-            AllCities = await _mediator.Send(new GetAllCities());
-            foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
-
-            AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-            foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
-
+            await LoadAllDataAsync();
             return Page();
         }
 
-
         public async Task OnGet()
         {
-            AllCities = await _mediator.Send(new GetAllCities());
-            foreach (var city in AllCities) AllCitiesPerimeter += city.PerimeterLocation + ";";
+            await LoadAllDataAsync();
+        }
+        
+        private async Task LoadAllDataAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<IEnumerable<City>>("api/City/AllCities");
+                AllCities = response ?? [];
+                AllParkingSlots = await _mediator.Send(new GetAllParkingSlots()) ?? new List<ParkingSlot>();
 
-            AllParkingSlots = await _mediator.Send(new GetAllParkingSlots());
-            foreach (var parkingSlot in AllParkingSlots) AllParkingSlotsPerimeter += parkingSlot.PerimeterLocation + ";";
+                AllCitiesPerimeter = string.Join(";", AllCities.Select(c => c.PerimeterLocation));
+                AllParkingSlotsPerimeter = string.Join(";", AllParkingSlots.Select(p => p.PerimeterLocation));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading data");
+            }
         }
     }
-
-
 }
