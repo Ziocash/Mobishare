@@ -25,7 +25,9 @@ public class GetAllParkingSlotsHandler : IRequestHandler<GetAllParkingSlots, Lis
         try
         {
             _logger.LogDebug("Executing {method}", nameof(GetAllParkingSlots));
-            var parkingSlots = await _dbContext.ParkingSlots.ToListAsync(cancellationToken);
+            var parkingSlots = await _dbContext.ParkingSlots
+                .Include(p => p.City) 
+                .ToListAsync(cancellationToken);
             return parkingSlots;
         }
         catch (Exception ex)
