@@ -25,7 +25,9 @@ public class GetAllVehiclesHandler : IRequestHandler<GetAllVehicles, List<Vehicl
         try
         {
             _logger.LogDebug("Executing {method}", nameof(GetAllVehicles));
-            var vehicles = await _dbContext.Vehicles.ToListAsync(cancellationToken);
+            var vehicles = await _dbContext.Vehicles
+                .Include(v => v.VehicleType)
+                .ToListAsync(cancellationToken);
             return vehicles;
         }
         catch (Exception ex)

@@ -14,8 +14,8 @@ public class Vehicle
     public string Status {get; set;}
     public double BatteryLevel {get; set;}
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
-    public ParkingSlot ParkingSlot {get; set;}
+    public ParkingSlot? ParkingSlot {get; set;}
     public int ParkingSlotId {get; set;}
-    public VehicleType VehicleType {get; set;}
+    public VehicleType? VehicleType {get; set;}
     public int VehicleTypeId {get; set;}    
 }

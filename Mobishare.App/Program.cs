@@ -88,6 +88,14 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+#region HttpClient configuration
+builder.Services.AddHttpClient("CityApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7027/");
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
+#endregion
+
 #region Ollama configuration
 builder.Services.AddScoped<IOllamaService, OllamaService>();
 # endregion

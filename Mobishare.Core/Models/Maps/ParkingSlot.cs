@@ -12,8 +12,8 @@ public class ParkingSlot
     public string PerimeterLocation {get; set;}
     public DateTime CreatedAt {get; set;} = DateTime.UtcNow;
     public string Type {get; set;}
-    public City City {get; set;}
+    public City? City {get; set;}
     public int CityId {get; set;}
-    public IdentityUser User {get; set;}
+    public IdentityUser? User {get; set;}
     public string UserId {get; set;}
 }

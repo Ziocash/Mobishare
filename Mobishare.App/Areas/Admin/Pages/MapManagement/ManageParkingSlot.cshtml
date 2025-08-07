@@ -135,7 +135,7 @@
                 {
                     <tr>
                         <td>@parkingSlot.Id</td>
-                        <td>@parkingSlot.City.Name</td>
+                        <td>@(parkingSlot.City?.Name ?? "Unknown")</td>
                         <td>@parkingSlot.Type</td>
                         <td>
                             <!-- Icona per aprire il modale di modifica -->
