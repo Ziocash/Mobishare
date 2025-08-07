@@ -1,3 +1,4 @@
+### WORK IN PROGRESS... EMPOWERING CHATBOT WITH TOOL AI MODEL... GREAT STUFF IS COOKING HERE! LET US COOK AND TRUST THE PROCESS!
 # 🚲 Mobishare
 **A smart and green solution to move around the city.**
 

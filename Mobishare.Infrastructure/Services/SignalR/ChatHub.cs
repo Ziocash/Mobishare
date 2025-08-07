@@ -64,7 +64,7 @@ public class ChatHub : Hub
 
         _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
         _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
-        _chat = new Chat(_client);
+        _chat = new Chat(_client) { Think = true };
     }
 
     public async Task SendMessage(string conversationId, string message)
@@ -131,13 +131,27 @@ public class ChatHub : Hub
 
         var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
         var aiPromtMessage = "";
-        
+
+
+        _chat.OnThink += async (sender, thinkContent) =>
+        {
+    
+            _logger.LogInformation("AI thinking: {ThinkContent}", thinkContent);
+
+       
+        };
+
+  
         await foreach (var response in _chat.SendAsync(prompt, tools))
         {
             aiPromtMessage += response;
-            if (aiPromtMessage != "")
+            if (!string.IsNullOrEmpty(aiPromtMessage))
                 await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", response, DateTime.UtcNow.ToLocalTime().ToString("g"));
         }
+
+     
+        _chat.OnThink -= async (sender, thinkContent) => { };
+
 
         var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(aiPromtMessage);
         var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
@@ -251,6 +265,7 @@ public class ChatHub : Hub
                 - Do **not** make up information.
                 - Do **not** repeat the user's message in your reply.
                 - Be direct, clear, and informative.
+                - Respond in the same language as the user.
 
                 Conversation history:
                 {messages}
@@ -286,12 +301,11 @@ public class ChatHub : Hub
 
                     await mediator.Send(new CloseConversationById(conversationId));
 
-                    await foreach (var partialResponse in _ollamaService.StreamResponseAsync(conversationId, InactivityPrompt()))
+                    await foreach (var partialResponse in _chat.SendAsync(InactivityPrompt()))
                     {
                         completeResponse += partialResponse;
-                        await _hubContext.Clients.Client(connectionId)
-                            .SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
-
+                        if (completeResponse != "")
+                            await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", partialResponse, DateTime.UtcNow.ToLocalTime().ToString("g"));
                     }
 
                     completeResponse = sanitizer.Sanitize(completeResponse);
