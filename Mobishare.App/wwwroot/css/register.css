@@ -1,0 +1,221 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #e6eaf4;
+    padding: 20px 0;
+}
+
+.row {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    gap: 40px;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.col-md-4 {
+    flex: 1;
+    max-width: 400px;
+}
+
+.col-md-6 {
+    flex: 1;
+    max-width: 500px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* Card principale per il form di registrazione */
+#registerForm {
+    background-color: #f5f9ff;
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#registerForm h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+#registerForm hr {
+    border: none;
+    height: 1px;
+    background-color: #e0e0e0;
+    margin-bottom: 30px;
+}
+
+/* Stili per i form floating */
+.form-floating {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background-color: #fff;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: box-shadow 0.3s;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 2px rgba(45, 180, 79, 0.2);
+}
+
+.form-floating label {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: #777;
+    font-size: 14px;
+    pointer-events: none;
+    transition: all 0.3s;
+    background-color: transparent;
+}
+
+.form-floating .form-control:focus + label,
+.form-floating .form-control:not(:placeholder-shown) + label {
+    top: -8px;
+    left: 10px;
+    font-size: 12px;
+    color: #2db44f;
+    background-color: #fff;
+    padding: 0 5px;
+}
+
+/* Pulsante di registrazione */
+#registerSubmit {
+    width: 100%;
+    padding: 15px;
+    background-color: #2db44f;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: background-color 0.3s;
+}
+
+#registerSubmit:hover {
+    background-color: #1f8439;
+}
+
+/* Messaggi di validazione */
+.text-danger {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Sezione login esterni */
+section {
+    background-color: #f5f9ff;
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+section h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+section hr {
+    border: none;
+    height: 1px;
+    background-color: #e0e0e0;
+    margin-bottom: 30px;
+}
+
+/* Pulsanti provider esterni */
+#external-account button {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+#external-account button:hover {
+    background-color: #f8f8f8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Link per la configurazione */
+section p {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+section a {
+    color: #2db44f;
+    text-decoration: none;
+}
+
+section a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 20px;
+    }
+    
+    .col-md-4,
+    .col-md-6 {
+        max-width: 100%;
+    }
+    
+    #registerForm,
+    section {
+        padding: 30px 20px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+}
