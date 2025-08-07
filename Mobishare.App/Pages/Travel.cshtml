@@ -1,0 +1,103 @@
+﻿@page
+@model Mobishare.App.Pages.TravelModel
+@{
+    ViewData["NoLayoutCss"] = true;
+}
+@inject IConfiguration Configuration
+
+<!-- Mappa -->
+<div id="map"></div>
+
+<!-- Contenuto principale -->
+<main class="content">
+    <!-- Informazioni bici -->
+    <div class="card">
+        <div class="card-content">
+            <div class="bike-info">
+                <div class="bike-image">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjMTZhMzRhIi8+CjxwYXRoIGQ9Ik0xMiAzNmMtMy4zIDAtNi0yLjctNi02czIuNy02IDYtNiA2IDIuNyA2IDYtMi43IDYtNiA2em0wLTEwYy0yLjIgMC00IDEuOC00IDRzMS44IDQgNCA0IDQtMS44IDQtNC0xLjgtNC00LTR6bTI0IDEwYy0zLjMgMC02LTIuNy02LTZzMi43LTYgNi02IDYgMi43IDYgNi0yLjcgNi02IDZ6bTAtMTBjLTIuMiAwLTQgMS44LTQgNHMxLjggNCA0IDQgNC0xLjggNC00LTEuOC00LTQtNHptLTEyLTEwYy0xLjEgMC0yLS45LTItMnMuOS0yIDItMiAyIC45IDIgMi0uOSAyLTIgMnptOCAxNGgtNGwtMi00aDRsNCA0eiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+"
+                        alt="EcoBike Pro">
+                </div>
+                <div class="bike-details">
+                    <h2>EcoBike Pro</h2>
+                    <p>Bicicletta Elettrica</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dettagli viaggio -->
+    <div class="trip-details">
+        <div class="card">
+            <div class="card-content">
+                <div class="detail-item">
+                    <svg class="detail-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z" />
+                    </svg>
+                    <div class="detail-content">
+                        <p>Orario di Inizio</p>
+                        <p>@Model.Ride.StartDateTime</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-content">
+                <div class="detail-item">
+                    <svg class="detail-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                    </svg>
+                    <div class="detail-content">
+                        <p>Luogo di Partenza</p>
+                        <p>@Model.StartLocationName</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cronometro -->
+    <div class="card timer-card">
+        <div class="card-content">
+            <p class="timer-label">Tempo Trascorso</p>
+            <div class="timer-display" id="timer">00:00</div>
+            <div class="timer-indicator">
+                <div class="pulse-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiche -->
+    <div class="stats-grid">
+        <div class="card">
+            <div class="card-content stat-card">
+                <div class="stat-value">2.3</div>
+                <div class="stat-label">km percorsi</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-content stat-card">
+                <div class="stat-value">€1.50</div>
+                <div class="stat-label">costo attuale</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pulsante termina viaggio -->
+    <button class="end-trip-button" onclick="endTrip()">
+        Termina Viaggio
+    </button>
+
+    <!-- Info aggiuntive -->
+    <div class="footer-info">
+        <p>Ricorda di parcheggiare in un'area consentita</p>
+    </div>
+
+
+    <script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")' async defer></script>
+    <script src="~/js/travel.js" type="text/javascript"></script>
+    <script src="~/js/site.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="~/css/travel.css">

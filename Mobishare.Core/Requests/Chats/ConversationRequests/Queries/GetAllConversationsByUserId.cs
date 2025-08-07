@@ -21,7 +21,7 @@ public class GetAllConversationsByUserIdHandler : IRequestHandler<GetAllConversa
 {
     private readonly ApplicationDbContext _dbContext;
 
-     private readonly ILogger<GetAllConversationsByUserIdHandler> _logger;
+    private readonly ILogger<GetAllConversationsByUserIdHandler> _logger;
 
     public GetAllConversationsByUserIdHandler(ApplicationDbContext dbContext, ILogger<GetAllConversationsByUserIdHandler> logger)
     {

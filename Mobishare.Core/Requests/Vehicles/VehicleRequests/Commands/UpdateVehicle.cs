@@ -8,7 +8,7 @@ using Mobishare.Core.Data;
 using Mobishare.Core.Models.Maps;
 using Mobishare.Core.Models.Vehicles;
 
-namespace Mobishare.Core.Requests.Maps.CityRequests.Commands
+namespace Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands
 {
     public class UpdateVehicle : Vehicle, IRequest<Vehicle> { }
 
@@ -39,7 +39,7 @@ namespace Mobishare.Core.Requests.Maps.CityRequests.Commands
 
             try
             {
-                _logger.LogDebug("Executing {method}", nameof(UpdateCityHandler));
+                _logger.LogDebug("Executing {method}", nameof(UpdateVehicleHandler));
 
                 if (vehicleToUpdate.Plate != request.Plate)
                     vehicleToUpdate.Plate = request.Plate;

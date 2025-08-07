@@ -1,3 +1,4 @@
+using System.Text;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,7 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService
 
             var messages = await _mediator.Send(new GetMessagesByConversationId(conversationId));
             var orderedMessages = messages.OrderBy(m => m.CreatedAt).ToList();
-    
+
             // Converti i messaggi al formato Ollama Message
             var chatHistory = orderedMessages.Select(msg => new Message
             {
@@ -61,6 +62,46 @@ namespace Mobishare.Infrastructure.Services.ChatBotAIService
                     yield return response.Message.Content;
                 }
             }
+        }
+        
+        public async Task<string> GetResponseAsync(string prompt)
+        {
+            // var req = new ChatRequest
+            // {
+            //     Model = _client.SelectedModel,
+            //     Messages = new List<Message>
+            //     {
+            //         new Message
+            //         {
+            //             Role = MessageSenderType.User.ToString().ToLower(),
+            //             Content = prompt
+            //         }
+            //     }
+            // };
+
+            var request = new ChatRequest
+            {
+                Model = _client.SelectedModel,
+                Messages = new List<Message>
+                {
+                    new Message
+                    {
+                        Role = "user",
+                        Content = prompt
+                    }
+                }
+            };
+
+            _logger.LogInformation("Request made to LLM: {request}", request.Messages);
+
+            var responseContent = new StringBuilder();
+
+            await foreach (var response in _client.ChatAsync(request))
+            {
+                if (!string.IsNullOrEmpty(response?.Message?.Content)) responseContent.Append(response.Message.Content);
+            }
+
+            return responseContent.ToString();
         }
     }
 }

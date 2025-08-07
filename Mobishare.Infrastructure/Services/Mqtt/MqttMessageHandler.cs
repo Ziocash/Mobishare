@@ -8,6 +8,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Mobishare.Infrastructure.Services.SignalR;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
+using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.Infrastructure.Services.MQTT;
 
@@ -70,6 +71,13 @@ public class MqttMessageHandler : IDisposable
                 _logger.LogWarning("Vehicle {VehicleId} does not exist.", vehiclePosition.VehicleId);
                 return;
             }
+
+            if (vehicle.Status != VehicleStatusType.Free.ToString())
+            {
+                _logger.LogWarning("Vehicle {VehicleId} in not Free.", vehiclePosition.VehicleId);
+                return;
+            }
+
 
             await _mediator.Send(
                 _mapper.Map<CreatePosition>(vehiclePosition)

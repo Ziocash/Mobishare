@@ -290,7 +290,7 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserMessageId")
+                    b.Property<int?>("UserMessageId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -779,9 +779,7 @@ namespace Mobishare.Core.Migrations
 
                     b.HasOne("Mobishare.Core.Models.Chats.ChatMessage", "UserMessage")
                         .WithMany()
-                        .HasForeignKey("UserMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserMessageId");
 
                     b.Navigation("AiMessage");
 

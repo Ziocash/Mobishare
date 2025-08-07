@@ -27,7 +27,8 @@ public class MessagePairConfiguration : IEntityTypeConfiguration<MessagePair>
 
         builder.HasOne(x => x.UserMessage)
             .WithMany()
-            .HasForeignKey(x => x.UserMessageId);
+            .HasForeignKey(x => x.UserMessageId)
+            .IsRequired(false);
 
         builder.HasOne(x => x.AiMessage)
             .WithMany()

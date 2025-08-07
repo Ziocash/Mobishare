@@ -1,0 +1,8 @@
+using System;
+
+namespace Mobishare.Core.Services.UserContext;
+
+public class UserContextService : IUserContextService
+{
+    public string? UserId { get; set; }
+}
