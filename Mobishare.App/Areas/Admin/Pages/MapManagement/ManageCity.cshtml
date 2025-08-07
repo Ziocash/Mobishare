@@ -133,7 +133,7 @@
                                         </div>
                                         <form method="post" asp-page-handler="UpdateCity" asp-route-id="@city.Id">
                                             <input type="hidden" name="Input.Id" value="@city.Id" />
-                                        <textarea id="editWkt-@city.Id" class="form-control" name="Input.CityArea" readonly>@(city.PerimeterLocation ?? "")</textarea>
+                                           <textarea id="editWkt-@city.Id" asp-for="@city.PerimeterLocation" class="form-control" name="Input.CityArea" readonly></textarea>
                                             <div class="form-group">
                                                 <label for="Name-@city.Id">City Name<b class="text-danger">*</b></label>
                                                 <input type="text" class="form-control" id="Name-@city.Id" name="Input.CityName"
