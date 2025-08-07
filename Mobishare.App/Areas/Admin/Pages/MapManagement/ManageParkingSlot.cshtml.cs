@@ -183,6 +183,7 @@ namespace Mobishare.App.Areas.Admin.Pages.MapManagement
             }
             else
             {
+                _logger.LogInformation("Parking slot succesflully deleted.");
                 TempData["SuccessMessage"] = "Parking slot successfully deleted";
             }
 
