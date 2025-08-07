@@ -168,7 +168,7 @@
                                             </div>
                                             <form method="post" asp-page-handler="UpdateParkingSlot" asp-route-id="@parkingSlot.Id">
                                                 <input type="hidden" name="Input.Id" value="@parkingSlot.Id" />
-                                            <textarea id="editWkt-@parkingSlot.Id" asp-for="Input.ParkingArea" class="form-control" name="Input.ParkingArea" readonly></textarea>
+                                            <textarea id="editWkt-@parkingSlot.Id" asp-for="@parkingSlot.PerimeterLocation" class="form-control" name="Input.ParkingArea" readonly></textarea>
                                                 <div class="modal-footer pb-0 pt-3">
                                                     <button type="button" class="btn btn-outline-secondary"
                                                         data-bs-dismiss="modal">Cancel</button>
