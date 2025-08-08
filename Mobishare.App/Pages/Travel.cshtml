@@ -96,6 +96,36 @@
         <p>Ricorda di parcheggiare in un'area consentita</p>
     </div>
 
+    <!-- Modal per terminare il viaggio -->
+    <div class="modal fade" id="endTripModal" tabindex="-1" aria-labelledby="endTripModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="endTripModalLabel">Termina Viaggio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Il tuo viaggio è terminato!</p>
+                    <div class="mb-3">
+                        <label for="tripName" class="form-label">Dai un nome al tuo viaggio (opzionale):</label>
+                        <input type="text" class="form-control" id="tripName" placeholder="Es: Viaggio al lavoro">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-success" id="confirmEndTrip">Conferma</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form nascosto per inviare i dati -->
+    <form id="endTripForm" method="post" asp-page-handler="EndTrip" style="display: none;">
+        <input type="hidden" id="tripNameInput" name="tripName" />
+        <input type="hidden" name="rideId" value="@Model.Ride.Id" />
+    </form>
+</main>
+
 
     <script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")' async defer></script>
     <script src="~/js/travel.js" type="text/javascript"></script>

@@ -22,13 +22,6 @@ function updateTimer() {
     document.getElementById('timer').textContent = timeString;
 }
 
-function endTrip() {
-    isActive = false;
-    document.querySelector('.pulse-dot').style.animation = 'none';
-    document.querySelector('.pulse-dot').style.background = '#9ca3af';
-    alert('Viaggio terminato!');
-}
-
 // Avvia il cronometro
 updateTimer();
 setInterval(updateTimer, 1000);
@@ -36,3 +29,32 @@ setInterval(updateTimer, 1000);
 function loadRideInfo(){
     
 }
+
+function endTrip() {
+    // Ferma il timer
+    isActive = false;
+    document.querySelector('.pulse-dot').style.animation = 'none';
+    document.querySelector('.pulse-dot').style.background = '#9ca3af';
+    
+    // Mostra il modal
+    const modal = new bootstrap.Modal(document.getElementById('endTripModal'));
+    modal.show();
+}
+
+// Aggiungi l'event listener per il pulsante di conferma
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmButton = document.getElementById('confirmEndTrip');
+    const tripNameField = document.getElementById('tripName');
+    const tripNameInput = document.getElementById('tripNameInput');
+    const endTripForm = document.getElementById('endTripForm');
+    
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            // Copia il nome del viaggio nel form nascosto
+            tripNameInput.value = tripNameField.value;
+            
+            // Invia il form
+            endTripForm.submit();
+        });
+    }
+});

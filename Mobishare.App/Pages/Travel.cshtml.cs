@@ -6,8 +6,12 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.UiModels;
+using Mobishare.Core.VehicleStatus;
 
 namespace Mobishare.App.Pages
 {
@@ -62,10 +66,75 @@ namespace Mobishare.App.Pages
             }
 
             StartPosition = await _mediator.Send(new GetPositionByVehicleId(Ride.VehicleId));
-            
+
             if (StartPosition != null)
                 StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
             return Page();
+        }
+        
+        public async Task<IActionResult> OnPostEndTrip(string tripName, int rideId)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (userId == null)
+                {
+                    _logger.LogWarning("Authenticated user has null UserId.");
+                    return RedirectToPage("/Index");
+                }
+
+                // Recupera il ride
+                var ride = await _mediator.Send(new GetRideById(rideId));
+                if (ride == null)
+                {
+                    _logger.LogWarning("Ride with ID {RideId} not found", rideId);
+                    return RedirectToPage("/Index");
+                }
+
+                // Recupera l'ultima posizione del veicolo
+                var lastPosition = await _mediator.Send(new GetPositionByVehicleId(ride.VehicleId));
+                
+                // Aggiorna il ride con orario di fine e posizione finale
+                await _mediator.Send(new UpdateRide
+                {
+                    Id = ride.Id,
+                    StartDateTime = ride.StartDateTime,
+                    EndDateTime = DateTime.UtcNow,
+                    Price = ride.Price, // Calcola il prezzo se necessario
+                    PositionStartId = ride.PositionStartId,
+                    PositionEndId = lastPosition?.Id,
+                    UserId = ride.UserId,
+                    VehicleId = ride.VehicleId,
+                    TripName = string.IsNullOrWhiteSpace(tripName) ? null : tripName // Se hai questo campo
+                });
+
+                // Libera il veicolo (rimetti a Free)
+                var vehicle = await _mediator.Send(new GetVehicleById(ride.VehicleId));
+                if (vehicle != null)
+                {
+                    await _mediator.Send(new UpdateVehicle
+                    {
+                        Id = vehicle.Id,
+                        Plate = vehicle.Plate,
+                        Status = VehicleStatusType.Free.ToString(),
+                        BatteryLevel = vehicle.BatteryLevel,
+                        ParkingSlotId = vehicle.ParkingSlotId,
+                        VehicleTypeId = vehicle.VehicleTypeId,
+                        CreatedAt = vehicle.CreatedAt
+                    });
+                }
+
+                _logger.LogInformation("Trip ended successfully for ride {RideId}", rideId);
+                TempData["SuccessMessage"] = "Viaggio terminato con successo!";
+                
+                return RedirectToPage("/LandingPage");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error ending trip for ride {RideId}", rideId);
+                TempData["ErrorMessage"] = "Errore nel terminare il viaggio.";
+                return Page();
+            }
         }
     }
 }
