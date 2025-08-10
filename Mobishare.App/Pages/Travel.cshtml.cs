@@ -10,6 +10,7 @@ using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
+using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
 
@@ -91,41 +92,60 @@ namespace Mobishare.App.Pages
                     return RedirectToPage("/Index");
                 }
 
+                // Recupera il veicolo per ottenere il tipo
+                var vehicle = await _mediator.Send(new GetVehicleById(ride.VehicleId));
+                if (vehicle == null)
+                {
+                    _logger.LogWarning("Vehicle with ID {VehicleId} not found", ride.VehicleId);
+                    return RedirectToPage("/Index");
+                }
+
+                // Recupera il tipo di veicolo per ottenere il prezzo al minuto
+                var vehicleType = await _mediator.Send(new GetVehicleTypeById(vehicle.VehicleTypeId));
+                if (vehicleType == null)
+                {
+                    _logger.LogWarning("VehicleType with ID {VehicleTypeId} not found", vehicle.VehicleTypeId);
+                    return RedirectToPage("/Index");
+                }
+
+                // Calcola la durata in minuti e il prezzo
+                var endTime = DateTime.UtcNow;
+                var durationInMinutes = (endTime - ride.StartDateTime).TotalMinutes;
+                var calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
+
                 // Recupera l'ultima posizione del veicolo
                 var lastPosition = await _mediator.Send(new GetPositionByVehicleId(ride.VehicleId));
                 
-                // Aggiorna il ride con orario di fine e posizione finale
+                // Aggiorna il ride con orario di fine, posizione finale e prezzo calcolato
                 await _mediator.Send(new UpdateRide
                 {
                     Id = ride.Id,
                     StartDateTime = ride.StartDateTime,
-                    EndDateTime = DateTime.UtcNow,
-                    Price = ride.Price, // Calcola il prezzo se necessario
+                    EndDateTime = endTime,
+                    Price = (double)calculatedPrice, // Prezzo calcolato basato sulla durata
                     PositionStartId = ride.PositionStartId,
                     PositionEndId = lastPosition?.Id,
                     UserId = ride.UserId,
                     VehicleId = ride.VehicleId,
-                    TripName = string.IsNullOrWhiteSpace(tripName) ? null : tripName // Se hai questo campo
+                    TripName = string.IsNullOrWhiteSpace(tripName) ? null : tripName
                 });
 
                 // Libera il veicolo (rimetti a Free)
-                var vehicle = await _mediator.Send(new GetVehicleById(ride.VehicleId));
-                if (vehicle != null)
+                await _mediator.Send(new UpdateVehicle
                 {
-                    await _mediator.Send(new UpdateVehicle
-                    {
-                        Id = vehicle.Id,
-                        Plate = vehicle.Plate,
-                        Status = VehicleStatusType.Free.ToString(),
-                        BatteryLevel = vehicle.BatteryLevel,
-                        ParkingSlotId = vehicle.ParkingSlotId,
-                        VehicleTypeId = vehicle.VehicleTypeId,
-                        CreatedAt = vehicle.CreatedAt
-                    });
-                }
+                    Id = vehicle.Id,
+                    Plate = vehicle.Plate,
+                    Status = VehicleStatusType.Free.ToString(),
+                    BatteryLevel = vehicle.BatteryLevel,
+                    ParkingSlotId = vehicle.ParkingSlotId,
+                    VehicleTypeId = vehicle.VehicleTypeId,
+                    CreatedAt = vehicle.CreatedAt
+                });
 
-                _logger.LogInformation("Trip ended successfully for ride {RideId}", rideId);
-                TempData["SuccessMessage"] = "Viaggio terminato con successo!";
+                _logger.LogInformation("Trip ended successfully for ride {RideId}. Duration: {Duration} minutes, Price: €{Price}", 
+                    rideId, Math.Round(durationInMinutes, 2), calculatedPrice);
+                
+                TempData["SuccessMessage"] = $"Viaggio terminato con successo! Durata: {Math.Round(durationInMinutes, 0)} minuti - Costo: €{calculatedPrice}";
                 
                 return RedirectToPage("/LandingPage");
             }

@@ -40,6 +40,12 @@ public class UpdateRideHandler : IRequestHandler<UpdateRide, Ride>
         ride.PositionEndId = request.PositionEndId;
         ride.Price = request.Price;
         
+        // Aggiorna il nome del viaggio se fornito
+        if (!string.IsNullOrEmpty(request.TripName))
+        {
+            /*Da implementare per quando ci sarà il campo che memorizza il nome del viaggio dell'utente */
+        }
+        
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ride;
     }
