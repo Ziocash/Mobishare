@@ -48,11 +48,6 @@ public class HistoryCreditController : ControllerBase
         var query = new GetAllHistoryCreditByUserId(userId);
         var response = await _mediator.Send(query);
 
-        if (response == null || !response.Any())
-        {
-            return NotFound("No history credits found for the specified user.");
-        }
-
         return Ok(response);
     }
 }

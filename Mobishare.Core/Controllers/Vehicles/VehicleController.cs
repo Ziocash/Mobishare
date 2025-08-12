@@ -66,11 +66,7 @@ public class VehicleController : ControllerBase
         }
 
         var result = await _mediator.Send(request);
-        if (result == null)
-        {
-            return NotFound("Vehicle not found.");
-        }
-
+        
         return Ok(result);
     }
     [HttpGet("AllVehicles")]
@@ -82,10 +78,6 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetAllVehicles()
     {
         var result = await _mediator.Send(new GetAllVehicles());
-        if (result == null || !result.Any())
-        {
-            return NotFound("No vehicles found.");
-        }
 
         return Ok(result);
     }
@@ -108,10 +100,6 @@ public class VehicleController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetVehicleById(id));
-        if (result == null)
-        {
-            return NotFound("Vehicle not found.");
-        }
 
         return Ok(result);
     }

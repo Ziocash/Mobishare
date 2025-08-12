@@ -71,10 +71,6 @@ public class ParkingSlotController : ControllerBase
         }
 
         var response = await _mediator.Send(request);
-        if (response == null)
-        {
-            return NotFound("Parking slot not found.");
-        }
 
         return Ok(response);
     }
@@ -101,11 +97,6 @@ public class ParkingSlotController : ControllerBase
         }
         var response = await _mediator.Send(new DeleteParkingSlot { Id = id });
 
-        if (response == null)
-        {
-            return NotFound("Parking slot not found.");
-        }
-
         return NoContent();
     }
 
@@ -120,10 +111,6 @@ public class ParkingSlotController : ControllerBase
     public async Task<IActionResult> GetAllParkingSlots()
     {
         var response = await _mediator.Send(new GetAllParkingSlots());
-        if (response == null || !response.Any())
-        {
-            return NotFound("No parking slots found.");
-        }
 
         return Ok(response);
     }
