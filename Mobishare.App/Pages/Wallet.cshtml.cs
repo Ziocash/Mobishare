@@ -22,6 +22,7 @@ namespace Mobishare.App.Pages
     public class WalletModel : PageModel
     {
         private readonly IPayPalClient _payPalClient;
+        private readonly HttpClient _httpClient;
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         private readonly ILogger<WalletModel> _logger;
@@ -29,9 +30,16 @@ namespace Mobishare.App.Pages
         public Balance UserBalance { get; set; }
         public List<HistoryCredit> HistoryCredit { get; set; }
 
-        public WalletModel(IPayPalClient payPalClient, IMediator mediator, IMapper mapper, ILogger<WalletModel> logger, UserManager<IdentityUser> userManager)
+        public WalletModel(
+            IPayPalClient payPalClient,
+            IHttpClientFactory httpClientFactory,
+            IMediator mediator,
+            IMapper mapper,
+            ILogger<WalletModel> logger,
+            UserManager<IdentityUser> userManager)
         {
             _payPalClient = payPalClient ?? throw new ArgumentNullException(nameof(payPalClient));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -39,7 +47,7 @@ namespace Mobishare.App.Pages
         }
 
         [BindProperty]
-        public InputWalletModel Input{ get; set; }
+        public InputWalletModel Input { get; set; }
         public class InputWalletModel
         {
             [Required(ErrorMessage = "Please enter an an amount.")]
@@ -49,12 +57,9 @@ namespace Mobishare.App.Pages
 
         public async Task<IActionResult> OnPostDeposit()
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var userId = _userManager.GetUserId(User);
-
-                UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
-                HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
+                await LoadAllData();
                 return Page();
             }
 
@@ -172,10 +177,25 @@ namespace Mobishare.App.Pages
 
         public async Task OnGetAsync()
         {
-            var userId = _userManager.GetUserId(User);
+            await LoadAllData();
+        }
 
-            UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
-            HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
+        private async Task LoadAllData()
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+
+                var userBalanceResponse = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+                var historyCreditresponse = await _httpClient.GetFromJsonAsync<List<HistoryCredit>>($"api/HistoryCredit/AllHistoryCredits/{userId}");
+
+                UserBalance = userBalanceResponse;
+                HistoryCredit = historyCreditresponse ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading data");
+            }
         }
     }
 }

@@ -62,10 +62,6 @@ public class BalanceController : ControllerBase
         }
 
         var result = await _mediator.Send(request);
-        if (result == null)
-        {
-            return NotFound("Balance not found.");
-        }
 
         return Ok(result);
     }
@@ -89,11 +85,7 @@ public class BalanceController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetBalanceByUserId(userId));
-        if (result == null)
-        {
-            return NotFound($"No balance found for user ID: {userId}");
-        }
-
+        
         return Ok(result);
     }
 }

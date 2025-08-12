@@ -63,10 +63,6 @@ public class PositionController : ControllerBase
         }
 
         var position = await _mediator.Send(new GetPositionByVehicleId(VehicleId));
-        if (position == null)
-        {
-            return NotFound("Position not found for the given vehicle ID.");
-        }
 
         return Ok(position);
     }

@@ -65,10 +65,6 @@ public class CityController : ControllerBase
         }
 
         var response = await _mediator.Send(request);
-        if (response == null)
-        {
-            return NotFound("City not found.");
-        }
 
         return Ok(response);
     }
@@ -95,10 +91,6 @@ public class CityController : ControllerBase
         }
 
         var response = await _mediator.Send(new DeleteCity { Id = id });
-        if (response == null)
-        {
-            return NotFound("City not found.");
-        }
 
         return NoContent();
     }
@@ -114,10 +106,6 @@ public class CityController : ControllerBase
     public async Task<IActionResult> GetAllCities()
     {
         var response = await _mediator.Send(new GetAllCities());
-        if (response == null || !response.Any())
-        {
-            return NotFound("No cities found.");
-        }
 
         return Ok(response);
     }

@@ -62,10 +62,6 @@ public class VehicleTypeController : ControllerBase
         }
 
         var response = await _mediator.Send(request);
-        if (response == null)
-        {
-            return NotFound($"Vehicle type with ID {request.Id} not found.");
-        }
 
         return Ok(response);
     }
@@ -89,10 +85,6 @@ public class VehicleTypeController : ControllerBase
         }
 
         var response = await _mediator.Send(new DeleteVehicleType { Id = id });
-        if (response == null)
-        {
-            return NotFound($"Vehicle type with ID {id} not found.");
-        }
 
         return NoContent();
     }
@@ -109,10 +101,6 @@ public class VehicleTypeController : ControllerBase
     public async Task<IActionResult> GetAllVehicleTypes()
     {
         var response = await _mediator.Send(new GetAllVehicleType());
-        if (response == null || !response.Any())
-        {
-            return NotFound("No vehicle types found.");
-        }
 
         return Ok(response);
     }
