@@ -19,6 +19,7 @@ namespace Mobishare.App.Pages
     public class LandingPageModel : PageModel
     {
         private readonly ILogger<LandingPageModel> _logger;
+        private readonly HttpClient _httpClient;
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
@@ -30,6 +31,7 @@ namespace Mobishare.App.Pages
 
         public LandingPageModel(
             ILogger<LandingPageModel> logger,
+            IHttpClientFactory httpClientFactory,
             IMediator mediator,
             IMapper mapper,
             IConfiguration configuration,
@@ -38,13 +40,13 @@ namespace Mobishare.App.Pages
             )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
-
 
         public async Task<IActionResult> OnPostReserveVehicle(int vehicleId)
         {
@@ -135,7 +137,6 @@ namespace Mobishare.App.Pages
 
             });
 
-
             return RedirectToPage("/Travel");
         }
 
@@ -153,7 +154,8 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            var rides = await _mediator.Send(new GetAllUserRides(userId));
+            var ridesResponse = await _httpClient.GetFromJsonAsync<IEnumerable<Ride>>($"api/Ride/AllUserRides/{userId}");
+            var rides = ridesResponse ?? [];
 
             foreach (var ride in rides)
             {

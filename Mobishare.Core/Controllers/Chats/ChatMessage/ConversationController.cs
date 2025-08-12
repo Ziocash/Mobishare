@@ -34,11 +34,7 @@ public class ConversationController : ControllerBase
     {
         if (command == null) return BadRequest("Command cannot be null.");
 
-
         var result = await _mediator.Send(command);
-
-        if (result == null) return NotFound("Conversation not found.");
-
 
         return CreatedAtAction(nameof(GetMessagesByConversationId), new { conversationId = result.Id }, result);
     }
@@ -59,8 +55,6 @@ public class ConversationController : ControllerBase
         var command = new CloseConversationById(conversationId);
         var result = await _mediator.Send(command);
 
-        if (result == null) return NotFound("Conversation not found.");
-
         return NoContent();
     }
 
@@ -77,11 +71,6 @@ public class ConversationController : ControllerBase
     {
         var query = new GetAllConversations();
         var conversations = await _mediator.Send(query);
-
-        if (conversations == null || !conversations.Any())
-        {
-            return NotFound("No conversations found.");
-        }
 
         return Ok(conversations);
     }
@@ -104,11 +93,6 @@ public class ConversationController : ControllerBase
         var query = new GetAllConversationsByUserId(userId);
         var conversations = await _mediator.Send(query);
 
-        if (conversations == null || !conversations.Any())
-        {
-            return NotFound("No conversations found for the user.");
-        }
-
         return Ok(conversations);
     }
 
@@ -127,11 +111,6 @@ public class ConversationController : ControllerBase
     {
         var query = new GetConversationById(conversationId);
         var messages = await _mediator.Send(query);
-
-        if (messages == null)
-        {
-            return NotFound("No messages found for this conversation.");
-        }
 
         return Ok(messages);
     }
