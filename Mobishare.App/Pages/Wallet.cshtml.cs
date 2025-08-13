@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
-using Mobishare.Core.Requests.Users.BalanceRequest.Queries;
 using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
 using PayPal.REST.Client;
 using PayPal.REST.Models.Orders;
@@ -20,8 +19,6 @@ namespace Mobishare.App.Pages
     {
         private readonly IPayPalClient _payPalClient;
         private readonly HttpClient _httpClient;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
         private readonly ILogger<WalletModel> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         public Balance UserBalance { get; set; }
@@ -30,15 +27,11 @@ namespace Mobishare.App.Pages
         public WalletModel(
             IPayPalClient payPalClient,
             IHttpClientFactory httpClientFactory,
-            IMediator mediator,
-            IMapper mapper,
             ILogger<WalletModel> logger,
             UserManager<IdentityUser> userManager)
         {
             _payPalClient = payPalClient ?? throw new ArgumentNullException(nameof(payPalClient));
             _httpClient = httpClientFactory.CreateClient("CityApi");
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
