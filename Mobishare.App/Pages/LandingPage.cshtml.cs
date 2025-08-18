@@ -1,14 +1,10 @@
-using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Models.Vehicles;
-using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
 
@@ -18,8 +14,6 @@ namespace Mobishare.App.Pages
     {
         private readonly ILogger<LandingPageModel> _logger;
         private readonly HttpClient _httpClient;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
 
@@ -30,8 +24,6 @@ namespace Mobishare.App.Pages
         public LandingPageModel(
             ILogger<LandingPageModel> logger,
             IHttpClientFactory httpClientFactory,
-            IMediator mediator,
-            IMapper mapper,
             IConfiguration configuration,
             IGoogleGeocodingService googleGeocoding,
             UserManager<IdentityUser> userManager
@@ -39,8 +31,6 @@ namespace Mobishare.App.Pages
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _httpClient = httpClientFactory.CreateClient("CityApi");
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
