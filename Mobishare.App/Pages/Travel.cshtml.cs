@@ -5,9 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Models.Vehicles;
-using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
-using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
-using Mobishare.Core.UiModels;
 
 namespace Mobishare.App.Pages
 {
@@ -15,8 +12,7 @@ namespace Mobishare.App.Pages
     public class TravelModel : PageModel
     {
         private readonly ILogger<LandingPageModel> _logger;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IGoogleGeocodingService _googleGeocoding;
@@ -26,20 +22,19 @@ namespace Mobishare.App.Pages
 
         public TravelModel(
             ILogger<LandingPageModel> logger,
-            IMediator mediator,
-            IMapper mapper,
+            IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             IGoogleGeocodingService googleGeocoding,
             UserManager<IdentityUser> userManager
             )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
+        
         public async Task<IActionResult> OnGet()
         {
             if (User?.Identity == null || !User.Identity.IsAuthenticated)
@@ -53,7 +48,7 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            Ride = await _mediator.Send(new GetRideByUserId(userId));
+            Ride = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/{userId}");
 
             if (Ride == null)
             {
@@ -61,10 +56,11 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            StartPosition = await _mediator.Send(new GetPositionByVehicleId(Ride.VehicleId));
-            
+            StartPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{Ride.VehicleId}");
+
             if (StartPosition != null)
                 StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
+
             return Page();
         }
     }
