@@ -12,31 +12,28 @@
     @if(!ViewData.ContainsKey("NoLayoutCss"))
     {
         <link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
-        
     }
     @RenderSection("Styles", required: false)
 </head>
 
 <body>
-    
     <header>
         @if (!Context.Request.Path.StartsWithSegments("/Identity/Account"))
         {
             <partial name="_NavbarPartial" />
         }
     </header>
-    
 
     <main role="main" class="pb-3">
         @RenderBody()
     </main>
 
-    <!--<footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted">
         @if (!Context.Request.Path.StartsWithSegments("/Identity/Account"))
         {
             <partial name="_FooterPartial" />
         }
-    </footer>-->
+    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
