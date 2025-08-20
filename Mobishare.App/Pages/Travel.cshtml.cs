@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
+using Mobishare.Core.Data;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
@@ -13,6 +14,7 @@ using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
+using Microsoft.EntityFrameworkCore;
 
 namespace Mobishare.App.Pages
 {
@@ -25,9 +27,12 @@ namespace Mobishare.App.Pages
         private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IGoogleGeocodingService _googleGeocoding;
+        private readonly ApplicationDbContext _context;
+
         public String? StartLocationName;
         public Ride Ride;
         public Position? StartPosition;
+        public decimal CostPerMinute { get; set; }
 
         public TravelModel(
             ILogger<LandingPageModel> logger,
@@ -35,7 +40,8 @@ namespace Mobishare.App.Pages
             IMapper mapper,
             IConfiguration configuration,
             IGoogleGeocodingService googleGeocoding,
-            UserManager<IdentityUser> userManager
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext context
             )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -44,7 +50,9 @@ namespace Mobishare.App.Pages
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _context = context;
         }
+        
         public async Task<IActionResult> OnGet()
         {
             if (User?.Identity == null || !User.Identity.IsAuthenticated)
@@ -66,11 +74,42 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
+            // Recupera il veicolo con il tipo per ottenere il costo per minuto
+            var vehicle = await _mediator.Send(new GetVehicleById(Ride.VehicleId));
+            if (vehicle != null)
+            {
+                var vehicleType = await _mediator.Send(new GetVehicleTypeById(vehicle.VehicleTypeId));
+                if (vehicleType != null)
+                {
+                    CostPerMinute = vehicleType.PricePerMinute;
+                }
+            }
+
             StartPosition = await _mediator.Send(new GetPositionByVehicleId(Ride.VehicleId));
 
             if (StartPosition != null)
                 StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
+            
             return Page();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> OnGetCurrentCostAsync(int rideId)
+        {
+            var ride = await _context.Rides
+                .Include(r => r.Vehicle)
+                .ThenInclude(v => v.VehicleType)
+                .FirstOrDefaultAsync(r => r.Id == rideId);
+
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            var elapsedMinutes = (DateTime.UtcNow - ride.StartDateTime).TotalMinutes;
+            var currentCost = Math.Round((decimal)elapsedMinutes * ride.Vehicle.VehicleType.PricePerMinute, 2);
+
+            return new JsonResult(new { cost = currentCost });
         }
         
         public async Task<IActionResult> OnPostEndTrip(string tripName, int rideId)
