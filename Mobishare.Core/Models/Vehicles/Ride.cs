@@ -9,6 +9,7 @@ namespace Mobishare.Core.Models.Vehicles;
 public class Ride
 {
     public int Id { get; set; }
+    public string? Name { get; set; }
     public DateTime StartDateTime { get; set; }
     public DateTime EndDateTime { get; set; }
     public double Price { get; set; }
@@ -20,5 +21,4 @@ public class Ride
     public string UserId { get; set; }
     public Vehicle? Vehicle { get; set; }
     public int VehicleId { get; set; }
-
 }
