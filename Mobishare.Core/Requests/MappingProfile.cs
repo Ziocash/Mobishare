@@ -43,7 +43,7 @@ public class MappingProfile : Profile
         // Vehicle requests
         CreateMap<CreateVehicle, Vehicle>().ReverseMap();
         CreateMap<UpdateVehicle, Vehicle>().ReverseMap();
-        // CreateMap<DeleteVehicle, Vehicle>().ReverseMap();
+        CreateMap<DeleteVehicle, Vehicle>().ReverseMap();
 
         // VehicleType requests
         CreateMap<CreateVehicleType, VehicleType>().ReverseMap();

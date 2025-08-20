@@ -69,6 +69,30 @@ public class VehicleController : ControllerBase
         
         return Ok(result);
     }
+
+    [HttpDelete("{id}")]
+    [SwaggerOperation(
+        Summary = "Delete a vehicle",
+        Description = "This endpoint allows you to delete a vehicle by its ID."
+    )]
+    [SwaggerResponse(200, "Vehicle deleted successfully")]
+    [SwaggerResponse(404, "Vehicle not found")]
+    [SwaggerResponse(500, "Internal server error")]
+    public async Task<IActionResult> DeleteVehicle(
+        [FromRoute]
+        [SwaggerParameter("The ID of the vehicle to delete", Required = true)]
+        int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest("Invalid vehicle ID.");
+        }
+
+        var response = await _mediator.Send(new DeleteVehicle { Id = id });
+
+        return NoContent();
+    }
+
     [HttpGet("AllVehicles")]
     [SwaggerOperation(
         Summary = "Get all vehicles",

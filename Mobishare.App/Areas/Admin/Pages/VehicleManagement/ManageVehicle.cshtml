@@ -1,4 +1,5 @@
 ﻿@page
+@using Mobishare.Core.VehicleStatus
 @model Mobishare.App.Areas.Admin.Pages.VehicleManagement.ManageVehicleModel
 @{
 }
@@ -152,39 +153,63 @@
                             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="editModalLabel-@vehicle.Id">Edit @vehicle.Plate</h5>
+                                        <h5 class="modal-title" id="editModalLabel-@vehicle.Id">Edit @vehicle.Id</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form method="post" asp-page-handler="UpdateVehicleType" asp-route-id="@vehicle.Id">
+                                        <form method="post" asp-page-handler="UpdateVehicle" asp-route-id="@vehicle.Id">
                                             <input type="hidden" name="Input.Id" value="@vehicle.Id" />
                                             <div class="form-group">
-                                                <label for="Model-@vehicle.Id">Vehicle Model<b class="text-danger">*</b></label>
-                                                <input type="text" class="form-control" id="Model-@vehicle.Id"
-                                                    name="Input.Model" value="@vehicle.Plate" required />
+                                                <label for="Plate-@vehicle.Id">Plate</label>
+                                                <input type="text" class="form-control" id="Plate-@vehicle.Id"
+                                                    name="Input.Plate" maxlength="5" value="@vehicle.Plate" />
                                             </div>
 
                                             <div class="form-group pt-2">
-                                                <label for="Type-@vehicle.Id">Vehicle Type<b class="text-danger">*</b></label>
-                                                <select class="form-control" id="Type-@vehicle.Id" name="Input.Type" required>
-                                                    @* @foreach (var type in Enum.GetValues(typeof(VehicleTypes)))
+                                                <label for="VehicleTypeId-@vehicle.Id">Vehicle Type<b
+                                                        class="text-danger">*</b></label>
+                                                <select class="form-control" id="VehicleTypeId-@vehicle.Id"
+                                                    name="Input.VehicleTypeId" required>
+                                                    <option value="">Select Vehicle Type</option>
+                                                    @foreach (var type in Model.AllVehicleTypes)
                                                     {
-                                                        <option value="@type"
-                                                            selected="@(type.ToString() == vehicle.Type.ToString() ? "selected" : null)">
-                                                            @type</option>
-                                                    } *@
+                                                        <option value="@type.Id"
+                                                            selected="@(type.Id == vehicle.VehicleTypeId ? "selected" : null)">
+                                                            @type.Model
+                                                        </option>
+                                                    }
                                                 </select>
                                             </div>
 
                                             <div class="form-group pt-2">
-                                                <label for="PricePerMinute-@vehicle.Id">Price Per Minute (€)<b
+                                                <label for="ParkingSlotId-@vehicle.Id">Parking Slot<b
                                                         class="text-danger">*</b></label>
-                                                <input type="number" class="form-control" id="PricePerMinute-@vehicle.Id"
-                                                    name="Input.PricePerMinute" value="@vehicle.Status" step="0.01" min="0.01"
-                                                    required />
+                                                <select class="form-control" id="ParkingSlotId-@vehicle.Id"
+                                                    name="Input.ParkingSlotId" required>
+                                                    <option value="">Select Parking Slot</option>
+                                                    @foreach (var slot in Model.AllParkingSlot)
+                                                    {
+                                                        <option value="@slot.Id"
+                                                            selected="@(slot.Id == vehicle.ParkingSlotId ? "selected" : null)">
+                                                            @slot.Id
+                                                        </option>
+                                                    }
+                                                </select>
                                             </div>
-                                            <small>Debug - Valore grezzo: @vehicle.Status</small>
+
+                                            <div class="form-group pt-2">
+                                                <label for="Status-@vehicle.Id">Status<b class="text-danger">*</b></label>
+                                                <select class="form-control" id="Status-@vehicle.Id" name="Input.Status" required>
+                                                    @foreach (var status in Enum.GetValues(typeof(VehicleStatusType)))
+                                                    {
+                                                        <option value="@status" selected="@(status.ToString() == vehicle.Status ? "selected" : null)">
+                                                            @status
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </div>
+
                                             <div class="modal-footer pb-0 pt-3">
                                                 <button type="button" class="btn btn-outline-secondary"
                                                     data-bs-dismiss="modal">Cancel</button>
@@ -206,7 +231,7 @@
                                     fill="currentColor" />
                             </svg>
                         </a>
-                        <!-- Modal -->
+                        <!-- Delete Modal -->
                         <div class="modal fade" id="deleteModal-@vehicle.Id" tabindex="-1" role="dialog"
                             aria-labelledby="deleteModalLabel-@vehicle.Id" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -218,7 +243,7 @@
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form method="post" asp-page-handler="DeleteVehicleType" asp-route-id="@vehicle.Id">
+                                        <form method="post" asp-page-handler="DeleteVehicle" asp-route-id="@vehicle.Id">
                                             <p class="mb-2">Are you sure you want to delete this vehicle?</p>
                                             <p><strong>Battery level:</strong> @vehicle.BatteryLevel</p>
                                             <p><strong>Plate:</strong> @vehicle.Plate</p>

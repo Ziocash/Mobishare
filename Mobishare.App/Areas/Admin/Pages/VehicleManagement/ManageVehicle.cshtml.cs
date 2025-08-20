@@ -43,6 +43,8 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
             public int VehicleTypeId { get; set; }
             [Required(ErrorMessage = "Select a valid city.")]
             public int ParkingSlotId { get; set; }
+            [Required(ErrorMessage = "Select a valid status.")]
+            public VehicleStatusType Status { get; set; }
         }
 
         public async Task<IActionResult> OnPostAddVehicle()
@@ -80,6 +82,62 @@ namespace Mobishare.App.Areas.Admin.Pages.VehicleManagement
 
             // ModelState.AddModelError(string.Empty, "Failed to add vehicle.");
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostUpdateVehicle(int id)
+        {
+            Input.Id = id;
+            if (!ModelState.IsValid)
+            {
+                await LoadAllData();
+                _logger.LogWarning("Invalid model states. Model states status: " + !ModelState.IsValid);
+                return Page();
+            }
+
+            var updateResponse = await _httpClient.PutAsJsonAsync("api/Vehicle",
+                new UpdateVehicle
+                {
+                    Id = id,
+                    Plate = Input.Plate ?? string.Empty,
+                    VehicleTypeId = Input.VehicleTypeId,
+                    ParkingSlotId = Input.ParkingSlotId,
+                    Status = Input.Status.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
+
+            if (!updateResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update vehicle. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            _logger.LogInformation("Vehicle succesfully updated");
+            TempData["SuccessMessage"] = "Vehicle succesfully updated.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteVehicle(int id)
+        {
+            var deleteResponse = await _httpClient.DeleteAsync($"api/Vehicle/{id}");
+
+            if (!deleteResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await deleteResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {deleteResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to delete vehicle. Error: {errorContent}";
+            }
+            else
+            {
+                _logger.LogInformation("Vehicle succesflully deleted.");
+                TempData["SuccessMessage"] = "Vehicle successfully deleted";
+            }
+
+            await LoadAllData();
+            return Page();
         }
 
         public async Task OnGet()
