@@ -76,7 +76,7 @@ public class RideController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("User/{userId}")]
     [SwaggerOperation(
         Summary = "Get the last ride for a specific user",
         Description = "This endpoint retrieves the last ride for a specific user.",
@@ -99,7 +99,33 @@ public class RideController : ControllerBase
         return Ok(result);
     }
 
-    /*[HttpPut("updateRide")]
+    [HttpGet("ride/{rideId}")]
+    [SwaggerOperation(
+        Summary = "Get a ride by its ID",
+        Description = "This endpoint retrieves a ride by its unique identifier.",
+        OperationId = "GetRideById"
+    )]
+    [SwaggerResponse(200, "Ride retrieved successfully", typeof(Ride))]
+    [SwaggerResponse(404, "Ride not found")]
+    public async Task<IActionResult> GetRideById(
+        [FromRoute]
+        [SwaggerParameter("rideId", Required = true, Description = "The ID of the ride to retrieve")]
+        int rideId)
+    {
+        if (rideId <= 0)
+        {
+            return BadRequest("Ride ID cannot be null or empty.");
+        }
+        var result = await _mediator.Send(new GetRideById(rideId));
+        if (result == null)
+        {
+            return NotFound("Ride not found.");
+        }
+        return Ok(result);
+    }
+    
+
+    [HttpPut("updateRide")]
     [SwaggerOperation(
         Summary = "Update an existing ride",
         Description = "This endpoint allows you to update an existing ride for a vehicle."
@@ -125,5 +151,5 @@ public class RideController : ControllerBase
         }
 
         return Ok(result);
-    }*/
+    }
 }

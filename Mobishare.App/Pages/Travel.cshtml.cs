@@ -1,18 +1,11 @@
-using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Data;
 using Mobishare.Core.Models.Vehicles;
-using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
-using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
-using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,7 +42,7 @@ namespace Mobishare.App.Pages
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _context = context;
         }
-        
+
         public async Task<IActionResult> OnGet()
         {
             if (User?.Identity == null || !User.Identity.IsAuthenticated)
@@ -63,7 +56,7 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            Ride = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/{userId}");
+            Ride = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
 
             if (Ride == null)
             {
@@ -72,21 +65,21 @@ namespace Mobishare.App.Pages
             }
 
             // Recupera il veicolo con il tipo per ottenere il costo per minuto
-            var vehicle = await _mediator.Send(new GetVehicleById(Ride.VehicleId));
+            var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{Ride.VehicleId}");
             if (vehicle != null)
             {
-                var vehicleType = await _mediator.Send(new GetVehicleTypeById(vehicle.VehicleTypeId));
+                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleTyep/{vehicle.VehicleTypeId}");
                 if (vehicleType != null)
                 {
                     CostPerMinute = vehicleType.PricePerMinute;
                 }
             }
 
-            StartPosition = await _mediator.Send(new GetPositionByVehicleId(Ride.VehicleId));
+            StartPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{Ride.VehicleId}");
 
             if (StartPosition != null)
                 StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
-         
+
             return Page();
         }
 
@@ -108,7 +101,7 @@ namespace Mobishare.App.Pages
 
             return new JsonResult(new { cost = currentCost });
         }
-        
+
         public async Task<IActionResult> OnPostEndTrip(string tripName, int rideId)
         {
             try
@@ -121,7 +114,7 @@ namespace Mobishare.App.Pages
                 }
 
                 // Recupera il ride
-                var ride = await _mediator.Send(new GetRideById(rideId));
+                var ride = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/{rideId}");
                 if (ride == null)
                 {
                     _logger.LogWarning("Ride with ID {RideId} not found", rideId);
@@ -129,7 +122,7 @@ namespace Mobishare.App.Pages
                 }
 
                 // Recupera il veicolo per ottenere il tipo
-                var vehicle = await _mediator.Send(new GetVehicleById(ride.VehicleId));
+                var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{ride.VehicleId}");
                 if (vehicle == null)
                 {
                     _logger.LogWarning("Vehicle with ID {VehicleId} not found", ride.VehicleId);
@@ -137,7 +130,7 @@ namespace Mobishare.App.Pages
                 }
 
                 // Recupera il tipo di veicolo per ottenere il prezzo al minuto
-                var vehicleType = await _mediator.Send(new GetVehicleTypeById(vehicle.VehicleTypeId));
+                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleTyep/{vehicle.VehicleTypeId}");
                 if (vehicleType == null)
                 {
                     _logger.LogWarning("VehicleType with ID {VehicleTypeId} not found", vehicle.VehicleTypeId);
@@ -150,24 +143,33 @@ namespace Mobishare.App.Pages
                 var calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
 
                 // Recupera l'ultima posizione del veicolo
-                var lastPosition = await _mediator.Send(new GetPositionByVehicleId(ride.VehicleId));
-                
+                var lastPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{ride.VehicleId}");
+
                 // Aggiorna il ride con orario di fine, posizione finale e prezzo calcolato
-                await _mediator.Send(new UpdateRide
+                var updateRideResponse = await _httpClient.PutAsJsonAsync("api/Ride",
+                    new UpdateRide
+                    {
+                        Id = ride.Id,
+                        StartDateTime = ride.StartDateTime,
+                        EndDateTime = endTime,
+                        Price = (double)calculatedPrice, // Prezzo calcolato basato sulla durata
+                        PositionStartId = ride.PositionStartId,
+                        PositionEndId = lastPosition?.Id,
+                        UserId = ride.UserId,
+                        VehicleId = ride.VehicleId,
+                        TripName = string.IsNullOrWhiteSpace(tripName) ? null : tripName
+                    }
+                );
+
+                if (!updateRideResponse.IsSuccessStatusCode)
                 {
-                    Id = ride.Id,
-                    StartDateTime = ride.StartDateTime,
-                    EndDateTime = endTime,
-                    Price = (double)calculatedPrice, // Prezzo calcolato basato sulla durata
-                    PositionStartId = ride.PositionStartId,
-                    PositionEndId = lastPosition?.Id,
-                    UserId = ride.UserId,
-                    VehicleId = ride.VehicleId,
-                    TripName = string.IsNullOrWhiteSpace(tripName) ? null : tripName
-                });
+                    var errorContent = await updateRideResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {updateRideResponse.StatusCode}, Content: {errorContent}");
+                    TempData["ErrorMessage"] = $"Failed to update Ride. Error: {errorContent}";
+                }
 
                 // Libera il veicolo (rimetti a Free)
-                await _mediator.Send(new UpdateVehicle
+                var UpdateVehicleType = await _httpClient.PutAsJsonAsync("api/Vehicle/updateVehicle", new UpdateVehicle
                 {
                     Id = vehicle.Id,
                     Plate = vehicle.Plate,
@@ -178,11 +180,19 @@ namespace Mobishare.App.Pages
                     CreatedAt = vehicle.CreatedAt
                 });
 
-                _logger.LogInformation("Trip ended successfully for ride {RideId}. Duration: {Duration} minutes, Price: €{Price}", 
+                if (!UpdateVehicleType.IsSuccessStatusCode)
+                {
+                    var errorContent = await UpdateVehicleType.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {UpdateVehicleType.StatusCode}, Content: {errorContent}");
+                    TempData["ErrorMessage"] = $"Failed to update vehicle type. Error: {errorContent}";
+                    return Page();
+                }
+
+                _logger.LogInformation("Trip ended successfully for ride {RideId}. Duration: {Duration} minutes, Price: €{Price}",
                     rideId, Math.Round(durationInMinutes, 2), calculatedPrice);
-                
+
                 TempData["SuccessMessage"] = $"Viaggio terminato con successo! Durata: {Math.Round(durationInMinutes, 0)} minuti - Costo: €{calculatedPrice}";
-                
+
                 return RedirectToPage("/LandingPage");
             }
             catch (Exception ex)
