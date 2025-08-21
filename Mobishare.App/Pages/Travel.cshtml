@@ -74,13 +74,13 @@
     <div class="stats-grid">
         <div class="card">
             <div class="card-content stat-card">
-                <div class="stat-value">2.3</div>
+                <div class="stat-value" id="distanceValue">2.3</div>
                 <div class="stat-label">km percorsi</div>
             </div>
         </div>
         <div class="card">
             <div class="card-content stat-card">
-                <div class="stat-value">€1.50</div>
+                <div class="stat-value" id="costValue">€0.00</div>
                 <div class="stat-label">costo attuale</div>
             </div>
         </div>
@@ -96,8 +96,226 @@
         <p>Ricorda di parcheggiare in un'area consentita</p>
     </div>
 
+    <!-- Modal per terminare il viaggio -->
+    <div class="modal fade" id="endTripModal" tabindex="-1" aria-labelledby="endTripModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="endTripModalLabel">Termina Viaggio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Il tuo viaggio è terminato!</p>
+                    <div class="mb-3">
+                        <label for="tripName" class="form-label">Dai un nome al tuo viaggio (opzionale):</label>
+                        <input type="text" class="form-control" id="tripName" placeholder="Es: Viaggio al lavoro">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-success" id="confirmEndTrip">Conferma</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")' async defer></script>
-    <script src="~/js/travel.js" type="text/javascript"></script>
-    <script src="~/js/site.js" type="text/javascript"></script>
-    <link rel="stylesheet" href="~/css/travel.css">
+    <!-- Form nascosto per inviare i dati -->
+    <form id="endTripForm" method="post" asp-page-handler="EndTrip" style="display: none;">
+        <input type="hidden" id="tripNameInput" name="tripName" />
+        <input type="hidden" name="rideId" value="@Model.Ride.Id" />
+    </form>
+</main>
+
+<!-- Script per passare dati al JavaScript -->
+<script>
+    window.rideData = {
+        rideId: @Model.Ride.Id,
+        costPerMinute: @Model.CostPerMinute.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+        startDateTime: '@Model.Ride.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")'
+    };
+    
+    console.log('Ride data initialized:', window.rideData);
+    console.log('CostPerMinute from server:', @Model.CostPerMinute);
+    
+    let startTime;
+    let timerInterval;
+    let costUpdateInterval;
+
+    // Inizializza immediatamente
+    function initializePage() {
+        console.log('Initializing page...');
+        
+        if (window.rideData) {
+            // Prova a parsare la data in diversi modi
+            startTime = new Date(window.rideData.startDateTime);
+            console.log('Start time string:', window.rideData.startDateTime);
+            console.log('Parsed start time:', startTime);
+            console.log('Is valid date:', !isNaN(startTime.getTime()));
+            console.log('Current time:', new Date());
+            
+            // Verifica se la data è valida
+            if (isNaN(startTime.getTime())) {
+                console.error('Invalid start time! Cannot parse:', window.rideData.startDateTime);
+                return;
+            }
+            
+            // Test immediato
+            const costElement = document.getElementById('costValue');
+            const timerElement = document.getElementById('timer');
+            console.log('Cost element found:', !!costElement);
+            console.log('Timer element found:', !!timerElement);
+            
+            if (costElement && timerElement) {
+                costElement.textContent = '€TEST';
+                timerElement.textContent = 'TEST';
+                console.log('Set test values');
+                
+                // Dopo 2 secondi, inizia gli aggiornamenti reali
+                setTimeout(function() {
+                    startTimer();
+                    startCostUpdater();
+                }, 2000);
+            } else {
+                console.error('Required elements not found!');
+            }
+        } else {
+            console.error('window.rideData is not available');
+        }
+    }
+
+    function startTimer() {
+        console.log('Starting timer...');
+        updateTimer();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+        if (!startTime || isNaN(startTime.getTime())) {
+            console.error('Invalid start time in updateTimer');
+            return;
+        }
+        
+        const now = new Date();
+        const elapsed = now - startTime;
+        
+        console.log('Timer update - now:', now);
+        console.log('Timer update - startTime:', startTime);
+        console.log('Timer update - elapsed ms:', elapsed);
+        
+        if (elapsed < 0) {
+            console.error('Negative elapsed time!');
+            return;
+        }
+        
+        const minutes = Math.floor(elapsed / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        
+        console.log('Timer update - minutes:', minutes, 'seconds:', seconds);
+        
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    function startCostUpdater() {
+        console.log('Starting cost updater...');
+        updateCost();
+        if (costUpdateInterval) clearInterval(costUpdateInterval);
+        costUpdateInterval = setInterval(updateCost, 1000);
+    }
+
+    function updateCost() {
+        if (!startTime || isNaN(startTime.getTime())) {
+            console.error('Invalid start time in updateCost');
+            return;
+        }
+        
+        if (!window.rideData.costPerMinute) {
+            console.error('Missing costPerMinute');
+            return;
+        }
+        
+        const now = new Date();
+        const elapsed = now - startTime;
+        const elapsedMinutes = elapsed / (1000 * 60);
+        const costPerMinute = parseFloat(window.rideData.costPerMinute);
+        const currentCost = Math.max(0, elapsedMinutes * costPerMinute);
+        
+        console.log('Cost update - elapsed ms:', elapsed);
+        console.log('Cost update - elapsed minutes:', elapsedMinutes.toFixed(4));
+        console.log('Cost update - cost per minute:', costPerMinute);
+        console.log('Cost update - current cost:', currentCost.toFixed(4));
+        
+        if (isNaN(currentCost)) {
+            console.error('Calculated cost is NaN!');
+            return;
+        }
+        
+        const costElement = document.getElementById('costValue');
+        if (costElement) {
+            const displayValue = `€${currentCost.toFixed(2)}`;
+            costElement.textContent = displayValue;
+            console.log('Updated display to:', displayValue);
+        } else {
+            console.error('costValue element not found during update');
+        }
+    }
+
+    function endTrip() {
+        console.log('Ending trip...');
+        
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        if (costUpdateInterval) {
+            clearInterval(costUpdateInterval);
+            costUpdateInterval = null;
+        }
+        
+        const modalElement = document.getElementById('endTripModal');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Modal element or Bootstrap not found');
+        }
+    }
+
+    // Inizializza quando il DOM è pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+        // DOM già caricato
+        initializePage();
+    }
+
+    // Gestione conferma fine viaggio
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmButton = document.getElementById('confirmEndTrip');
+        if (confirmButton) {
+            confirmButton.addEventListener('click', function() {
+                const tripName = document.getElementById('tripName').value;
+                const tripNameInput = document.getElementById('tripNameInput');
+                if (tripNameInput) {
+                    tripNameInput.value = tripName;
+                }
+                const endTripForm = document.getElementById('endTripForm');
+                if (endTripForm) {
+                    endTripForm.submit();
+                }
+            });
+        }
+    });
+
+    // Funzione per la mappa
+    function initMaps() {
+        console.log('Maps initialized');
+    }
+</script>
+
+<script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")' async defer></script>
+<script src="~/js/site.js" type="text/javascript"></script>
+<link rel="stylesheet" href="~/css/travel.css">
