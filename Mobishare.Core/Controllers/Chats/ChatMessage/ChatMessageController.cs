@@ -56,11 +56,6 @@ public class ChatMessageController : ControllerBase
         var query = new GetMessagesByConversationId(conversationId);
         var messages = await _mediator.Send(query);
 
-        if (messages == null || !messages.Any())
-        {
-            return NotFound();
-        }
-
         return Ok(messages);
     }
 

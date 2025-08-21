@@ -66,13 +66,33 @@ public class VehicleController : ControllerBase
         }
 
         var result = await _mediator.Send(request);
-        if (result == null)
-        {
-            return NotFound("Vehicle not found.");
-        }
-
+        
         return Ok(result);
     }
+
+    [HttpDelete("{id}")]
+    [SwaggerOperation(
+        Summary = "Delete a vehicle",
+        Description = "This endpoint allows you to delete a vehicle by its ID."
+    )]
+    [SwaggerResponse(200, "Vehicle deleted successfully")]
+    [SwaggerResponse(404, "Vehicle not found")]
+    [SwaggerResponse(500, "Internal server error")]
+    public async Task<IActionResult> DeleteVehicle(
+        [FromRoute]
+        [SwaggerParameter("The ID of the vehicle to delete", Required = true)]
+        int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest("Invalid vehicle ID.");
+        }
+
+        var response = await _mediator.Send(new DeleteVehicle { Id = id });
+
+        return NoContent();
+    }
+
     [HttpGet("AllVehicles")]
     [SwaggerOperation(
         Summary = "Get all vehicles",
@@ -82,10 +102,6 @@ public class VehicleController : ControllerBase
     public async Task<IActionResult> GetAllVehicles()
     {
         var result = await _mediator.Send(new GetAllVehicles());
-        if (result == null || !result.Any())
-        {
-            return NotFound("No vehicles found.");
-        }
 
         return Ok(result);
     }
@@ -108,10 +124,6 @@ public class VehicleController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetVehicleById(id));
-        if (result == null)
-        {
-            return NotFound("Vehicle not found.");
-        }
 
         return Ok(result);
     }

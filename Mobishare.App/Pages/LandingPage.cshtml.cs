@@ -1,16 +1,10 @@
-using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Models.Vehicles;
-using Mobishare.Core.Requests.Maps.CityRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.PositionRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.RideRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
-using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
 
@@ -19,8 +13,7 @@ namespace Mobishare.App.Pages
     public class LandingPageModel : PageModel
     {
         private readonly ILogger<LandingPageModel> _logger;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly UserManager<IdentityUser> _userManager;
 
@@ -30,67 +23,93 @@ namespace Mobishare.App.Pages
 
         public LandingPageModel(
             ILogger<LandingPageModel> logger,
-            IMediator mediator,
-            IMapper mapper,
+            IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             IGoogleGeocodingService googleGeocoding,
             UserManager<IdentityUser> userManager
             )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _googleGeocoding = googleGeocoding ?? throw new ArgumentNullException(nameof(googleGeocoding));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-
         public async Task<IActionResult> OnPostReserveVehicle(int vehicleId)
         {
             _logger.LogInformation("Prenotazione confermata per veicolo {VehicleId}", vehicleId);
-            var vehicle = await _mediator.Send(new GetVehicleById(vehicleId));
+
+            var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{vehicleId}");
+
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
                 return Page();
             }
-            await _mediator.Send(new UpdateVehicle
-            {
-                Id = vehicle.Id,
-                Plate = vehicle.Plate,
-                Status = VehicleStatusType.Reserved.ToString(),
-                BatteryLevel = vehicle.BatteryLevel,
-                ParkingSlotId = vehicle.ParkingSlotId,
-                VehicleTypeId = vehicle.VehicleTypeId,
-                CreatedAt = vehicle.CreatedAt
-            });
 
-            TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
+            var updateResponse = await _httpClient.PutAsJsonAsync("api/Vehicle",
+                new UpdateVehicle
+                {
+                    Id = vehicle.Id,
+                    Plate = vehicle.Plate,
+                    Status = VehicleStatusType.Reserved.ToString(),
+                    BatteryLevel = vehicle.BatteryLevel,
+                    ParkingSlotId = vehicle.ParkingSlotId,
+                    VehicleTypeId = vehicle.VehicleTypeId,
+                    CreatedAt = vehicle.CreatedAt
+                }
+            );
+
+            if (!updateResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update vehicle. Error: {errorContent}";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
+            }
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostFreeVehicle(int vehicleId)
         {
             _logger.LogInformation("Liberazione confermata per veicolo {VehicleId}", vehicleId);
-            var vehicle = await _mediator.Send(new GetVehicleById(vehicleId));
+            var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{vehicleId}");
+
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
                 return Page();
             }
-            await _mediator.Send(new UpdateVehicle
-            {
-                Id = vehicle.Id,
-                Plate = vehicle.Plate,
-                Status = VehicleStatusType.Free.ToString(),
-                BatteryLevel = vehicle.BatteryLevel,
-                ParkingSlotId = vehicle.ParkingSlotId,
-                VehicleTypeId = vehicle.VehicleTypeId,
-                CreatedAt = vehicle.CreatedAt
-            });
 
-            TempData["SuccessMessage"] = $"Veicolo {vehicleId} liberato con successo!";
+            var updateResponse = await _httpClient.PutAsJsonAsync("api/Vehicle",
+                new UpdateVehicle
+                {
+                    Id = vehicle.Id,
+                    Plate = vehicle.Plate,
+                    Status = VehicleStatusType.Free.ToString(),
+                    BatteryLevel = vehicle.BatteryLevel,
+                    ParkingSlotId = vehicle.ParkingSlotId,
+                    VehicleTypeId = vehicle.VehicleTypeId,
+                    CreatedAt = vehicle.CreatedAt
+                }
+            );
+
+            if (!updateResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update vehicle. Error: {errorContent}";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = $"Veicolo {vehicleId} liberato con successo!";
+            }
+
             return RedirectToPage();
         }
 
@@ -103,42 +122,60 @@ namespace Mobishare.App.Pages
                 _logger.LogWarning("Authenticated user has null UserId.");
                 return Page();
             }
+
             _logger.LogInformation("Inizio corsa confermato per veicolo {VehicleId}", vehicleId);
-            var vehicle = await _mediator.Send(new GetVehicleById(vehicleId));
+            var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{vehicleId}");
 
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle with ID {Id} not found", vehicleId);
                 return Page();
             }
-            var position = await _mediator.Send(new GetPositionByVehicleId(vehicleId));
 
-            await _mediator.Send(new UpdateVehicle
+            var position = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{vehicleId}");
+
+            var updateResponse = await _httpClient.PutAsJsonAsync("api/Vehicle",
+                new UpdateVehicle
+                {
+                    Id = vehicle.Id,
+                    Plate = vehicle.Plate,
+                    Status = VehicleStatusType.Occupied.ToString(),
+                    BatteryLevel = vehicle.BatteryLevel,
+                    ParkingSlotId = vehicle.ParkingSlotId,
+                    VehicleTypeId = vehicle.VehicleTypeId,
+                    CreatedAt = vehicle.CreatedAt
+                }
+            );
+
+            if (!updateResponse.IsSuccessStatusCode)
             {
-                Id = vehicle.Id,
-                Plate = vehicle.Plate,
-                Status = VehicleStatusType.Occupied.ToString(),
-                BatteryLevel = vehicle.BatteryLevel,
-                ParkingSlotId = vehicle.ParkingSlotId,
-                VehicleTypeId = vehicle.VehicleTypeId,
-                CreatedAt = vehicle.CreatedAt
-            });
+                var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update vehicle. Error: {errorContent}";
+                return Page();
+            }
 
-            await _mediator.Send(new CreateRide
+            var createResponse = await _httpClient.PostAsJsonAsync("api/Ride",
+                new CreateRide
+                {
+                    StartDateTime = DateTime.UtcNow,
+                    Price = 0, // Set a default price or calculate it based on your logic
+                    PositionStartId = position.Id, // This will be set when the ride starts
+                    PositionEndId = null, // This will be set when the ride ends
+                    VehicleId = vehicleId,
+                    UserId = userId
+                }
+            );
+
+            if (!createResponse.IsSuccessStatusCode)
             {
-                StartDateTime = DateTime.UtcNow,
-                Price = 0, // Set a default price or calculate it based on your logic
-                PositionStartId = position.Id, // This will be set when the ride starts
-                PositionEndId = null, // This will be set when the ride ends
-                VehicleId = vehicleId,
-                UserId = userId
-
-            });
-
+                var errorContent = await createResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to add ride. Error: {errorContent}";
+            }
 
             return RedirectToPage("/Travel");
         }
-
 
         public async Task<IActionResult> OnGet()
         {
@@ -153,7 +190,8 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            var rides = await _mediator.Send(new GetAllUserRides(userId));
+            var ridesResponse = await _httpClient.GetFromJsonAsync<IEnumerable<Ride>>($"api/Ride/AllUserRides/{userId}");
+            var rides = ridesResponse ?? [];
 
             foreach (var ride in rides)
             {

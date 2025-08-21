@@ -36,11 +36,6 @@ public class RideController : ControllerBase
 
         var result = await _mediator.Send(createRide);
 
-        if (result == null)
-        {
-            return NotFound("Vehicle not found.");
-        }
-
         return CreatedAtAction(nameof(CreateRide), new { id = result.Id }, result);
     }
 
@@ -54,11 +49,6 @@ public class RideController : ControllerBase
     public async Task<IActionResult> GetAllRides()
     {
         var result = await _mediator.Send(new GetAllRides());
-
-        if (result == null || !result.Any())
-        {
-            return NotFound("No rides found.");
-        }
 
         return Ok(result);
     }
@@ -82,10 +72,7 @@ public class RideController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetAllUserRides(userId));
-        if (result == null || !result.Any())
-        {
-            return NotFound("User not found or no rides found.");
-        }
+        
         return Ok(result);
     }
 
@@ -108,11 +95,6 @@ public class RideController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetRideByUserId(userId));
-
-        if (result == null)
-        {
-            return NotFound("Ride not found.");
-        }
 
         return Ok(result);
     }

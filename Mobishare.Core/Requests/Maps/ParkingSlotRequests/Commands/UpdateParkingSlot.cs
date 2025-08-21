@@ -40,6 +40,8 @@ public class UpdateParkingSlotHandler : IRequestHandler<UpdateParkingSlot, Parki
                 parkingSlotToUpdate.CityId = request.CityId;
             if (parkingSlotToUpdate.UserId != request.UserId)
                 parkingSlotToUpdate.UserId = request.UserId;
+            if (parkingSlotToUpdate.Type != request.Type)
+                parkingSlotToUpdate.Type = request.Type;
             parkingSlotToUpdate.CreatedAt = request.CreatedAt;
 
             _dbContext.ParkingSlots.Update(parkingSlotToUpdate);

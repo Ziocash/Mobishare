@@ -16,6 +16,8 @@ public class RideConfiguration : IEntityTypeConfiguration<Ride>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Name);
+
         builder.Property(x => x.StartDateTime)
                 .IsRequired();
 
