@@ -65,7 +65,18 @@ public class ChatHub : Hub
 
         _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
         _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
-        _chat = new Chat(_client) { Think = true };
+
+        _chat = new Chat(_client)
+        {
+            Think = true,
+            Options = new RequestOptions
+            {
+                MiroStat = 2,
+                MiroStatEta = (float?)0.3,
+                MiroStatTau = (float?)3.7,
+                Temperature = (float?)0.3
+            }
+        };
     }
 
     public async Task SendMessage(string conversationId, string message)
@@ -130,19 +141,6 @@ public class ChatHub : Hub
 
         UserContext.UserId = userId;
 
-        
-    // Configurazione esplicita per il reasoning
-    var requestOptions = new ChatRequestOptions
-    {
-        // Forza il modello a mostrare il reasoning prima di rispondere
-        Format = "json", // Oppure un formato che supporti il reasoning strutturato
-        Options = new Dictionary<string, object>
-        {
-            { "temperature", 0.1 }, // Bassa temperatura per reasoning più deterministico
-            { "num_predict", 512 } // Massimo numero di token per il reasoning
-        }
-    };
-
 
         var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
         var aiPromtMessage = "";
@@ -150,11 +148,11 @@ public class ChatHub : Hub
 
         _chat.OnThink += async (sender, thinkContent) =>
         {
-            aiThinkMessage +=  thinkContent;
+            aiThinkMessage += thinkContent;
         };
 
         _logger.LogInformation("AI thinking: {aiThinkMessage}", aiThinkMessage);
-        
+
         await foreach (var response in _chat.SendAsync(prompt, tools))
         {
             aiPromtMessage += response;
@@ -162,7 +160,7 @@ public class ChatHub : Hub
                 await Clients.Caller.SendAsync("ReceiveMessage", "MobishareBot", response, DateTime.UtcNow.ToLocalTime().ToString("g"));
         }
 
-     
+
         _chat.OnThink -= async (sender, thinkContent) => { };
 
 
