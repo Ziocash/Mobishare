@@ -68,7 +68,7 @@ namespace Mobishare.App.Pages
             var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{Ride.VehicleId}");
             if (vehicle != null)
             {
-                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleTyep/{vehicle.VehicleTypeId}");
+                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
                 if (vehicleType != null)
                 {
                     CostPerMinute = vehicleType.PricePerMinute;
@@ -130,7 +130,7 @@ namespace Mobishare.App.Pages
                 }
 
                 // Recupera il tipo di veicolo per ottenere il prezzo al minuto
-                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleTyep/{vehicle.VehicleTypeId}");
+                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
                 if (vehicleType == null)
                 {
                     _logger.LogWarning("VehicleType with ID {VehicleTypeId} not found", vehicle.VehicleTypeId);
@@ -169,7 +169,7 @@ namespace Mobishare.App.Pages
                 }
 
                 // Libera il veicolo (rimetti a Free)
-                var UpdateVehicleType = await _httpClient.PutAsJsonAsync("api/Vehicle/updateVehicle", new UpdateVehicle
+                var updateVehicleResponse = await _httpClient.PutAsJsonAsync("api/Vehicle", new UpdateVehicle
                 {
                     Id = vehicle.Id,
                     Plate = vehicle.Plate,
@@ -180,10 +180,10 @@ namespace Mobishare.App.Pages
                     CreatedAt = vehicle.CreatedAt
                 });
 
-                if (!UpdateVehicleType.IsSuccessStatusCode)
+                if (!updateVehicleResponse.IsSuccessStatusCode)
                 {
-                    var errorContent = await UpdateVehicleType.Content.ReadAsStringAsync();
-                    _logger.LogError($"API error: {UpdateVehicleType.StatusCode}, Content: {errorContent}");
+                    var errorContent = await updateVehicleResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {updateVehicleResponse.StatusCode}, Content: {errorContent}");
                     TempData["ErrorMessage"] = $"Failed to update vehicle type. Error: {errorContent}";
                     return Page();
                 }
