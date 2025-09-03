@@ -52,7 +52,10 @@ public class MappingProfile : Profile
 
         //Ride requests
         CreateMap<CreateRide, Ride>().ReverseMap();
-        CreateMap<UpdateRide, Ride>().ReverseMap();
+        CreateMap<UpdateRide, Ride>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.TripName))
+            .ReverseMap()
+            .ForMember(dest => dest.TripName, opt => opt.MapFrom(src => src.Name));
         CreateMap<DeleteRide, Ride>().ReverseMap();
 
         //-------------------------------
