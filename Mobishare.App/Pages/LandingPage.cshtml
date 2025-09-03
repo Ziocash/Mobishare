@@ -96,10 +96,10 @@
           Your Travels
         </h5>
       </div>
-      <div class="travels-content" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+      <div class="travels-content">
       @if (Model.AllRides != null && Model.AllRides.Count > 0)
       {
-        <div class="col m-3" style="padding-bottom: 100px;">
+        <div style="padding: 10px 10px 40px 10px;">
           @foreach (var vm in Model.AllRides)
           {
             var ride = vm.Ride;
@@ -182,12 +182,10 @@
         </div>
                 }
         </div>
-        <!-- Extra spacing to ensure last item is fully visible -->
-        <div style="height: 50px; width: 100%;"></div>
       }
       else
       {
-        <div class="m-3">
+        <div style="padding: 10px;">
           <div class="alert alert-info d-flex align-items-center" role="alert">
             <i class="fas fa-info-circle me-2"></i>
             <div>
@@ -196,8 +194,6 @@
             </div>
           </div>
         </div>
-        <!-- Extra spacing for consistency -->
-        <div style="height: 50px; width: 100%;"></div>
       }
       </div> <!-- closes travels-content -->
     </div> <!-- closes travels-container -->

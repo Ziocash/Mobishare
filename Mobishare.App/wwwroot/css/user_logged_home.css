@@ -181,10 +181,9 @@ main {
 }
 
 .travels-container {
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: calc(100vh - 150px);
+    max-height: calc(100vh - 150px);
+    overflow: hidden;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
@@ -216,7 +215,8 @@ main {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 100px;
+    padding-bottom: 20px;
+    min-height: 0;
 }
 
 .travels-content::-webkit-scrollbar {
@@ -239,8 +239,6 @@ main {
 }
 
 .travel-card {
-    margin: 15px;
-    margin-bottom: 20px;
     border-radius: 12px;
     border: none;
     transition: all 0.3s ease;
@@ -249,8 +247,13 @@ main {
     overflow: hidden;
 }
 
-.travel-card:last-child {
-    margin-bottom: 80px;
+/* Override Bootstrap card defaults */
+.travel-card.card {
+    margin-bottom: 15px !important;
+}
+
+.travel-card.card:last-child {
+    margin-bottom: 25px !important;
 }
 
 .travel-card:hover {
@@ -263,18 +266,23 @@ main {
     color: #667eea;
     font-weight: 600;
     font-size: 1.1rem;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .travel-card .card-body {
-    padding: 20px;
+    padding: 15px 15px 5px 15px !important;
+}
+
+/* Assicura che l'ultimo elemento nel card-body non abbia margin-bottom */
+.travel-card .card-body > *:last-child {
+    margin-bottom: 0 !important;
 }
 
 .travel-info {
     display: flex;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     font-size: 14px;
-    padding: 5px 0;
+    padding: 3px 0;
     border-bottom: 1px solid rgba(102, 126, 234, 0.1);
 }
 
@@ -299,10 +307,10 @@ main {
     font-size: 12px;
     color: #7c8db5;
     text-align: right;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(102, 126, 234, 0.1);
+    margin: 5px 0 0 0 !important;
+    padding: 5px 0 0 0 !important;
     font-style: italic;
+    line-height: 1.2;
 }
 
 /* Removed old scrollbar styles - now handled by .travels-content */
@@ -329,7 +337,7 @@ main {
     }
     
     .travels-content {
-        padding-bottom: 30px;
+        padding-bottom: 20px;
     }
 
     .bike-code-form {
@@ -337,12 +345,15 @@ main {
     }
     
     .travel-card {
-        margin: 10px;
-        margin-bottom: 15px;
+        margin: 0 0 12px 0;
     }
     
     .travel-card:last-child {
-        margin-bottom: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .travel-card .card-body {
+        padding: 12px 12px 5px 12px !important;
     }
 }
 
