@@ -69,21 +69,29 @@ public class MqttMessageHandler : IDisposable
                 return;
             }
 
-            if (vehicle.Status != VehicleStatusType.Free.ToString())
+            // Solo aggiorna la posizione se il veicolo è libero, ma invia sempre l'aggiornamento al frontend
+            if (vehicle.Status == VehicleStatusType.Free.ToString())
             {
-                _logger.LogWarning("Vehicle {VehicleId} in not Free.", vehiclePosition.VehicleId);
-                return;
-            }
+                var createResponse = await _httpClient.PostAsJsonAsync("api/Position", vehiclePosition);
 
-            var createResponse = await _httpClient.PostAsJsonAsync("api/Position", vehiclePosition);
-
-            if (!createResponse.IsSuccessStatusCode)
-            {
-                var errorContent = await createResponse.Content.ReadAsStringAsync();
-                _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
+                if (!createResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await createResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
+                }
             }
             
-            await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehiclePosition);
+            // Invia sempre l'aggiornamento al frontend con lo status del veicolo
+            var vehicleUpdate = new 
+            {
+                VehicleId = vehiclePosition.VehicleId,
+                Latitude = vehiclePosition.Latitude,
+                Longitude = vehiclePosition.Longitude,
+                Status = vehicle.Status,
+                BatteryLevel = vehicle.BatteryLevel
+            };
+            
+            await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehicleUpdate);
         }
         catch (Exception ex)
         {

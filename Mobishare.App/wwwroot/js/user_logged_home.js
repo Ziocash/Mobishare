@@ -32,10 +32,10 @@ document.addEventListener('DOMContentLoaded', function () {
           myModal.hide();
         }
         
+        // Non rimuovere il marker, ma aggiorna il suo stile per mostrare che è prenotato
         const selectedId = document.getElementById('selectedVehicleId').value;
         if (vehicleMarkers[selectedId]) {
-          vehicleMarkers[selectedId].setMap(null);
-          delete vehicleMarkers[selectedId];
+          updateMarkerStyle(vehicleMarkers[selectedId], true);
         }
       })
       .catch(error => {
@@ -64,42 +64,103 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const id = vehicle.vehicleId.toString();
     const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
+    const status = vehicle.status;
+    const isReserved = status === "Reserved";
 
     if (vehicleMarkers[id]) {
       const marker = vehicleMarkers[id];
       const currentPos = marker.getPosition();
 
+      // Aggiorna la posizione se cambiata
       if (currentPos.lat() !== newPosition.lat || currentPos.lng() !== newPosition.lng) {
         marker.setPosition(newPosition);
       }
+      
+      // Aggiorna lo stile del marker in base al nuovo status
+      updateMarkerStyle(marker, isReserved);
     } else {
+      // Determina l'icona e lo stile in base allo status
+      const markerIcon = getMarkerIcon(isReserved);
+      
       // Crea marker separato per ogni veicolo
       const marker = new google.maps.Marker({
         position: newPosition,
         map: map,
-        title: `Veicolo ${id}`,
-        icon: {
-          url: "/img/vehicle/icon/bicycle.png",
-          scaledSize: new google.maps.Size(40, 40)
-        }
+        title: isReserved ? `Veicolo ${id} (Prenotato)` : `Veicolo ${id}`,
+        icon: markerIcon,
+        opacity: isReserved ? 0.8 : 1.0
       });
 
       // Salva il marker in una mappa con la chiave ID
       vehicleMarkers[id] = marker;
 
-      // Listener separato per ogni marker
-      marker.addListener('click', () => {
-        document.getElementById('selectedVehicleId').value = id;
-        document.getElementById('vehicleIdDisplay').innerText = id;
+      // Listener separato per ogni marker - solo per veicoli liberi
+      if (!isReserved) {
+        marker.addListener('click', () => {
+          document.getElementById('selectedVehicleId').value = id;
+          document.getElementById('vehicleIdDisplay').innerText = id;
 
-        const myModal = new bootstrap.Modal(document.getElementById('confirmReservationModal'));
-        myModal.show();
-      });
+          const myModal = new bootstrap.Modal(document.getElementById('confirmReservationModal'));
+          myModal.show();
+        });
+      } else {
+        // Per i veicoli prenotati, mostra solo un messaggio informativo
+        marker.addListener('click', () => {
+          alert(`Veicolo ${id} è attualmente prenotato e non disponibile.`);
+        });
+      }
     }
   });
 
 
 
+
+  // Funzioni helper per gestire gli stili dei marker
+  function getMarkerIcon(isReserved) {
+    if (isReserved) {
+      // Crea un'icona SVG per i veicoli prenotati (con uno stile diverso)
+      const reservedIcon = {
+        path: 'M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z', // Una forma di stella
+        fillColor: '#FF6B6B', // Rosso per indicare "prenotato"
+        fillOpacity: 0.8,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 2
+      };
+      return reservedIcon;
+    } else {
+      return {
+        url: "/img/vehicle/icon/bicycle.png",
+        scaledSize: new google.maps.Size(40, 40)
+      };
+    }
+  }
+
+  function updateMarkerStyle(marker, isReserved) {
+    // Aggiorna l'opacità e l'icona in base al nuovo status
+    marker.setOpacity(isReserved ? 0.8 : 1.0);
+    marker.setIcon(getMarkerIcon(isReserved));
+    
+    // Aggiorna il titolo
+    const vehicleId = marker.getTitle().match(/\d+/)[0];
+    marker.setTitle(isReserved ? `Veicolo ${vehicleId} (Prenotato)` : `Veicolo ${vehicleId}`);
+    
+    // Rimuovi tutti i listener esistenti e aggiungi quello appropriato
+    google.maps.event.clearListeners(marker, 'click');
+    
+    if (!isReserved) {
+      marker.addListener('click', () => {
+        document.getElementById('selectedVehicleId').value = vehicleId;
+        document.getElementById('vehicleIdDisplay').innerText = vehicleId;
+        const myModal = new bootstrap.Modal(document.getElementById('confirmReservationModal'));
+        myModal.show();
+      });
+    } else {
+      marker.addListener('click', () => {
+        alert(`Veicolo ${vehicleId} è attualmente prenotato e non disponibile.`);
+      });
+    }
+  }
 
   btn.addEventListener('click', function () {
     const vehicleCode = code.value.trim();
@@ -257,9 +318,9 @@ function freeVehicle(id) {
     .then(data => {
       /* Inserire messaggio per dire che la prenotazione è cancellata */
       hidePopup();
+      // Non rimuovere il marker, ma ripristina il suo stile per mostrare che è di nuovo libero
       if (vehicleMarkers[id]) {
-        vehicleMarkers[id].setMap(null);
-        delete vehicleMarkers[id];
+        updateMarkerStyle(vehicleMarkers[id], false);
       }
     })
     .catch(error => {
