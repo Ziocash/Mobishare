@@ -34,9 +34,9 @@ public class RepairConfiguration : IEntityTypeConfiguration<Repair>
                .HasForeignKey(x => x.UserId)
                .IsRequired();
 
-        builder.HasOne(x => x.Vehicle)
+        builder.HasOne(x => x.Report)
                .WithMany()
-               .HasForeignKey(x => x.VehicleId)
+               .HasForeignKey(x => x.ReportId)
                .IsRequired();
     }
 }

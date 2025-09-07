@@ -11,8 +11,8 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250601205920_FixedTable")]
-    partial class FixedTable
+    [Migration("20250907183806_FirstMigration")]
+    partial class FirstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -293,7 +293,7 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserMessageId")
+                    b.Property<int?>("UserMessageId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -524,6 +524,9 @@ namespace Mobishare.Core.Migrations
                     b.Property<DateTime?>("FinishedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ReportId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("Status")
                         .HasColumnType("TEXT");
 
@@ -531,14 +534,11 @@ namespace Mobishare.Core.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ReportId");
 
-                    b.HasIndex("VehicleId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Repairs");
                 });
@@ -605,6 +605,9 @@ namespace Mobishare.Core.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("PositionEndId")
@@ -782,9 +785,7 @@ namespace Mobishare.Core.Migrations
 
                     b.HasOne("Mobishare.Core.Models.Chats.ChatMessage", "UserMessage")
                         .WithMany()
-                        .HasForeignKey("UserMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserMessageId");
 
                     b.Navigation("AiMessage");
 
@@ -894,21 +895,21 @@ namespace Mobishare.Core.Migrations
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Repair", b =>
                 {
+                    b.HasOne("Mobishare.Core.Models.Vehicles.Report", "Report")
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
-                        .WithMany()
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Report");
 
                     b.Navigation("User");
-
-                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.RepairAssignment", b =>
