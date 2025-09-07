@@ -1,5 +1,7 @@
 let reserved = null;
-
+let map; // Mappa globale
+let vehicleMarkers = {};
+let marker;
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('vehicleReservationForm');
   form.addEventListener('submit', function (event) {
@@ -39,14 +41,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       })
       .catch(error => {
-        alert(error);
+        alert('t1' + error);
       });
   });
 });
 
-let map; // Mappa globale
-let vehicleMarkers = {};
-let marker;
+
 window.onload = initMap;
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -259,6 +259,7 @@ function hidePopup() {
 }
 
 function showPopup() {
+    debugger;
   const popup = document.getElementById('mapPopup');
 
   popup.style.display = 'flex';
@@ -293,7 +294,7 @@ async function startTimer() {
     const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
     document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
     console.log('Test secondi: ', seconds);
-
+    
     if (parseInt(seconds) === 0) {
       freeVehicle(reserved);
       reserved = null;
