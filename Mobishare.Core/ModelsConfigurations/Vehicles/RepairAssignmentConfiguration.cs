@@ -6,24 +6,24 @@ using Mobishare.Core.Models.Vehicles;
 namespace Mobishare.Core.ModelsConfigurations.Vehicles;
 
 /// <summary>
-/// This class is used to configure the RepairAssignment table in the database.
+/// This class is used to configure the ReportAssignment table in the database.
 /// </summary>
-public class RepairAssignmentConfiguration : IEntityTypeConfiguration<RepairAssignment>
+public class ReportAssignmentConfiguration : IEntityTypeConfiguration<ReportAssignment>
 {
-    public void Configure(EntityTypeBuilder<RepairAssignment> builder)
+    public void Configure(EntityTypeBuilder<ReportAssignment> builder)
     {
-        builder.ToTable("RepairAssignments");
+        builder.ToTable("ReportAssignments");
 
-        builder.HasKey(x => new { x.UserId, x.RepairId });
+        builder.HasKey(x => new { x.UserId, x.ReportId });
 
         builder.HasOne(x => x.User)
                .WithMany()
                .HasForeignKey(x => x.UserId)
                .IsRequired();
 
-        builder.HasOne(x => x.Repair)
+        builder.HasOne(x => x.Report)
                .WithMany()
-               .HasForeignKey(x => x.RepairId)
+               .HasForeignKey(x => x.ReportId)
                .IsRequired();
     }
 }

@@ -531,18 +531,11 @@ namespace Mobishare.Core.Migrations
                     Status = table.Column<decimal>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     FinishedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
                     ReportId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Repairs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Repairs_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Repairs_Reports_ReportId",
                         column: x => x.ReportId,
@@ -552,27 +545,27 @@ namespace Mobishare.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RepairAssignments",
+                name: "ReportAssignments",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    RepairId = table.Column<int>(type: "INTEGER", nullable: false)
+                    ReportId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RepairAssignments", x => x.Id);
+                    table.PrimaryKey("PK_ReportAssignments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RepairAssignments_AspNetUsers_UserId",
+                        name: "FK_ReportAssignments_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RepairAssignments_Repairs_RepairId",
-                        column: x => x.RepairId,
-                        principalTable: "Repairs",
+                        name: "FK_ReportAssignments_Reports_ReportId",
+                        column: x => x.ReportId,
+                        principalTable: "Reports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -685,23 +678,18 @@ namespace Mobishare.Core.Migrations
                 column: "VehicleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RepairAssignments_RepairId",
-                table: "RepairAssignments",
-                column: "RepairId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RepairAssignments_UserId",
-                table: "RepairAssignments",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Repairs_ReportId",
                 table: "Repairs",
                 column: "ReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Repairs_UserId",
-                table: "Repairs",
+                name: "IX_ReportAssignments_ReportId",
+                table: "ReportAssignments",
+                column: "ReportId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportAssignments_UserId",
+                table: "ReportAssignments",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -776,7 +764,10 @@ namespace Mobishare.Core.Migrations
                 name: "MessagePairs");
 
             migrationBuilder.DropTable(
-                name: "RepairAssignments");
+                name: "Repairs");
+
+            migrationBuilder.DropTable(
+                name: "ReportAssignments");
 
             migrationBuilder.DropTable(
                 name: "Rides");
@@ -791,16 +782,13 @@ namespace Mobishare.Core.Migrations
                 name: "ChatMessages");
 
             migrationBuilder.DropTable(
-                name: "Repairs");
+                name: "Reports");
 
             migrationBuilder.DropTable(
                 name: "Positions");
 
             migrationBuilder.DropTable(
                 name: "Conversations");
-
-            migrationBuilder.DropTable(
-                name: "Reports");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");

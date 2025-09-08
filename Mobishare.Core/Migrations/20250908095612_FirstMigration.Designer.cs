@@ -11,7 +11,7 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250907183806_FirstMigration")]
+    [Migration("20250908095612_FirstMigration")]
     partial class FirstMigration
     {
         /// <inheritdoc />
@@ -530,39 +530,11 @@ namespace Mobishare.Core.Migrations
                     b.Property<decimal>("Status")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ReportId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Repairs");
-                });
-
-            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.RepairAssignment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RepairId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RepairId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RepairAssignments");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Report", b =>
@@ -596,6 +568,28 @@ namespace Mobishare.Core.Migrations
                     b.HasIndex("VehicleId");
 
                     b.ToTable("Reports");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.ReportAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReportId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReportAssignments");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Ride", b =>
@@ -901,34 +895,7 @@ namespace Mobishare.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Report");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.RepairAssignment", b =>
-                {
-                    b.HasOne("Mobishare.Core.Models.Vehicles.Repair", "Repair")
-                        .WithMany()
-                        .HasForeignKey("RepairId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Repair");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Report", b =>
@@ -948,6 +915,25 @@ namespace Mobishare.Core.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.ReportAssignment", b =>
+                {
+                    b.HasOne("Mobishare.Core.Models.Vehicles.Report", "Report")
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Ride", b =>
