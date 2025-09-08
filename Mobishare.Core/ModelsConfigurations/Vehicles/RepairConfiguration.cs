@@ -29,11 +29,6 @@ public class RepairConfiguration : IEntityTypeConfiguration<Repair>
 
         builder.Property(x => x.FinishedAt);
 
-        builder.HasOne(x => x.User)
-               .WithMany()
-               .HasForeignKey(x => x.UserId)
-               .IsRequired();
-
         builder.HasOne(x => x.Report)
                .WithMany()
                .HasForeignKey(x => x.ReportId)
