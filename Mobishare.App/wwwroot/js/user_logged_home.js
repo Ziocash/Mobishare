@@ -143,9 +143,56 @@ document.addEventListener('DOMContentLoaded', function () {
   btn.addEventListener('click', function () {
     const vehicleCode = code.value.trim();
     if (!isNaN(vehicleCode) && vehicleCode !== "") {
-      errorMessage.style.display = 'none';
-      code.value = '';
+      // Controlla se c'è già una prenotazione attiva
+      if (reserved != null) {
+        showAlreadyReservedPopup();
+        return;
+      }
+
+      // Prova a prenotare il veicolo con il codice inserito
+      reserved = vehicleCode;
+      
+      fetch('?handler=ReserveVehicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+        },
+        body: `vehicleId=${encodeURIComponent(vehicleCode)}`
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error('Veicolo non trovato o non disponibile');
+        }
+      })
+      .then(data => {
+        // Prenotazione riuscita
+        errorMessage.style.display = 'none';
+        code.value = '';
+        
+        // Imposta l'ID del veicolo selezionato per il popup
+        document.getElementById('selectedVehicleId').value = vehicleCode;
+        
+        // Aggiorna il marker sulla mappa se esiste
+        if (vehicleMarkers[vehicleCode]) {
+          updateMarkerStyle(vehicleMarkers[vehicleCode], true);
+        }
+        
+        // Mostra il popup di prenotazione
+        showPopup();
+      })
+      .catch(error => {
+        // Reset dello stato di prenotazione in caso di errore
+        reserved = null;
+        
+        // Mostra messaggio di errore
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>' + error.message;
+        errorMessage.style.display = 'block';
+      });
     } else {
+      errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Invalid bike code. Please check and try again.';
       errorMessage.style.display = 'block';
     }
   });
