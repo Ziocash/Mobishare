@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       })
       .catch(error => {
-        alert('t1' + error);
+        console.error('t1' + error);
       });
   });
 });
