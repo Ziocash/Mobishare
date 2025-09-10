@@ -4,8 +4,12 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
 using Mobishare.Core.Data;
 using Mobishare.Core.Models.Vehicles;
+using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
+using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
+using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
+using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.VehicleStatus;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +26,7 @@ namespace Mobishare.App.Pages
         private readonly ApplicationDbContext _context;
 
         public String? StartLocationName;
-        public Ride Ride;
+        public Ride? Ride;
         public Position? StartPosition;
         public decimal CostPerMinute { get; set; }
 
@@ -60,8 +64,8 @@ namespace Mobishare.App.Pages
 
             if (Ride == null)
             {
-                _logger.LogWarning("No ride found for user with ID: {UserId}", userId);
-                return RedirectToPage("/Index");
+                _logger.LogInformation("No active ride found for user with ID: {UserId}. Redirecting to landing page.", userId);
+                return RedirectToPage("/LandingPage");
             }
 
             // Recupera il veicolo con il tipo per ottenere il costo per minuto
@@ -142,6 +146,63 @@ namespace Mobishare.App.Pages
                 var durationInMinutes = (endTime - ride.StartDateTime).TotalMinutes;
                 var calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
 
+                // Recupera il saldo dell'utente
+                var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+                if (userBalance == null)
+                {
+                    _logger.LogWarning("No balance found for user {UserId}", userId);
+                    TempData["ErrorMessage"] = "Impossibile recuperare il saldo dell'utente.";
+                    return Page();
+                }
+
+                // Verifica che l'utente abbia fondi sufficienti
+                if (userBalance.Credit < (double)calculatedPrice)
+                {
+                    _logger.LogWarning("Insufficient balance for user {UserId}. Required: €{Price}, Available: €{Balance}", 
+                        userId, calculatedPrice, userBalance.Credit);
+                    TempData["ErrorMessage"] = $"Saldo insufficiente. Necessari: €{calculatedPrice:F2}, Disponibili: €{userBalance.Credit:F2}. Ricarica il tuo wallet.";
+                    return Page();
+                }
+
+                // Scala il costo dal saldo dell'utente
+                var newBalance = userBalance.Credit - (double)calculatedPrice;
+                var updateBalanceResponse = await _httpClient.PutAsJsonAsync("api/Balance",
+                    new UpdateBalance
+                    {
+                        Id = userBalance.Id,
+                        Credit = newBalance,
+                        Points = userBalance.Points,
+                        UserId = userId
+                    }
+                );
+
+                if (!updateBalanceResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await updateBalanceResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"Failed to update balance: {updateBalanceResponse.StatusCode}, Content: {errorContent}");
+                    TempData["ErrorMessage"] = "Errore nell'aggiornamento del saldo.";
+                    return Page();
+                }
+
+                // Crea una voce nello storico delle transazioni
+                var createHistoryResponse = await _httpClient.PostAsJsonAsync("api/HistoryCredit",
+                    new CreateHistoryCredit
+                    {
+                        UserId = userId,
+                        Credit = (double)calculatedPrice,
+                        TransactionType = CreditTransactionType.RidePayment.ToString(),
+                        CreatedAt = DateTime.UtcNow,
+                        BalanceId = userBalance.Id
+                    }
+                );
+
+                if (!createHistoryResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await createHistoryResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"Failed to create history credit: {createHistoryResponse.StatusCode}, Content: {errorContent}");
+                    // Non blocchiamo il processo per questo errore, ma lo logghiamo
+                }
+
                 // Recupera l'ultima posizione del veicolo
                 var lastPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{ride.VehicleId}");
 
@@ -188,10 +249,10 @@ namespace Mobishare.App.Pages
                     return Page();
                 }
 
-                _logger.LogInformation("Trip ended successfully for ride {RideId}. Duration: {Duration} minutes, Price: €{Price}",
-                    rideId, Math.Round(durationInMinutes, 2), calculatedPrice);
+                _logger.LogInformation("Trip ended successfully for ride {RideId}. Duration: {Duration} minutes, Price: €{Price}, Balance deducted: €{Deducted}",
+                    rideId, Math.Round(durationInMinutes, 2), calculatedPrice, calculatedPrice);
 
-                TempData["SuccessMessage"] = $"Viaggio terminato con successo! Durata: {Math.Round(durationInMinutes, 0)} minuti - Costo: €{calculatedPrice}";
+                TempData["SuccessMessage"] = $"Viaggio terminato con successo! Durata: {Math.Round(durationInMinutes, 0)} minuti - Costo: €{calculatedPrice:F2} - Nuovo saldo: €{newBalance:F2}";
 
                 return RedirectToPage("/LandingPage");
             }

@@ -5,6 +5,17 @@
 }
 @inject IConfiguration Configuration
 
+@if (Model.Ride == null)
+{
+    <script>
+        window.location.href = '/LandingPage';
+    </script>
+    <div style="text-align: center; padding: 50px;">
+        <p>Nessun viaggio attivo. Reindirizzamento in corso...</p>
+    </div>
+    return;
+}
+
 <!-- Mappa -->
 <div id="map"></div>
 
@@ -37,7 +48,7 @@
                     </svg>
                     <div class="detail-content">
                         <p>Orario di Inizio</p>
-                        <p>@Model.Ride.StartDateTime</p>
+                        <p>@(Model.Ride?.StartDateTime.ToString() ?? "N/A")</p>
                     </div>
                 </div>
             </div>
@@ -131,16 +142,16 @@
     <!-- Form nascosto per inviare i dati -->
     <form id="endTripForm" method="post" asp-page-handler="EndTrip" style="display: none;">
         <input type="hidden" id="tripNameInput" name="tripName" />
-        <input type="hidden" name="rideId" value="@Model.Ride.Id" />
+        <input type="hidden" name="rideId" value="@(Model.Ride?.Id ?? 0)" />
     </form>
 </main>
 
 <!-- Script per passare dati al JavaScript -->
 <script>
     window.rideData = {
-        rideId: @Model.Ride.Id,
+        rideId: @(Model.Ride?.Id ?? 0),
         costPerMinute: @Model.CostPerMinute.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-        startDateTime: '@Model.Ride.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")'
+        startDateTime: '@(Model.Ride?.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") ?? "")'
     };
     
     console.log('Ride data initialized:', window.rideData);
