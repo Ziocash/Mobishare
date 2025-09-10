@@ -1,12 +1,53 @@
 ﻿@page
 @model MyApp.Namespace.ManageTicketsModel
-@{
-}
 
 <h4>All Tickets</h4>
-
 <hr />
 
-@foreach(var report in Model.AllReports) {
-    <p>@report.Description</p>
+@if (Model.AllReports == null || !Model.AllReports.Any())
+{
+    <p>No reports found for this user.</p>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Vehicle Id</th>
+                <th>Image</th>
+                <th>Position</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var report in Model.AllReports)
+            {
+                <tr>
+                    <td>@report.Description</td>
+                    <td>@report.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>@report.Vehicle.Id</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(report.Image))
+                        {
+                            <img src="@report.Image" alt="Report Image" width="100" />
+                        }
+                    </td>
+                    <td>
+                        @{
+                            var lastPos = report.Vehicle?.Positions
+                                .OrderByDescending(p => p.GpsReceptionTime)
+                                .FirstOrDefault();
+                        }
+                        @if(lastPos != null)
+                        {
+                            <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=@lastPos.Latitude,@lastPos.Longitude">
+                                Show on Map
+                            </a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
