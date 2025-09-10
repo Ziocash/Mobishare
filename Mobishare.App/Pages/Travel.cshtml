@@ -105,15 +105,24 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Il tuo viaggio è terminato!</p>
+                    <p><strong>Vuoi terminare il viaggio?</strong></p>
+                    <p class="text-muted">Il timer si fermerà solo dopo la conferma. Se annulli, il viaggio continuerà.</p>
                     <div class="mb-3">
                         <label for="tripName" class="form-label">Dai un nome al tuo viaggio (opzionale):</label>
-                        <input type="text" class="form-control" id="tripName" placeholder="Es: Viaggio al lavoro">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="tripName" placeholder="Es: Viaggio al lavoro">
+                            <button class="btn btn-outline-primary" type="button" id="aiSuggestBtn" title="Suggerimento AI (coming soon)">
+                                <svg width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">💡 Presto: suggerimenti AI basati su orario, posizione e preferenze</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="btn btn-success" id="confirmEndTrip">Conferma</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla e Continua</button>
+                    <button type="button" class="btn btn-danger" id="confirmEndTrip">Termina Definitivamente</button>
                 </div>
             </div>
         </div>
@@ -264,16 +273,9 @@
     }
 
     function endTrip() {
-        console.log('Ending trip...');
+        console.log('User wants to end trip - showing confirmation modal...');
         
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        if (costUpdateInterval) {
-            clearInterval(costUpdateInterval);
-            costUpdateInterval = null;
-        }
+        // NON fermiamo i timer qui! Il viaggio continua fino alla conferma
         
         const modalElement = document.getElementById('endTripModal');
         if (modalElement && typeof bootstrap !== 'undefined') {
@@ -297,6 +299,20 @@
         const confirmButton = document.getElementById('confirmEndTrip');
         if (confirmButton) {
             confirmButton.addEventListener('click', function() {
+                console.log('User confirmed trip end - stopping timers and submitting...');
+                
+                // ORA fermiamo i timer perché l'utente ha confermato
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    console.log('Timer stopped after confirmation');
+                }
+                if (costUpdateInterval) {
+                    clearInterval(costUpdateInterval);
+                    costUpdateInterval = null;
+                    console.log('Cost updater stopped after confirmation');
+                }
+                
                 const tripName = document.getElementById('tripName').value;
                 const tripNameInput = document.getElementById('tripNameInput');
                 if (tripNameInput) {
@@ -304,7 +320,56 @@
                 }
                 const endTripForm = document.getElementById('endTripForm');
                 if (endTripForm) {
+                    console.log('Submitting trip end form...');
                     endTripForm.submit();
+                }
+            });
+        }
+        
+        // Gestione pulsante AI per suggerimenti
+        const aiSuggestBtn = document.getElementById('aiSuggestBtn');
+        if (aiSuggestBtn) {
+            aiSuggestBtn.addEventListener('click', function() {
+                // Per ora mostra solo una preview della funzionalità futura
+                const currentTime = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const suggestions = [
+                    `Viaggio ${currentTime}`,
+                    'Spostamento mattutino',
+                    'Tragitto serale',
+                    'Viaggio veloce',
+                    'Tour in città'
+                ];
+                
+                const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+                
+                // Anima il pulsante
+                aiSuggestBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                aiSuggestBtn.disabled = true;
+                
+                setTimeout(() => {
+                    document.getElementById('tripName').value = randomSuggestion;
+                    aiSuggestBtn.innerHTML = `<svg width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                        <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
+                    </svg>`;
+                    aiSuggestBtn.disabled = false;
+                    
+                    // Feedback visivo
+                    const tripNameInput = document.getElementById('tripName');
+                    tripNameInput.classList.add('border-primary');
+                    setTimeout(() => tripNameInput.classList.remove('border-primary'), 2000);
+                }, 1500);
+            });
+        }
+        
+        // Gestione pulsante "Annulla" - il viaggio continua
+        const modal = document.getElementById('endTripModal');
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', function (event) {
+                // Se il modal si chiude senza conferma, il viaggio continua
+                if (timerInterval && costUpdateInterval) {
+                    console.log('Modal closed without confirmation - trip continues');
+                } else {
+                    console.log('Modal closed after confirmation - trip ended');
                 }
             });
         }
