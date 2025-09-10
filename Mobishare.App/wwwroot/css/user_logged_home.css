@@ -362,7 +362,7 @@ main {
 .map-popup {
     display: none; 
     position: absolute;
-    top: 5px;
+    top: 30px;
     right: 5px;
     background-color: white;
     padding: 15px;
@@ -446,7 +446,7 @@ main {
 }
 
 #alreadyReservedPopup {
-    top: 125px !important;
+    top: 155px !important;
     padding-bottom: 0;
     padding-left: 0;
     padding-right: 0;
