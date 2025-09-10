@@ -29,9 +29,12 @@ public class GetReportsByUserIdHandler : IRequestHandler<GetReportsByUserId, IEn
 
     public async Task<IEnumerable<Report>?> Handle(GetReportsByUserId request, CancellationToken cancellationToken)
     {
-         return await _dbContext.ReportAssignments
-        .Where(ra => ra.UserId == request.UserId)
-        .Select(ra => ra.Report)
-        .ToListAsync(cancellationToken);
+        return await _dbContext.ReportAssignments
+            .Where(ra => ra.UserId == request.UserId)
+            .Include(ra => ra.Report)
+                .ThenInclude(r => r.Vehicle)
+                    .ThenInclude(v => v.Positions)
+            .Select(ra => ra.Report)
+            .ToListAsync(cancellationToken);
     }
 }
