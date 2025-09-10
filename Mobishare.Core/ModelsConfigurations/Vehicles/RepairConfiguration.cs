@@ -19,15 +19,8 @@ public class RepairConfiguration : IEntityTypeConfiguration<Repair>
         builder.Property(x => x.Description)
                 .IsRequired();
 
-        builder.Property(x => x.Status)
-                .IsRequired()
-                .HasDefaultValue(0);
-
         builder.Property(x => x.CreatedAt)
-                .IsRequired()
                 .HasDefaultValue(DateTime.UtcNow);
-
-        builder.Property(x => x.FinishedAt);
 
         builder.HasOne(x => x.Report)
                .WithMany()
