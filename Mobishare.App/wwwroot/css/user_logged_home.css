@@ -316,7 +316,7 @@ main {
 /* Removed old scrollbar styles - now handled by .travels-content */
 
 /*to make the page responsive*/
-@media (max-width: 767.98px) {
+@media (max-width: 1080px) {
     .app-container {
         height: auto;
         overflow: visible;
@@ -354,6 +354,206 @@ main {
     
     .travel-card .card-body {
         padding: 12px 12px 5px 12px !important;
+    }
+}
+
+/* Responsive design per telefoni */
+@media (max-width: 1080px) {
+    html, body {
+        overflow-y: auto;
+    }
+    
+    .app-container {
+        margin-top: 80px;
+        height: auto;
+        min-height: calc(100vh - 80px);
+    }
+    
+    .row {
+        margin: 0;
+    }
+    
+    /* Stack verticalmente mappa e cronologia viaggi */
+    .left-column, .travels-container {
+        flex: 0 0 100%;
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Mappa più piccola su mobile */
+    .map-container {
+        height: 40vh;
+        margin: 5px;
+        padding: 5px;
+    }
+    
+    #map {
+        height: 100%;
+        margin: 0;
+        border-radius: 8px;
+    }
+    
+    /* Popup più piccolo e centrato su mobile */
+    .map-popup {
+        width: calc(100vw - 20px);
+        max-width: 320px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        top: 20px;
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .popup-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .popup-buttons button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    #alreadyReservedPopup {
+        width: calc(100vw - 20px);
+        max-width: 320px;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        top: 90px !important;
+    }
+    
+    /* Form di inserimento codice più compatto */
+    .bike-code-form {
+        margin: 5px;
+        padding: 15px;
+    }
+    
+    .bike-code-form .row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .bike-code-form .col,
+    .bike-code-form .col-auto {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .bike-code-form .btn {
+        width: 100%;
+        padding: 12px;
+    }
+    
+    /* Cronologia viaggi compatta */
+    .travels-container {
+        height: auto;
+        max-height: 50vh;
+        margin-top: 10px;
+    }
+    
+    .travels-header {
+        padding: 15px;
+    }
+    
+    .travels-header h5 {
+        font-size: 1.1rem;
+    }
+    
+    .travel-card {
+        margin-bottom: 10px !important;
+    }
+    
+    .travel-card .card-body {
+        padding: 10px !important;
+    }
+    
+    .travel-info {
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    
+    .travel-info .label {
+        width: 70px;
+        font-size: 12px;
+    }
+    
+    .travel-date {
+        font-size: 11px;
+        margin-top: 3px !important;
+    }
+    
+    /* Current location box più piccolo */
+    .current-location {
+        bottom: 15px;
+        left: 15px;
+        padding: 8px 12px;
+        font-size: 13px;
+        gap: 8px;
+    }
+    
+    .location-dot {
+        width: 10px;
+        height: 10px;
+    }
+    
+    /* Chat bubble più piccolo */
+    #chatBubble {
+        width: 55px;
+        height: 55px;
+        bottom: 20px;
+        right: 20px;
+        font-size: 20px;
+    }
+    
+    #chatWindow {
+        width: calc(100vw - 20px);
+        max-width: 320px;
+        height: 60vh;
+        bottom: 80px;
+        right: 10px;
+    }
+}
+
+/* Design per telefoni molto piccoli */
+@media (max-width: 480px) {
+    .map-container {
+        height: 45vh;
+    }
+    
+    .travels-container {
+        max-height: 35vh;
+    }
+    
+    .bike-code-form {
+        padding: 10px;
+    }
+    
+    .map-popup,
+    #alreadyReservedPopup {
+        width: calc(100vw - 16px);
+        max-width: 280px;
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .popup-buttons button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .travel-card .card-body {
+        padding: 8px !important;
+    }
+    
+    .travel-info {
+        font-size: 12px;
+    }
+    
+    .travel-info .label {
+        width: 60px;
+        font-size: 11px;
     }
 }
 
