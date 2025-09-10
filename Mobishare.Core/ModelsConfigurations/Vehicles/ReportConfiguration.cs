@@ -25,6 +25,8 @@ public class ReportConfiguration : IEntityTypeConfiguration<Report>
 
         builder.Property(x => x.Image);
 
+        builder.Property(x => x.Status);
+
         builder.HasOne(x => x.User)
                .WithMany()
                .HasForeignKey(x => x.UserId)
