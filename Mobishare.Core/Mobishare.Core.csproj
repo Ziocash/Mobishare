@@ -35,10 +35,7 @@
     <Folder Include="Migrations\" />
     <Folder Include="Requests/Chats/MessagePairRequests/Queries/" />
     <Folder Include="Requests/Vehicles/PositionRequests/Queries/" />
-    <Folder Include="Requests/Vehicles/RepairRequests/" />
-    <Folder Include="Requests/Vehicles/RepairRequests/Commands/" />
     <Folder Include="Requests/Vehicles/RepairRequests/Queries/" />
-    <Folder Include="Requests/Vehicles/ReportRequests/Commands/" />
   </ItemGroup>
 
   <ItemGroup>

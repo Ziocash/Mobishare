@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.ReportRequests;
+using Mobishare.Core.Requests.Vehicles.ReportRequests.Commands;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mobishare.Core.Controllers.Vehicles;
@@ -37,7 +38,65 @@ public class ReportController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetReportsByUserId(userId));
+
+        return Ok(result);
+    }
+
+    [HttpPut("Assign")]
+    [SwaggerOperation(
+        Summary = "Change report status",
+        Description = "This endpoint change report status to Assigned.",
+        OperationId = "UpdateReport"
+    )]
+    [SwaggerResponse(200, "Reports retrieved successfully", typeof(UpdateReport))]
+    [SwaggerResponse(400, "Invalid request payload")]
+    [SwaggerResponse(404, "User not found or no reports found")]
+    public async Task<IActionResult> AssignReport(
+        [FromBody]
+        [SwaggerParameter("reportId", Required = true, Description = "The ID of the report to update.")]
+        UpdateReport updateReport)
+    {
+        if (updateReport == null)
+        {
+            return BadRequest("Invalid request payload.");
+        }
+
+        var result = await _mediator.Send(updateReport);
+
+        if (result == null)
+        {
+            return NotFound("Report not found.");
+        }
+
+        return Ok(result);
+    }
+    
+    [HttpPut("Close")]
+    [SwaggerOperation(
+        Summary = "Change report status",
+        Description = "This endpoint change report status to Closed.",
+        OperationId = "UpdateReport"
+    )]
+    [SwaggerResponse(200, "Reports retrieved successfully", typeof(UpdateReport))]
+    [SwaggerResponse(400, "Invalid request payload")]
+    [SwaggerResponse(404, "User not found or no reports found")]
+    public async Task<IActionResult> CloseReport(
+        [FromBody]
+        [SwaggerParameter("reportId", Required = true, Description = "The ID of the report to update.")]
+        UpdateReport updateReport)
+    {
+        if (updateReport == null)
+        {
+            return BadRequest("Invalid request payload.");
+        }
+
+        var result = await _mediator.Send(updateReport);
         
+        if (result == null)
+        {
+            return NotFound("Report not found.");
+        }
+
         return Ok(result);
     }
 }

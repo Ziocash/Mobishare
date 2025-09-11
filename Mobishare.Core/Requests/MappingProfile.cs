@@ -11,6 +11,7 @@ using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
 using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.ReportRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
@@ -54,6 +55,8 @@ public class MappingProfile : Profile
         CreateMap<CreateRide, Ride>().ReverseMap();
         CreateMap<UpdateRide, Ride>().ReverseMap();
         CreateMap<DeleteRide, Ride>().ReverseMap();
+
+        CreateMap<UpdateReport, Report>().ReverseMap();
 
         //-------------------------------
 

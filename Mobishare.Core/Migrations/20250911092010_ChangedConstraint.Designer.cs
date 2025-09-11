@@ -11,8 +11,8 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250910173656_RemovedField")]
-    partial class RemovedField
+    [Migration("20250911092010_ChangedConstraint")]
+    partial class ChangedConstraint
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

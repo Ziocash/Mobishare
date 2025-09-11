@@ -11,7 +11,7 @@ using Mobishare.Core.Data;
 namespace Mobishare.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250908095612_FirstMigration")]
+    [Migration("20250911090800_FirstMigration")]
     partial class FirstMigration
     {
         /// <inheritdoc />
@@ -514,21 +514,15 @@ namespace Mobishare.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("FinishedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("ReportId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Status")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -551,11 +545,12 @@ namespace Mobishare.Core.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Image")
-                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("VehicleId")
@@ -879,7 +874,7 @@ namespace Mobishare.Core.Migrations
             modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Position", b =>
                 {
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
-                        .WithMany()
+                        .WithMany("Positions")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -902,9 +897,7 @@ namespace Mobishare.Core.Migrations
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("Mobishare.Core.Models.Vehicles.Vehicle", "Vehicle")
                         .WithMany()
@@ -984,6 +977,11 @@ namespace Mobishare.Core.Migrations
                     b.Navigation("ParkingSlot");
 
                     b.Navigation("VehicleType");
+                });
+
+            modelBuilder.Entity("Mobishare.Core.Models.Vehicles.Vehicle", b =>
+                {
+                    b.Navigation("Positions");
                 });
 #pragma warning restore 612, 618
         }
