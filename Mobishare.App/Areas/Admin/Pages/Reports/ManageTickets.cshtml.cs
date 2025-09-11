@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.ReportStatusEnum;
+using Mobishare.Core.Requests.Vehicles.RepairRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.ReportRequests.Commands;
 using Mobishare.Core.Security;
 
@@ -82,7 +83,23 @@ namespace Mobishare.App.Areas.Admin.Pages.Reports
 
             _logger.LogInformation($"Closing ticket {Input.ReportId}.");
 
-            var response = await _httpClient.PutAsJsonAsync($"api/Report/Close",
+            var createResponse = await _httpClient.PostAsJsonAsync("api/Repair",
+                new CreateRepair
+                {
+                    Description = Input.RepairDescription,
+                    ReportId = Input.ReportId,
+                    CreatedAt = DateTime.UtcNow
+                }
+            );
+
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                var errorContent = await createResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error while create repair: {createResponse.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = "Failed to create repair.";
+            }
+
+            var closeResponse = await _httpClient.PutAsJsonAsync($"api/Report/Close",
                 new UpdateReport
                 {
                     Id = Input.ReportId,
@@ -90,18 +107,16 @@ namespace Mobishare.App.Areas.Admin.Pages.Reports
                 }
             );
 
-            if (!response.IsSuccessStatusCode)
+            if (!closeResponse.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"API error while closing ticket: {response.StatusCode}, Content: {errorContent}");
+                var errorContent = await closeResponse.Content.ReadAsStringAsync();
+                _logger.LogError($"API error while closing ticket: {closeResponse.StatusCode}, Content: {errorContent}");
                 TempData["ErrorMessage"] = "Failed to update the ticket.";
             }
-            else
-            {
-                _logger.LogInformation($"Ticket {Input.ReportId} was successfully closed.");
-                TempData["SuccessMessage"] = "Ticket has been successfully updated.";
-            }
-
+            
+            _logger.LogInformation($"Ticket {Input.ReportId} was successfully closed.");
+            TempData["SuccessMessage"] = "Ticket has been successfully closed.";
+            
             return RedirectToPage();
         }
 
