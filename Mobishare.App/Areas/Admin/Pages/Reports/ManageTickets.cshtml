@@ -1,8 +1,23 @@
 ﻿@page
-@model MyApp.Namespace.ManageTicketsModel
+@model Mobishare.App.Areas.Admin.Pages.Reports.ManageTicketsModel
 
 <h4>All Tickets</h4>
 <hr />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error!</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <h3 class="mt-4">My Assigned Ticket</h3>
 
@@ -47,24 +62,21 @@
                 </div>
 
                 <div class="col-md-6">
-                    <form method="post">
-                        @* Input nascosto per inviare l'ID del report al backend *@
-                        <input type="hidden" name="ReportId" value="@myAssignedTicket.Id" />
-
+                    <form method="post" asp-page-handler="CloseTicket" asp-route-id="@myAssignedTicket.Id">
+                        <input type="hidden" asp-for="Input.ReportId" value="@myAssignedTicket.Id" />
                         <div class="form-group">
-                            <label for="repairDescription"><strong>Repair Description:</strong></label>
-                            <textarea id="repairDescription" name="RepairDescription" class="form-control" rows="5" placeholder="Enter the details of the repair work done..."></textarea>
+                            <label asp-for="Input.RepairDescription"><strong>Repair Description:</strong></label>
+                            <textarea asp-for="Input.RepairDescription" class="form-control" rows="5" placeholder="Enter the details of the repair work done..."></textarea>
+                            <span asp-validation-for="Input.RepairDescription" class="text-danger"></span>
                         </div>
-
-                        <div class="form-group mt-3">
-                            <label for="newStatus"><strong>Update Status:</strong></label>
-                            <select id="newStatus" name="NewStatus" class="form-control">
+                        @* <div class="form-group mt-3">
+                            <label asp-for="Input.NewStatus"><strong>Update Status:</strong></label>
+                            <select asp-for="Input.NewStatus" class="form-control">
                                 <option value="Assigned" selected>Keep as Assigned</option>
                                 <option value="Closed">Close Ticket</option>
                             </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-success mt-4">Update Ticket</button>
+                        </div> *@
+                        <button type="submit" class="btn btn-success mt-4">Close Ticket</button>
                     </form>
                 </div>
             </div>
@@ -123,7 +135,9 @@ else
                     <td>
                         @if (myAssignedTicket == null)
                         {
-                            <a asp-page="/AssignTicket" asp-route-reportId="@report.Id" class="btn btn-primary btn-sm">Assign to Me</a>
+                            <form method="post" asp-page-handler="AssignTicket" asp-route-id="@report.Id">
+                                <button type="submit" class="btn btn-primary btn-sm">Assign to Me</button>
+                            </form>
                         }
                         else
                         {
