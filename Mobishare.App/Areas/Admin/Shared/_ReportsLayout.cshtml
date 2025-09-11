@@ -7,31 +7,22 @@
     <h1>Reports</h1>
     <div class="box pt-2 ps-2">
         <div class="row mb-3">
-            @* <div class="col-lg-3 pe-5 pb-4">
+            <div class="col-lg-3 pe-5 pb-4">
                 <div class="row mt-2">
                     <p class="fs-s text-secondary mb-1">Management</p>
                 </div>
                 <div class="row">
-                    <a href="/Admin/UserSettings/SuspendedUser"
-                        class="btn mb-1 text-start b-d @(Context.Request.Path == "/Admin/UserSettings/SuspendedUser" ? "b-g bold-500" : "")">
+                    <a href="/Admin/Reports/ManageTickets"
+                        class="btn mb-1 text-start b-d @(Context.Request.Path == "/Admin/Reports/ManageTickets" ? "b-g bold-500" : "")">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                            viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
+                            viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE -->
                             <path fill="currentColor"
-                                d="M3 19V9q0-.825.588-1.412T5 7h4V5.825q0-.4.15-.763t.425-.637l1-1Q11.15 2.85 12 2.85t1.425.575l1 1q.275.275.425.638t.15.762V11h4q.825 0 1.413.588T21 13v6q0 .825-.587 1.413T19 21H5q-.825 0-1.412-.587T3 19m2 0h2v-2H5zm0-4h2v-2H5zm0-4h2V9H5zm6 8h2v-2h-2zm0-4h2v-2h-2zm0-4h2V9h-2zm0-4h2V5h-2zm6 12h2v-2h-2zm0-4h2v-2h-2z" />
+                                d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4.18C9.6 1.84 10.7 1 12 1s2.4.84 2.82 2zm-7 0a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1M7 7V5H5v14h14V5h-2v2zm4 2h2v4.5h-2zm0 6h2v2h-2z" />
                         </svg>
-                        Manage City
-                    </a>
-                    <a href="/Admin/UserSettings/SuspendedUser"
-                        class="btn mb-1 text-start b-d @(Context.Request.Path == "/Admin/UserSettings/SuspendedUser" ? "b-g bold-500" : "")">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                            viewBox="0 0 24 24"><!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->
-                            <path fill="currentColor"
-                                d="M10 15v4q0 .825-.587 1.413T8 21t-1.412-.587T6 19V5q0-.825.588-1.412T8 3h5q2.5 0 4.25 1.75T19 9t-1.75 4.25T13 15zm0-4h3.2q.825 0 1.413-.587T15.2 9t-.587-1.412T13.2 7H10z" />
-                        </svg>
-                        Manage Parking Slot
+                        Manage Tickets
                     </a>
                 </div>
-            </div> *@
+            </div>
             <div class="col-lg-9 ps-0">
                 @RenderBody()
             </div>
