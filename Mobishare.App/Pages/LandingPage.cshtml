@@ -55,6 +55,23 @@
           </div>
         </div>
 
+        <!-- Popup for insufficient funds -->
+        <div class="map-popup" id="insufficientFundsPopup" style="display: none;">
+          <div class="popup-header-reserved">
+            <span>Fondi insufficienti!</span>
+            <button class="btn-close-popup ms-2" style="float: right;" onclick="hideInsufficientFundsPopup()"
+              title="Chiudi popup">×</button>
+          </div>
+          <div class="popup-body-reserved">
+            <p>Il tuo saldo è insufficiente per prenotare un veicolo. È necessario avere almeno €1.00 per poter iniziare un viaggio.</p>
+            <p><a href="/Wallet" class="btn btn-primary btn-sm mt-2">Ricarica il tuo saldo</a></p>
+          </div>
+          <div class="progress mt-2" style="height: 8px;">
+            <div id="insufficientFundsProgress" class="progress-bar bg-danger" role="progressbar"
+              style="width: 100%; transition: width 0.1s;"></div>
+          </div>
+        </div>
+
         <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
 
         <!-- Current Location box-->
@@ -202,6 +219,7 @@
 
 <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
   <input type="hidden" id="selectedVehicleId" name="vehicleId" />
+  
 
 
   <!-- Modale Bootstrap -->
@@ -218,8 +236,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-          <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma"
-            onclick="showPopup()">
+          <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma">
         </div>
       </div>
     </div>
@@ -249,6 +266,12 @@
 <!-- Modern animations -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Controlla se mostrare il popup di fondi insufficienti
+    const insufficientFundsFlag = document.getElementById('insufficientFundsFlag');
+    if (insufficientFundsFlag && insufficientFundsFlag.value === 'true') {
+        showInsufficientFundsPopup();
+    }
+
     // Smooth hover effects for chat bubble
     const chatBubble = document.getElementById('chatBubble');
     if (chatBubble) {

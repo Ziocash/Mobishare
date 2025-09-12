@@ -27,21 +27,53 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: `vehicleId=${encodeURIComponent(vehicleId)}`
     })
-      .then(response => response.ok ? response.text() : Promise.reject('Errore nella prenotazione'))
+      .then(response => response.json())
       .then(data => {
-        const myModal = bootstrap.Modal.getInstance(document.getElementById('confirmReservationModal'));
-        if (myModal) {
-          myModal.hide();
-        }
+        console.log('Risposta prenotazione:', data);
         
-        // Non rimuovere il marker, ma aggiorna il suo stile per mostrare che è prenotato
-        const selectedId = document.getElementById('selectedVehicleId').value;
-        if (vehicleMarkers[selectedId]) {
-          updateMarkerStyle(vehicleMarkers[selectedId], true);
+        if (data.success) {
+          // Prenotazione riuscita, mostra popup di prenotazione
+          console.log('Prenotazione riuscita, mostro popup prenotazione');
+          
+          // Chiudi il modal di conferma prenotazione
+          const modalEl = document.getElementById('confirmReservationModal');
+          const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          myModal.hide();
+          
+          // Mostra il popup di prenotazione avvenuta
+          showPopup();
+        } else if (data.error === 'insufficient_funds') {
+          // Saldo insufficiente, mostra popup
+          console.log('Saldo insufficiente rilevato, mostro popup');
+          
+          // Chiudi il modal di conferma prenotazione
+          const modalEl = document.getElementById('confirmReservationModal');
+          const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          myModal.hide();
+          
+          showInsufficientFundsPopup();
+          reserved = null; // Reset dello stato di prenotazione
+        } else {
+          // Altri errori
+          console.error('Errore prenotazione:', data.error);
+          
+          // Chiudi il modal di conferma prenotazione
+          const modalEl = document.getElementById('confirmReservationModal');
+          const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          myModal.hide();
+          
+          reserved = null; // Reset dello stato di prenotazione
         }
       })
       .catch(error => {
-        console.error('t1' + error);
+        console.error('Errore nella richiesta:', error);
+        
+        // Chiudi il modal di conferma prenotazione
+        const modalEl = document.getElementById('confirmReservationModal');
+        const myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        myModal.hide();
+        
+        reserved = null; // Reset dello stato di prenotazione in caso di errore
       });
   });
 });
@@ -160,35 +192,43 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         body: `vehicleId=${encodeURIComponent(vehicleCode)}`
       })
-      .then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw new Error('Veicolo non trovato o non disponibile');
-        }
-      })
+      .then(response => response.json())
       .then(data => {
-        // Prenotazione riuscita
-        errorMessage.style.display = 'none';
-        code.value = '';
+        console.log('Risposta prenotazione (codice manuale):', data);
         
-        // Imposta l'ID del veicolo selezionato per il popup
-        document.getElementById('selectedVehicleId').value = vehicleCode;
-        
-        // Aggiorna il marker sulla mappa se esiste
-        if (vehicleMarkers[vehicleCode]) {
-          updateMarkerStyle(vehicleMarkers[vehicleCode], true);
+        if (data.success) {
+          // Prenotazione riuscita, mostra popup di prenotazione
+          console.log('Prenotazione riuscita (codice manuale), mostro popup prenotazione');
+          errorMessage.style.display = 'none';
+          code.value = '';
+          
+          // Imposta l'ID del veicolo selezionato per il popup
+          document.getElementById('selectedVehicleId').value = vehicleCode;
+          
+          // Aggiorna il marker sulla mappa se esiste
+          if (vehicleMarkers[vehicleCode]) {
+            updateMarkerStyle(vehicleMarkers[vehicleCode], true);
+          }
+          
+          // Mostra il popup di prenotazione avvenuta
+          showPopup();
+        } else if (data.error === 'insufficient_funds') {
+          // Saldo insufficiente, mostra popup
+          console.log('Saldo insufficiente rilevato (codice manuale), mostro popup');
+          showInsufficientFundsPopup();
+          reserved = null;
+          errorMessage.style.display = 'none';
+        } else {
+          // Altri errori
+          reserved = null;
+          errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>' + (data.error || 'Errore nella prenotazione');
+          errorMessage.style.display = 'block';
         }
-        
-        // Mostra il popup di prenotazione
-        showPopup();
       })
       .catch(error => {
-        // Reset dello stato di prenotazione in caso di errore
+        console.error('Errore nella richiesta (codice manuale):', error);
         reserved = null;
-        
-        // Mostra messaggio di errore
-        errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>' + error.message;
+        errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Errore di connessione';
         errorMessage.style.display = 'block';
       });
     } else {
@@ -387,4 +427,40 @@ function hideAlreadyReservedPopup() {
   clearInterval(alreadyReservedInterval);
   document.getElementById('alreadyReservedProgress').style.width = '100%';
 }
+
+// Variabili per il popup fondi insufficienti
+let insufficientFundsTimeout;
+let insufficientFundsInterval;
+
+function showInsufficientFundsPopup() {
+  const popup = document.getElementById('insufficientFundsPopup');
+  const progressBar = document.getElementById('insufficientFundsProgress');
+  popup.style.display = 'flex';
+  progressBar.style.width = '100%';
+
+  let duration = 15; // secondi - più lungo per permettere all'utente di leggere
+  let elapsed = 0;
+
+  // Aggiorna la barra ogni 100ms
+  insufficientFundsInterval = setInterval(() => {
+    elapsed += 0.1;
+    let percent = Math.max(0, 100 - (elapsed / duration) * 100);
+    progressBar.style.width = percent + "%";
+  }, 100);
+
+  // Nascondi dopo la durata specificata
+  insufficientFundsTimeout = setTimeout(() => {
+    hideInsufficientFundsPopup();
+  }, duration * 1000);
+}
+
+function hideInsufficientFundsPopup() {
+  document.getElementById('insufficientFundsPopup').style.display = 'none';
+  // Ferma la progress bar e resetta
+  clearTimeout(insufficientFundsTimeout);
+  clearInterval(insufficientFundsInterval);
+  document.getElementById('insufficientFundsProgress').style.width = '100%';
+}
+
+
 
