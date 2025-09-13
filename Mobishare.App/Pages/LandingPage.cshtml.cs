@@ -201,7 +201,7 @@ namespace Mobishare.App.Pages
             }
 
             // Prenotazione completata con successo
-            return new JsonResult(new { success = true });
+            return RedirectToPage("/Travel");
         }
 
         public async Task<IActionResult> OnGet()
