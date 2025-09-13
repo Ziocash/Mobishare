@@ -27,6 +27,7 @@ namespace Mobishare.App.Pages
 
         public String? StartLocationName;
         public Ride? Ride;
+        public VehicleType? VehicleType;
         public Position? StartPosition;
         public decimal CostPerMinute { get; set; }
 
@@ -69,13 +70,13 @@ namespace Mobishare.App.Pages
             }
 
             // Recupera il veicolo con il tipo per ottenere il costo per minuto
-            var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{Ride.VehicleId}");
-            if (vehicle != null)
+            var Vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{Ride.VehicleId}");
+            if (Vehicle != null)
             {
-                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
-                if (vehicleType != null)
+                VehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{Vehicle.VehicleTypeId}");
+                if (VehicleType != null)
                 {
-                    CostPerMinute = vehicleType.PricePerMinute;
+                    CostPerMinute = VehicleType.PricePerMinute;
                 }
             }
 
@@ -144,7 +145,13 @@ namespace Mobishare.App.Pages
                 // Calcola la durata in minuti e il prezzo
                 var endTime = DateTime.UtcNow;
                 var durationInMinutes = (endTime - ride.StartDateTime).TotalMinutes;
-                var calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
+                var calculatedPrice = 0m;
+                if (durationInMinutes < 30)
+                    calculatedPrice = (decimal)(FixedCostVehicle)Enum.Parse(typeof(FixedCostVehicle), vehicleType.Type);
+
+                else
+                    calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
+                
 
                 // Recupera il saldo dell'utente
                 var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
@@ -158,7 +165,7 @@ namespace Mobishare.App.Pages
                 // Verifica che l'utente abbia fondi sufficienti
                 if (userBalance.Credit < (double)calculatedPrice)
                 {
-                    _logger.LogWarning("Insufficient balance for user {UserId}. Required: €{Price}, Available: €{Balance}", 
+                    _logger.LogWarning("Insufficient balance for user {UserId}. Required: €{Price}, Available: €{Balance}",
                         userId, calculatedPrice, userBalance.Credit);
                     TempData["ErrorMessage"] = $"Saldo insufficiente. Necessari: €{calculatedPrice:F2}, Disponibili: €{userBalance.Credit:F2}. Ricarica il tuo wallet.";
                     return Page();
