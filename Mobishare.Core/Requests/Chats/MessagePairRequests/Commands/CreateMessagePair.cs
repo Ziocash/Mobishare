@@ -1,6 +1,7 @@
 using System;
 using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mobishare.Core.Data;
 using Mobishare.Core.Models.Chats;
@@ -12,13 +13,13 @@ public class CreateMessagePair : MessagePair, IRequest<MessagePair> { }
 public class CreateMessagePairHandler : IRequestHandler<CreateMessagePair, MessagePair>
 {
     private readonly IMapper _mapper;
-    private readonly ApplicationDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<CreateMessagePairHandler> _logger;
 
-    public CreateMessagePairHandler(IMapper mapper, ApplicationDbContext dbContext, ILogger<CreateMessagePairHandler> logger)
+    public CreateMessagePairHandler(IMapper mapper, IServiceScopeFactory serviceScopeFactory, ILogger<CreateMessagePairHandler> logger)
     {
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -29,8 +30,10 @@ public class CreateMessagePairHandler : IRequestHandler<CreateMessagePair, Messa
         try
         {
             _logger.LogDebug("Executing {method}", nameof(CreateMessagePair));
-            _dbContext.MessagePairs.Entry(newMessagePair).State = Microsoft.EntityFrameworkCore.EntityState.Added;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.MessagePairs.Entry(newMessagePair).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+            await dbContext.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Message pair created successfully");
         }
         catch (Exception ex)
