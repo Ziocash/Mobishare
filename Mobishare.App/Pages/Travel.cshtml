@@ -17,7 +17,12 @@
 }
 
 <!-- Mappa -->
-<div id="map"></div>
+<div class="controls">
+    <div id="map"></div>
+    <input type="hidden" id="allCities" value="@Model.AllCitiesPerimeter" />        
+    <input type="hidden" id="allParkingSlots" value="@Model.AllParkingSlotsPerimeter" />
+</div>
+
 
 <!-- Contenuto principale -->
 <main class="content">
@@ -149,6 +154,12 @@
         <input type="hidden" name="rideId" value="@(Model.Ride?.Id ?? 0)" />
     </form>
 </main>
+
+<style>
+.gmnoprint {
+    display: none !important;
+}
+</style>
 
 <!-- Script per passare dati al JavaScript -->
 <script>

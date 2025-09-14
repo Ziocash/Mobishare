@@ -12,6 +12,7 @@ using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
 using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.VehicleStatus;
 using Microsoft.EntityFrameworkCore;
+using Mobishare.Core.Models.Maps;
 
 namespace Mobishare.App.Pages
 {
@@ -24,6 +25,11 @@ namespace Mobishare.App.Pages
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IGoogleGeocodingService _googleGeocoding;
         private readonly ApplicationDbContext _context;
+
+        public IEnumerable<ParkingSlot> AllParkingSlots { get; set; }
+        public IEnumerable<City> AllCities { get; set; }
+        public string AllParkingSlotsPerimeter { get; set; }
+        public string AllCitiesPerimeter { get; set; }
 
         public String? StartLocationName;
         public Ride? Ride;
@@ -84,6 +90,21 @@ namespace Mobishare.App.Pages
 
             if (StartPosition != null)
                 StartLocationName = await _googleGeocoding.GetAddressFromCoordinatesAsync((double)StartPosition.Latitude, (double)StartPosition.Longitude);
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<IEnumerable<City>>("api/City/AllCities");
+                AllCities = response ?? [];
+                var parkigSlotResponse = await _httpClient.GetFromJsonAsync<IEnumerable<ParkingSlot>>("api/ParkingSlot/AllAvailableParkingSlots");
+                AllParkingSlots = parkigSlotResponse ?? [];
+
+                AllCitiesPerimeter = string.Join(";", AllCities.Select(c => c.PerimeterLocation));
+                AllParkingSlotsPerimeter = string.Join(";", AllParkingSlots.Select(p => p.PerimeterLocation));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading data");
+            }
 
             return Page();
         }
@@ -151,7 +172,7 @@ namespace Mobishare.App.Pages
 
                 else
                     calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
-                
+
 
                 // Recupera il saldo dell'utente
                 var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
