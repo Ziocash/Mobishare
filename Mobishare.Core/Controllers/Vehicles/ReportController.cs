@@ -19,6 +19,33 @@ public class ReportController : ControllerBase
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
+    [HttpPost()]
+    [SwaggerOperation(
+        Summary = "Create a new report",
+        Description = "This endpoint allows you to create a new report.",
+        OperationId = "CreateReport")]
+    [SwaggerResponse(201, "Report created successfully", typeof(CreateReport))]
+    [SwaggerResponse(400, "Invalid request payload")]
+    public async Task<IActionResult> CreateReport(
+        [FromBody] 
+        [SwaggerParameter(Description = "The report details to create.", Required = true)]
+        CreateReport request
+    )
+    {
+        if (request == null)
+        {
+            return BadRequest("Request payload cannot be null.");
+        }
+
+        var result = await _mediator.Send(request);
+        if (result == null)
+        {
+            return BadRequest("Failed to create report.");
+        }
+
+        return CreatedAtAction(nameof(CreateReport), new { id = result.Id }, result);
+    }
+
     [HttpGet("AllReports/{userId}")]
     [SwaggerOperation(
         Summary = "Get all reports for a technician",
