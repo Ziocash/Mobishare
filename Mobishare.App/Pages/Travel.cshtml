@@ -288,7 +288,7 @@
         let FixedCost = fixedCostVehicle[type];
         console.log('Fixed cost for vehicle type', type, ':', FixedCost);
         if (elapsedMinutes >= 30)
-            currentCost = FixedCost + (elapsedMinutes * costPerMinute);
+            currentCost = FixedCost + ((elapsedMinutes - 30) * costPerMinute);
         else
             currentCost = FixedCost;
 

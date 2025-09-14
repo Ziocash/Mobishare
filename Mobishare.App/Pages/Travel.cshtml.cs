@@ -171,7 +171,7 @@ namespace Mobishare.App.Pages
                     calculatedPrice = (decimal)(FixedCostVehicle)Enum.Parse(typeof(FixedCostVehicle), vehicleType.Type);
 
                 else
-                    calculatedPrice = Math.Round((decimal)durationInMinutes * vehicleType.PricePerMinute, 2);
+                    calculatedPrice = Math.Round(((decimal)durationInMinutes - 30) * vehicleType.PricePerMinute, 2);
 
 
                 // Recupera il saldo dell'utente
