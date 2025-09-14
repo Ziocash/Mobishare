@@ -110,7 +110,7 @@ namespace Mobishare.App.Pages
             return Page();
         }
 
-        [HttpGet]
+        //[HttpGet]
         public async Task<IActionResult> OnGetCurrentCostAsync(int rideId)
         {
             var ride = await _context.Rides
@@ -164,6 +164,9 @@ namespace Mobishare.App.Pages
                     (double)lastPosition.Longitude,
                     (double)lastPosition.Latitude
                 );
+
+                var parkingSlotResponse = await _httpClient.GetFromJsonAsync<IEnumerable<ParkingSlot>>("api/ParkingSlot/AllAvailableParkingSlots");
+                AllParkingSlots = parkingSlotResponse ?? [];
 
                 foreach (var parkingSlot in AllParkingSlots)
                 {
