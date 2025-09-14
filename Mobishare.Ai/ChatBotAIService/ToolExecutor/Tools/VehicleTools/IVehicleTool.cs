@@ -8,8 +8,9 @@ public interface IVehicleTool
     /// Reports an issue with a vehicle.
     /// </summary>
     /// <param name="description"></param>
+    /// <param name="vehicleId"></param>
     /// 
-    Task<string> ReportVehicleIssueAsync(string description);
+    Task<string> ReportVehicleIssueAsync(string description, int vehicleId);
 
     /// <summary>
     /// Reserves a vehicle.
