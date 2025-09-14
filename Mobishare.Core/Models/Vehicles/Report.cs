@@ -19,4 +19,6 @@ public class Report
     public Vehicle? Vehicle { get; set; }
     public int VehicleId { get; set; }
     public string? Status { get; set; }
+
+    public ICollection<Repair> Repairs { get; set; } = new List<Repair>();
 }

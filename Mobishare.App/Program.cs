@@ -14,13 +14,13 @@ using Mobishare.Core.Services.GoogleGeocoding;
 using Mobishare.Infrastructure.Services.SignalR;
 using PayPal.REST.Client;
 using PayPal.REST.Models;
-using Mobishare.Infrastructure.Services.ChatBotAIService;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentClassifier;
-using Mobishare.Infrastructure.Services.ChatBotAIService.IntentRouter;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
+using Mobishare.Ai.ChatBotAIService;
+using Mobishare.Ai.ChatBotAIService.IntentRouter;
+using Mobishare.Ai.ChatBotAIService.IntentClassifier;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
 using Mobishare.Core.Services.UserContext;
-using Mobishare.Infrastructure.Services.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
 
 var builder = WebApplication.CreateBuilder(args);
 
