@@ -167,6 +167,7 @@
         rideId: @(Model.Ride?.Id ?? 0),
         costPerMinute: @Model.CostPerMinute.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
         startDateTime: '@(Model.Ride?.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") ?? "")',
+        vehicleId: @(Model.Ride?.VehicleId ?? 0),
         vehicleType: '@(Model.VehicleType?.Type ?? "")'
     };
 
@@ -176,6 +177,7 @@
     let startTime;
     let timerInterval;
     let costUpdateInterval;
+    let newPosition;
 
     // Inizializza immediatamente
     function initializePage() {
@@ -218,6 +220,44 @@
             console.error('window.rideData is not available');
         }
     }
+
+    const hub = new signalR.HubConnectionBuilder().withUrl("/VehicleHub").build();
+    hub.start().then(() => console.log("Connessione al SignalR Hub stabilita."))
+    .catch((err) => console.error(err));
+
+    hub.on("ReceiveVehiclePositionUpdate", (vehicle) => {
+    console.log("Messaggio ricevuto:", vehicle);
+
+    const id = vehicle.vehicleId.toString();
+    if(window.rideData.vehicleId.toString() === id) {
+        newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
+        if (vehicleMarkers[id]) {
+        const marker = vehicleMarkers[id];
+        const currentPos = marker.getPosition();
+
+        if (
+            currentPos.lat() !== newPosition.lat ||
+            currentPos.lng() !== newPosition.lng
+        ) {
+            marker.setPosition(newPosition);
+        }
+        } else {
+        // Crea marker separato per ogni veicolo
+        const marker = new google.maps.Marker({
+            position: newPosition,
+            map: map,
+            title: `Veicolo ${id}`,
+            icon: {
+            url: "/img/vehicle/icon/bicycle.png",
+            scaledSize: new google.maps.Size(40, 40),
+            },
+        });
+
+        // Salva il marker in una mappa con la chiave ID
+        vehicleMarkers[id] = marker;
+        }
+    }
+  });
 
     function startTimer() {
         console.log('Starting timer...');

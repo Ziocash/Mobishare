@@ -13,6 +13,7 @@ using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.VehicleStatus;
 using Microsoft.EntityFrameworkCore;
 using Mobishare.Core.Models.Maps;
+using NetTopologySuite.IO;
 
 namespace Mobishare.App.Pages
 {
@@ -30,9 +31,9 @@ namespace Mobishare.App.Pages
         public IEnumerable<City> AllCities { get; set; }
         public string AllParkingSlotsPerimeter { get; set; }
         public string AllCitiesPerimeter { get; set; }
-
         public String? StartLocationName;
         public Ride? Ride;
+        public int VehicleId;
         public VehicleType? VehicleType;
         public Position? StartPosition;
         public decimal CostPerMinute { get; set; }
@@ -154,6 +155,36 @@ namespace Mobishare.App.Pages
                     _logger.LogWarning("Vehicle with ID {VehicleId} not found", ride.VehicleId);
                     return RedirectToPage("/Index");
                 }
+                // Recupera l'ultima posizione del veicolo
+                var lastPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{ride.VehicleId}");
+
+                var isInsideParkingSlot = false;
+                var reader = new WKTReader();
+                var currentPoint = new NetTopologySuite.Geometries.Point(
+                    (double)lastPosition.Longitude,
+                    (double)lastPosition.Latitude
+                );
+
+                foreach (var parkingSlot in AllParkingSlots)
+                {
+                    if (!string.IsNullOrEmpty(parkingSlot.PerimeterLocation))
+                    {
+                        var polygon = (NetTopologySuite.Geometries.Polygon)reader.Read(parkingSlot.PerimeterLocation);
+
+                        if (polygon.Contains(currentPoint))
+                        {
+                            isInsideParkingSlot = true;
+                            _logger.LogInformation("Vehicle for ride {RideId} is inside parking slot {ParkingSlotId}", rideId, parkingSlot.Id);
+                            break;
+                        }
+                    }
+                }
+
+                if (!isInsideParkingSlot)
+                {
+                    TempData["ErrorMessage"] = "Please, go into a parking slot.";
+                    return Page();
+                }
 
                 // Recupera il tipo di veicolo per ottenere il prezzo al minuto
                 var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
@@ -231,8 +262,8 @@ namespace Mobishare.App.Pages
                     // Non blocchiamo il processo per questo errore, ma lo logghiamo
                 }
 
-                // Recupera l'ultima posizione del veicolo
-                var lastPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{ride.VehicleId}");
+
+
 
                 // Aggiorna il ride con orario di fine, posizione finale e prezzo calcolato
                 var updateRideResponse = await _httpClient.PutAsJsonAsync("api/Ride",
