@@ -218,7 +218,7 @@ namespace Mobishare.App.Pages
             }
 
             var currentRide = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
-            if (currentRide.PositionEnd != null)
+            if (currentRide.PositionEndId == null)
             {
                 _logger.LogInformation("Ride found for user with ID: {UserId}. Redirecting to travel.", userId);
                 return RedirectToPage("/Travel");
