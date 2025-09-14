@@ -217,6 +217,13 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
+            var currentRide = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
+            if (currentRide != null)
+            {
+                _logger.LogInformation("Ride found for user with ID: {UserId}. Redirecting to travel.", userId);
+                return RedirectToPage("/Travel");
+            }
+
             var ridesResponse = await _httpClient.GetFromJsonAsync<IEnumerable<Ride>>($"api/Ride/AllUserRides/{userId}");
             var rides = ridesResponse ?? [];
 
