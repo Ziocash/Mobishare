@@ -2,6 +2,7 @@ using System;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Mobishare.Core.Models.Maps;
+using Mobishare.Core.ParkingSlotClassification;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Queries;
 using Swashbuckle.AspNetCore.Annotations;
@@ -111,6 +112,22 @@ public class ParkingSlotController : ControllerBase
     public async Task<IActionResult> GetAllParkingSlots()
     {
         var response = await _mediator.Send(new GetAllParkingSlots());
+
+        return Ok(response);
+    }
+
+    [HttpGet("AllAvailableParkingSlots")]
+    [SwaggerOperation(
+        Summary = "Get all Available Parking Slots",
+        Description = "Retrieves all Available parking slots in the system.",
+        OperationId = "GetAllAvailableParkingSlots"
+    )]
+    [SwaggerResponse(200, "List of parking slots retrieved successfully", typeof(IEnumerable<ParkingSlot>))]
+    [SwaggerResponse(500, "Internal server error")]
+    public async Task<IActionResult> GetAllAvailableParkingSlots()
+    {
+        var response = await _mediator.Send(new GetAllParkingSlots());
+        response.Where(p => p.Type == ParkingSlotTypes.Available.ToString());
 
         return Ok(response);
     }

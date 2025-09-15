@@ -1,6 +1,8 @@
+/* Modern improvements for the landing page */
 html, body {
     height: 100%;
     overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 header {
@@ -9,7 +11,9 @@ header {
     left: 0;
     width: 100%;
     z-index: 2000;
+    backdrop-filter: blur(10px);
 }
+
 main {
     margin-top: 9vh; /* stessa altezza della navbar */
 }
@@ -26,14 +30,15 @@ main {
 
 .app-container {
     margin-top: 106px;
-    height: calc(100vh - 106px);
+    height: calc(100vh - 130px);
     overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .left-column {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 130px);
     overflow: hidden;
 }
 
@@ -42,6 +47,10 @@ main {
     z-index: 0;
     width: 100%;
     height: 85vh;
+    border-radius: 12px;
+    margin: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .map-container {
@@ -50,6 +59,7 @@ main {
     position: relative;
     overflow: hidden;
     min-height: 200px;
+    padding: 5px;
 }
 
 .map-placeholder {
@@ -69,124 +79,244 @@ main {
 
 .current-location {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background-color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    bottom: 30px;
+    left: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 12px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.current-location:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
 }
 
 .location-dot {
-    width: 12px;
-    height: 12px;
-    background-color: #198754;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(45deg, #28a745, #20c997);
     border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
 }
 
 .bike-code-form {
     flex-shrink: 0;
-    /*
-    min-height: 10vh;
-    background-color: white;
-    padding: 15px 20px;
-    border-top: 1px solid #dee2e6;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;*/
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    margin: 10px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.bike-code-form .form-control {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 12px 16px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.bike-code-form .form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.bike-code-form .btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.bike-code-form .btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+}
+
+.bike-code-form .btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .error-message {
     color: #dc3545;
     font-size: 14px;
-    margin-top: 5px;
+    margin-top: 8px;
     display: none;
+    padding: 8px 12px;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #dc3545;
+}
+
+.input-group-text {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px 0 0 8px !important;
+}
+
+/* Alert improvements */
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: 1px solid #b6d4da;
+    border-radius: 12px;
+    border-left: 4px solid #17a2b8;
 }
 
 .travels-container {
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: auto;
-    background-color: white;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.05);
+    height: calc(100vh - 150px);
+    max-height: calc(100vh - 150px);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
     padding: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
 }
 
 .travels-header {
     position: sticky;
     top: 0;
-    background-color: white;
-    padding: 15px;
-    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 10;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.travels-header h5 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.travels-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+    min-height: 0;
+}
+
+.travels-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.travels-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.travels-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.travels-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
 }
 
 .travel-card {
-    margin-bottom: 10px;
-    transition: transform 0.2s;
-    background-color: #ffffff !important; 
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* Override Bootstrap card defaults */
+.travel-card.card {
+    margin-bottom: 15px !important;
+}
+
+.travel-card.card:last-child {
+    margin-bottom: 25px !important;
 }
 
 .travel-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #d1eeb1!important; 
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
 }
 
 .travel-card .card-title {
-    color: #2E7D32;
+    color: #667eea;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
 }
 
 .travel-card .card-body {
-    padding: 12px;
+    padding: 15px 15px 5px 15px !important;
+}
+
+/* Assicura che l'ultimo elemento nel card-body non abbia margin-bottom */
+.travel-card .card-body > *:last-child {
+    margin-bottom: 0 !important;
 }
 
 .travel-info {
     display: flex;
     margin-bottom: 5px;
     font-size: 14px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.travel-info:last-of-type {
+    border-bottom: none;
 }
 
 .travel-info .label {
-    width: 70px;
-    color: #6c757d;
-    font-weight: 500;
+    width: 80px;
+    color: #667eea;
+    font-weight: 600;
+    font-size: 13px;
 }
 
 .travel-info .value {
     flex: 1;
-    color: #212529;
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 .travel-date {
     font-size: 12px;
-    color: #6c757d;
+    color: #7c8db5;
     text-align: right;
-    margin-top: 5px;
+    margin: 5px 0 0 0 !important;
+    padding: 5px 0 0 0 !important;
+    font-style: italic;
+    line-height: 1.2;
 }
 
-.travels-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.travels-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.travels-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.travels-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
+/* Removed old scrollbar styles - now handled by .travels-content */
 
 /*to make the page responsive*/
-@media (max-width: 767.98px) {
+@media (max-width: 1080px) {
     .app-container {
         height: auto;
         overflow: visible;
@@ -202,11 +332,230 @@ main {
     }
     
     .travels-container {
-        height: 50vh;
+        height: 60vh;
+        max-height: 60vh;
+    }
+    
+    .travels-content {
+        padding-bottom: 20px;
     }
 
     .bike-code-form {
         min-height: auto;
+    }
+    
+    .travel-card {
+        margin: 0 0 12px 0;
+    }
+    
+    .travel-card:last-child {
+        margin-bottom: 20px;
+    }
+    
+    .travel-card .card-body {
+        padding: 12px 12px 5px 12px !important;
+    }
+}
+
+/* Responsive design per telefoni */
+@media (max-width: 1080px) {
+    html, body {
+        overflow-y: auto;
+    }
+    
+    .app-container {
+        margin-top: 80px;
+        height: auto;
+        min-height: calc(100vh - 80px);
+    }
+    
+    .row {
+        margin: 0;
+    }
+    
+    /* Stack verticalmente mappa e cronologia viaggi */
+    .left-column, .travels-container {
+        flex: 0 0 100%;
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Mappa più piccola su mobile */
+    .map-container {
+        height: 40vh;
+        margin: 5px;
+        padding: 5px;
+    }
+    
+    #map {
+        height: 100%;
+        margin: 0;
+        border-radius: 8px;
+    }
+    
+    /* Popup più piccolo e centrato su mobile */
+    .map-popup {
+        width: calc(100vw - 20px);
+        max-width: 320px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        top: 20px;
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .popup-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .popup-buttons button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    #alreadyReservedPopup,
+    #insufficientFundsPopup {
+        width: calc(100vw - 20px);
+        max-width: 350px;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        top: 90px !important;
+    }
+    
+    /* Form di inserimento codice più compatto */
+    .bike-code-form {
+        margin: 5px;
+        padding: 15px;
+    }
+    
+    .bike-code-form .row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .bike-code-form .col,
+    .bike-code-form .col-auto {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .bike-code-form .btn {
+        width: 100%;
+        padding: 12px;
+    }
+    
+    /* Cronologia viaggi compatta */
+    .travels-container {
+        height: auto;
+        max-height: 50vh;
+        margin-top: 10px;
+    }
+    
+    .travels-header {
+        padding: 15px;
+    }
+    
+    .travels-header h5 {
+        font-size: 1.1rem;
+    }
+    
+    .travel-card {
+        margin-bottom: 10px !important;
+    }
+    
+    .travel-card .card-body {
+        padding: 10px !important;
+    }
+    
+    .travel-info {
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    
+    .travel-info .label {
+        width: 70px;
+        font-size: 12px;
+    }
+    
+    .travel-date {
+        font-size: 11px;
+        margin-top: 3px !important;
+    }
+    
+    /* Current location box più piccolo */
+    .current-location {
+        bottom: 15px;
+        left: 15px;
+        padding: 8px 12px;
+        font-size: 13px;
+        gap: 8px;
+    }
+    
+    .location-dot {
+        width: 10px;
+        height: 10px;
+    }
+    
+    /* Chat bubble più piccolo */
+    #chatBubble {
+        width: 55px;
+        height: 55px;
+        bottom: 20px;
+        right: 20px;
+        font-size: 20px;
+    }
+    
+    #chatWindow {
+        width: calc(100vw - 20px);
+        max-width: 320px;
+        height: 60vh;
+        bottom: 80px;
+        right: 10px;
+    }
+}
+
+/* Design per telefoni molto piccoli */
+@media (max-width: 480px) {
+    .map-container {
+        height: 45vh;
+    }
+    
+    .travels-container {
+        max-height: 35vh;
+    }
+    
+    .bike-code-form {
+        padding: 10px;
+    }
+    
+    .map-popup,
+    #alreadyReservedPopup,
+    #insufficientFundsPopup {
+        width: calc(100vw - 16px);
+        max-width: 310px;
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .popup-buttons button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .travel-card .card-body {
+        padding: 8px !important;
+    }
+    
+    .travel-info {
+        font-size: 12px;
+    }
+    
+    .travel-info .label {
+        width: 60px;
+        font-size: 11px;
     }
 }
 
@@ -215,7 +564,7 @@ main {
 .map-popup {
     display: none; 
     position: absolute;
-    top: 5px;
+    top: 30px;
     right: 5px;
     background-color: white;
     padding: 15px;
@@ -298,8 +647,9 @@ main {
     color: white;
 }
 
-#alreadyReservedPopup {
-    top: 125px !important;
+#alreadyReservedPopup,
+#insufficientFundsPopup {
+    top: 155px !important;
     padding-bottom: 0;
     padding-left: 0;
     padding-right: 0;

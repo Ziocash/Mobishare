@@ -95,11 +95,14 @@ public class RideController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetRideByUserId(userId));
-
+        if (result == null)
+        {
+            return NotFound("Ride not found.");
+        }
         return Ok(result);
     }
 
-    [HttpGet("ride/{rideId}")]
+    [HttpGet("{rideId}")]
     [SwaggerOperation(
         Summary = "Get a ride by its ID",
         Description = "This endpoint retrieves a ride by its unique identifier.",
@@ -125,7 +128,7 @@ public class RideController : ControllerBase
     }
     
 
-    [HttpPut("updateRide")]
+    [HttpPut()]
     [SwaggerOperation(
         Summary = "Update an existing ride",
         Description = "This endpoint allows you to update an existing ride for a vehicle."

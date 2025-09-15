@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.App.Services;
+using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
@@ -40,6 +41,32 @@ namespace Mobishare.App.Pages
         {
             _logger.LogInformation("Prenotazione confermata per veicolo {VehicleId}", vehicleId);
 
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                _logger.LogWarning("Authenticated user has null UserId.");
+                return new JsonResult(new { success = false, error = "User not found" });
+            }
+
+            // Controllo del saldo prima della prenotazione
+            var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+            if (userBalance == null)
+            {
+                _logger.LogWarning("No balance found for user {UserId}", userId);
+                return new JsonResult(new { success = false, error = "Balance not found" });
+            }
+
+            // Verifica che l'utente abbia almeno 1 euro
+            if (userBalance.Credit < 1.0)
+            {
+                _logger.LogWarning("Insufficient balance for user {UserId}. Required: €1.00, Available: €{Balance}", 
+                    userId, userBalance.Credit);
+                _logger.LogInformation("Prenotazione bloccata per fondi insufficienti. User: {UserId}, Saldo: €{Balance}", userId, userBalance.Credit);
+                return new JsonResult(new { success = false, error = "insufficient_funds", balance = userBalance.Credit });
+            }
+
+            _logger.LogInformation("Saldo verificato OK per user {UserId}. Saldo: €{Balance}", userId, userBalance.Credit);
+
             var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{vehicleId}");
 
             if (vehicle == null)
@@ -65,14 +92,13 @@ namespace Mobishare.App.Pages
             {
                 var errorContent = await updateResponse.Content.ReadAsStringAsync();
                 _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
-                TempData["ErrorMessage"] = $"Failed to update vehicle. Error: {errorContent}";
+                return new JsonResult(new { success = false, error = "Failed to update vehicle" });
             }
             else
             {
-                TempData["SuccessMessage"] = $"Veicolo {vehicleId} prenotato con successo!";
+                _logger.LogInformation("Veicolo {VehicleId} prenotato con successo!", vehicleId);
+                return new JsonResult(new { success = true });
             }
-
-            return Page();
         }
 
         public async Task<IActionResult> OnPostFreeVehicle(int vehicleId)
@@ -171,9 +197,10 @@ namespace Mobishare.App.Pages
             {
                 var errorContent = await createResponse.Content.ReadAsStringAsync();
                 _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
-                TempData["ErrorMessage"] = $"Failed to add ride. Error: {errorContent}";
+                return new JsonResult(new { success = false, error = "Failed to create ride" });
             }
 
+            // Prenotazione completata con successo
             return RedirectToPage("/Travel");
         }
 
@@ -188,6 +215,13 @@ namespace Mobishare.App.Pages
             {
                 _logger.LogWarning("Authenticated user has null UserId.");
                 return RedirectToPage("/Index");
+            }
+
+            var currentRide = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
+            if (currentRide.PositionEndId == null)
+            {
+                _logger.LogInformation("Ride found for user with ID: {UserId}. Redirecting to travel.", userId);
+                return RedirectToPage("/Travel");
             }
 
             var ridesResponse = await _httpClient.GetFromJsonAsync<IEnumerable<Ride>>($"api/Ride/AllUserRides/{userId}");

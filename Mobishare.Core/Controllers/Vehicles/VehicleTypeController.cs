@@ -89,6 +89,31 @@ public class VehicleTypeController : ControllerBase
         return NoContent();
     }
     
+    [HttpGet("{id}")]
+    [SwaggerOperation(
+        Summary = "Get a vehicle type by its ID",
+        Description = "Retrieves a vehicle type by its unique identifier."
+    )]
+    [SwaggerResponse(200, "Vehicle type retrieved successfully", typeof(VehicleType))]
+    [SwaggerResponse(404, "Vehicle type not found")]
+    public async Task<IActionResult> GetVehicleTypeById(
+        [FromRoute]
+        [SwaggerParameter("The ID of the vehicle type to retrieve", Required = true)]
+        int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest("Invalid vehicle type ID.");
+        }
+
+        var response = await _mediator.Send(new GetVehicleTypeById (id));
+        if (response == null)
+        {
+            return NotFound("Vehicle type not found.");
+        }
+
+        return Ok(response);
+    }
 
     [HttpGet("AllVehicleTypes")]
     [SwaggerOperation(

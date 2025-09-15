@@ -49,12 +49,12 @@ public class BalanceController : ControllerBase
         Description = "Updates an existing balance",
         OperationId = "UpdateBalance"
     )]
-    [SwaggerResponse(200, "Balance updated successfully", typeof(CreateBalance))]
+    [SwaggerResponse(200, "Balance updated successfully", typeof(UpdateBalance))]
     [SwaggerResponse(400, "Invalid request payload")]
     public async Task<IActionResult> UpdateBalance(
         [FromBody]
         [SwaggerRequestBody("Balance update payload", Required = true)]
-        CreateBalance request)
+        UpdateBalance request)
     {
         if (request == null)
         {

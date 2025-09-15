@@ -43,7 +43,7 @@ public class UpdateRideHandler : IRequestHandler<UpdateRide, Ride>
         // Aggiorna il nome del viaggio se fornito
         if (!string.IsNullOrEmpty(request.TripName))
         {
-            /*Da implementare per quando ci sarà il campo che memorizza il nome del viaggio dell'utente */
+            ride.Name = request.TripName;
         }
         
         await _dbContext.SaveChangesAsync(cancellationToken);
