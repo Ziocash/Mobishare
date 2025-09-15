@@ -120,6 +120,26 @@
                         </a>
                     </div>
                 }
+                @if (User.HasClaim(c => c.Type == ClaimNames.Role.ToString() && (c.Value == UserRole.Admin.ToString() ||
+                                c.Value == UserRole.Staff.ToString() || c.Value == UserRole.Technician.ToString())))
+                {
+                    <div class="row border-top"></div>
+
+                    <div class="row mt-2">
+                        <p class="fs-s text-secondary mb-1">Report</p>
+                    </div>
+                    <div class="row">
+                        <a href="/Admin/Reports/ManageTickets"
+                            class="btn mb-1 text-start b-d @(HttpContext.Request.Path == "/Admin/Reports/ManageTickets" ? "b-g bold-500" : "")">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24"><!-- Icon from Material Design Icons by Pictogrammers - https://github.com/Templarian/MaterialDesign/blob/master/LICENSE -->
+                                <path fill="currentColor"
+                                    d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4.18C9.6 1.84 10.7 1 12 1s2.4.84 2.82 2zm-7 0a1 1 0 0 0-1 1a1 1 0 0 0 1 1a1 1 0 0 0 1-1a1 1 0 0 0-1-1M7 7V5H5v14h14V5h-2v2zm4 2h2v4.5h-2zm0 6h2v2h-2z" />
+                            </svg>
+                            Manage Tickets
+                        </a>
+                    </div>
+                }
             </div>
             <div class="col-lg-9 ps-0">
                 <p>Benvenuto nel pannello di amministrazione</p>

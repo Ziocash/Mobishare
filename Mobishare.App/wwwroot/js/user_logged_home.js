@@ -455,5 +455,3 @@ function hideInsufficientFundsPopup() {
   clearInterval(insufficientFundsInterval);
   document.getElementById('insufficientFundsProgress').style.width = '100%';
 }
-
-

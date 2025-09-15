@@ -5,4 +5,7 @@ namespace Mobishare.Core.Services.UserContext;
 public class UserContextService : IUserContextService
 {
     public string? UserId { get; set; }
+    public string? Lat { get; set; }
+    public string? Lon { get; set; }
+
 }
