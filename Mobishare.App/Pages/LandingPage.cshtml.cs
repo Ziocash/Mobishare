@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -6,6 +7,7 @@ using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
+using Mobishare.Core.Security;
 using Mobishare.Core.UiModels;
 using Mobishare.Core.VehicleStatus;
 
@@ -59,7 +61,7 @@ namespace Mobishare.App.Pages
             // Verifica che l'utente abbia almeno 1 euro
             if (userBalance.Credit < 1.0)
             {
-                _logger.LogWarning("Insufficient balance for user {UserId}. Required: €1.00, Available: €{Balance}", 
+                _logger.LogWarning("Insufficient balance for user {UserId}. Required: €1.00, Available: €{Balance}",
                     userId, userBalance.Credit);
                 _logger.LogInformation("Prenotazione bloccata per fondi insufficienti. User: {UserId}, Saldo: €{Balance}", userId, userBalance.Credit);
                 return new JsonResult(new { success = false, error = "insufficient_funds", balance = userBalance.Credit });
@@ -217,11 +219,16 @@ namespace Mobishare.App.Pages
                 return RedirectToPage("/Index");
             }
 
-            var currentRide = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
-            if (currentRide.PositionEndId == null)
+            var currentRideResponse = await _httpClient.GetAsync($"api/Ride/User/{userId}");
+            if (currentRideResponse.StatusCode == HttpStatusCode.NoContent)
             {
                 _logger.LogInformation("Ride found for user with ID: {UserId}. Redirecting to travel.", userId);
-                return RedirectToPage("/Travel");
+            }
+            else
+            {
+                var currentRide = await currentRideResponse.Content.ReadFromJsonAsync<Ride>();
+                if (currentRide.PositionEndId == null)
+                    return RedirectToPage("/Travel");
             }
 
             var ridesResponse = await _httpClient.GetFromJsonAsync<IEnumerable<Ride>>($"api/Ride/AllUserRides/{userId}");

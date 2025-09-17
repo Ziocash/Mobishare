@@ -160,9 +160,14 @@
         display: none !important;
     }
 </style>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
+    integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- Script per passare dati al JavaScript -->
 <script>
+    // --- 1. DATI INIZIALI E VARIABILI GLOBALI ---
+
+    // I dati del viaggio vengono passati dal server (Razor) a JavaScript
     window.rideData = {
         rideId: @(Model.Ride?.Id ?? 0),
         costPerMinute: @Model.CostPerMinute.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
@@ -171,257 +176,204 @@
         vehicleType: '@(Model.VehicleType?.Type ?? "")'
     };
 
-    console.log('Ride data initialized:', window.rideData);
-    console.log('CostPerMinute from server:', @Model.CostPerMinute);
-
+    // Variabili che verranno usate durante il ciclo di vita della pagina
     let startTime;
     let timerInterval;
     let costUpdateInterval;
-    let newPosition;
+    let vehicleMarkers = {}; // Oggetto per tenere traccia dei marker sulla mappa
 
-    // Inizializza immediatamente
-    function initializePage() {
-        console.log('Initializing page...');
 
-        if (window.rideData) {
-            // Prova a parsare la data in diversi modi
-            startTime = new Date(window.rideData.startDateTime);
-            console.log('Start time string:', window.rideData.startDateTime);
-            console.log('Parsed start time:', startTime);
-            console.log('Is valid date:', !isNaN(startTime.getTime()));
-            console.log('Current time:', new Date());
+    // --- 2. LOGICA DI INIZIALIZZAZIONE PRINCIPALE ---
 
-            // Verifica se la data è valida
-            if (isNaN(startTime.getTime())) {
-                console.error('Invalid start time! Cannot parse:', window.rideData.startDateTime);
-                return;
+    // Questa è la funzione principale che viene eseguita quando la pagina è pronta
+    document.addEventListener('DOMContentLoaded', function () {
+        initializePage();       // Fa partire subito timer e costo
+        connectAndWaitForMap(); // Avvia la connessione a SignalR e l'attesa della mappa
+        setupButtonListeners(); // Imposta gli eventi per i bottoni del modal
+    });
+
+
+    // --- 3. GESTIONE DELLA MAPPA E SIGNALR (IL CUORE DELLA SOLUZIONE) ---
+
+    /**
+     * Si connette a SignalR e poi avvia un controllo a intervalli
+     * per aspettare che la variabile 'map' sia creata dal file esterno site.js.
+     */
+    function connectAndWaitForMap() {
+        const hub = new signalR.HubConnectionBuilder().withUrl("/VehicleHub").build();
+
+        hub.start()
+            .then(() => {
+                console.log("Connessione a SignalR stabilita. In attesa che la mappa sia pronta...");
+
+                const mapCheckInterval = setInterval(function () {
+                    // Controlla ogni 100ms se la mappa globale (da site.js) è stata creata
+                    if (typeof map !== 'undefined' && map) {
+                        // Trovata! La mappa è pronta.
+                        console.log("Mappa trovata! Inizializzo gli aggiornamenti in tempo reale.");
+                        clearInterval(mapCheckInterval); // Interrompi il controllo, non serve più
+                        setupSignalRMapListener(hub);  // Avvia la funzione che ascolta i messaggi
+                    }
+                }, 100); // Frequenza del controllo
+            })
+            .catch(err => console.error("Errore fatale nella connessione a SignalR:", err));
+    }
+
+    function setupSignalRMapListener(hub) {
+        hub.on("ReceiveVehiclePositionUpdate", (vehicle) => {
+            const id = vehicle.vehicleId.toString();
+
+            // Aggiorna la posizione solo se il messaggio è per il veicolo che stiamo guidando
+            if (window.rideData.vehicleId == id) {
+                const newPosition = { lat: vehicle.latitude, lng: vehicle.longitude };
+                map.setCenter(newPosition);
+                if (vehicleMarkers[id]) {
+                    // Se il marker esiste già, aggiorna solo la sua posizione
+                    vehicleMarkers[id].setPosition(newPosition);
+                } else {
+                    // Altrimenti, crea un nuovo marker
+                    const markerIcon = {
+                        url: "/img/vehicle/icon/bicycle.png",
+                        scaledSize: new google.maps.Size(40, 40)
+                    };
+                    const marker = new google.maps.Marker({
+                        position: newPosition,
+                        map: map, // Ora siamo sicuri che 'map' esista
+                        icon: markerIcon,
+                        title: `Veicolo ${id}`
+                    });
+                    vehicleMarkers[id] = marker; // Salva il marker per futuri aggiornamenti
+                }
             }
-
-            // Test immediato
-            const costElement = document.getElementById('costValue');
-            const timerElement = document.getElementById('timer');
-            console.log('Cost element found:', !!costElement);
-            console.log('Timer element found:', !!timerElement);
-
-            if (costElement && timerElement) {
-                costElement.textContent = '€0.00';
-                timerElement.textContent = '00:00';
-                console.log('Set test values');
-                
-                // Dopo 2 secondi, inizia gli aggiornamenti reali
-                setTimeout(function () {
-                    startTimer();
-                    startCostUpdater();
-                }, 2000);
-            } else {
-                console.error('Required elements not found!');
-            }
-        } else {
-            console.error('window.rideData is not available');
-        }
+        });
     }
 
 
+    // --- 4. FUNZIONALITÀ DELLA PAGINA (Timer, Costo, Bottoni) ---
+
+    /**
+     * Inizializza il timer e il calcolo del costo all'avvio della pagina.
+     */
+    function initializePage() {
+        if (!window.rideData || !window.rideData.startDateTime) {
+            console.error('Dati del viaggio o orario di inizio mancanti.');
+            return;
+        }
+        startTime = new Date(window.rideData.startDateTime);
+        if (isNaN(startTime.getTime())) {
+            console.error('Orario di inizio non valido:', window.rideData.startDateTime);
+            return;
+        }
+        
+        // Fa partire gli aggiornamenti continui
+        startTimer();
+        startCostUpdater();
+    }
+
     function startTimer() {
-                console.log('Starting timer...');
-                updateTimer();
-                if (timerInterval) clearInterval(timerInterval);
-                timerInterval = setInterval(updateTimer, 1000);
-            }
+        if (timerInterval) clearInterval(timerInterval);
+        updateTimer(); // Esegui subito per mostrare il valore corretto
+        timerInterval = setInterval(updateTimer, 1000);
+    }
 
     function updateTimer() {
-                if (!startTime || isNaN(startTime.getTime())) {
-                    console.error('Invalid start time in updateTimer');
-                    return;
-                }
-
-                const now = new Date();
-                const elapsed = now - startTime;
-
-                console.log('Timer update - now:', now);
-                console.log('Timer update - startTime:', startTime);
-                console.log('Timer update - elapsed ms:', elapsed);
-
-                if (elapsed < 0) {
-                    console.error('Negative elapsed time!');
-                    return;
-                }
-
-                const minutes = Math.floor(elapsed / 60000);
-                const seconds = Math.floor((elapsed % 60000) / 1000);
-
-                console.log('Timer update - minutes:', minutes, 'seconds:', seconds);
-
-                const timerElement = document.getElementById('timer');
-                if (timerElement) {
-                    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }
+        const elapsed = new Date() - startTime;
+        if (elapsed < 0) return;
+        const minutes = Math.floor(elapsed / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
 
     function startCostUpdater() {
-                console.log('Starting cost updater...');
-                updateCost();
-                if (costUpdateInterval) clearInterval(costUpdateInterval);
-                costUpdateInterval = setInterval(updateCost, 1000);
-            }
+        if (costUpdateInterval) clearInterval(costUpdateInterval);
+        updateCost(); // Esegui subito
+        costUpdateInterval = setInterval(updateCost, 1000);
+    }
 
     function updateCost() {
-                if (!startTime || isNaN(startTime.getTime())) {
-                    console.error('Invalid start time in updateCost');
-                    return;
-                }
+        const elapsedMinutes = (new Date() - startTime) / 60000;
+        if (elapsedMinutes < 0) return;
 
-                if (!window.rideData.costPerMinute) {
-                    console.error('Missing costPerMinute');
-                    return;
-                }
+        const costPerMinute = parseFloat(window.rideData.costPerMinute);
+        const fixedCostMap = { Bike: 5, Scooter: 7, EBike: 6 };
+        const fixedCost = fixedCostMap[window.rideData.vehicleType] || 0;
+        
+        let currentCost = fixedCost;
+        if (elapsedMinutes > 30) {
+            currentCost += (elapsedMinutes - 30) * costPerMinute;
+        }
 
-                const now = new Date();
-                const elapsed = now - startTime;
-                const elapsedMinutes = elapsed / (1000 * 60);
-                const costPerMinute = parseFloat(window.rideData.costPerMinute);
-                let currentCost;
+        const costElement = document.getElementById('costValue');
+        if (costElement) {
+            costElement.textContent = `€${currentCost.toFixed(2)}`;
+        }
+    }
 
-                const fixedCostVehicle = {
-                    Bike: 5,
-                    Scooter: 7,
-                    EBike: 6
-                };
-                let type = window.rideData.vehicleType;
-                let FixedCost = fixedCostVehicle[type];
-                console.log('Fixed cost for vehicle type', type, ':', FixedCost);
-                if (elapsedMinutes >= 30)
-                    currentCost = FixedCost + ((elapsedMinutes - 30) * costPerMinute);
-                else
-                    currentCost = FixedCost;
-
-                console.log('Cost update - elapsed ms:', elapsed);
-                console.log('Cost update - elapsed minutes:', elapsedMinutes.toFixed(4));
-                console.log('Cost update - cost per minute:', costPerMinute);
-                console.log('Cost update - current cost:', currentCost.toFixed(4));
-
-                if (isNaN(currentCost)) {
-                    console.error('Calculated cost is NaN!');
-                    return;
-                }
-
-                const costElement = document.getElementById('costValue');
-                if (costElement) {
-                    const displayValue = `€${currentCost.toFixed(2)}`;
-                    costElement.textContent = displayValue;
-                    console.log('Updated display to:', displayValue);
-                } else {
-                    console.error('costValue element not found during update');
-                }
-            }
-
+    /**
+     * Mostra il modal di conferma per terminare il viaggio.
+     */
     function endTrip() {
-                console.log('User wants to end trip - showing confirmation modal...');
-
-                // NON fermiamo i timer qui! Il viaggio continua fino alla conferma
-
-                const modalElement = document.getElementById('endTripModal');
-                if (modalElement && typeof bootstrap !== 'undefined') {
-                    const modal = new bootstrap.Modal(modalElement);
-                    modal.show();
+        const modalElement = document.getElementById('endTripModal');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            new bootstrap.Modal(modalElement).show();
+        }
+    }
+    
+    /**
+     * Raggruppa tutti i listener per i bottoni del modal e altri elementi interattivi.
+     */
+    function setupButtonListeners() {
+        const confirmButton = document.getElementById('confirmEndTrip');
+        if (confirmButton) {
+            confirmButton.addEventListener('click', function () {
+                console.log('Viaggio terminato dall\'utente.');
+                clearInterval(timerInterval);
+                clearInterval(costUpdateInterval);
+                
+                document.getElementById('tripNameInput').value = document.getElementById('tripName').value;
+                document.getElementById('endTripForm').submit();
+            });
+        }
+        
+        const aiSuggestBtn = document.getElementById('aiSuggestBtn');
+        if (aiSuggestBtn) {
+            aiSuggestBtn.addEventListener('click', function () {
+                const currentTime = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const suggestions = [`Viaggio ${currentTime}`, 'Spostamento mattutino', 'Tragitto serale', 'Viaggio veloce', 'Tour in città'];
+                const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+                aiSuggestBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                aiSuggestBtn.disabled = true;
+                setTimeout(() => {
+                    document.getElementById('tripName').value = randomSuggestion;
+                    aiSuggestBtn.innerHTML = `<svg width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16"><path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/></svg>`;
+                    aiSuggestBtn.disabled = false;
+                }, 1500);
+            });
+        }
+        
+        const modal = document.getElementById('endTripModal');
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', function (event) {
+                if (timerInterval && costUpdateInterval) {
+                    console.log('Modal chiuso, il viaggio continua.');
                 } else {
-                    console.error('Modal element or Bootstrap not found');
+                    console.log('Modal chiuso dopo la conferma di fine viaggio.');
                 }
-            }
-
-    // Inizializza quando il DOM è pronto
-    if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializePage);
-        } else {
-            // DOM già caricato
-            initializePage();
+            });
         }
+    }
 
-        // Gestione conferma fine viaggio
-        document.addEventListener('DOMContentLoaded', function () {
-            const confirmButton = document.getElementById('confirmEndTrip');
-            if (confirmButton) {
-                confirmButton.addEventListener('click', function () {
-                    console.log('User confirmed trip end - stopping timers and submitting...');
+    /**
+     * Questa funzione viene chiamata dal callback dell'API di Google Maps.
+     * La sua implementazione reale è in site.js.
+     */
+    function initMaps() {
+        // L'implementazione vera è in site.js
+    }
 
-                    // ORA fermiamo i timer perché l'utente ha confermato
-                    if (timerInterval) {
-                        clearInterval(timerInterval);
-                        timerInterval = null;
-                        console.log('Timer stopped after confirmation');
-                    }
-                    if (costUpdateInterval) {
-                        clearInterval(costUpdateInterval);
-                        costUpdateInterval = null;
-                        console.log('Cost updater stopped after confirmation');
-                    }
-
-                    const tripName = document.getElementById('tripName').value;
-                    const tripNameInput = document.getElementById('tripNameInput');
-                    if (tripNameInput) {
-                        tripNameInput.value = tripName;
-                    }
-                    const endTripForm = document.getElementById('endTripForm');
-                    if (endTripForm) {
-                        console.log('Submitting trip end form...');
-                        endTripForm.submit();
-                    }
-                });
-            }
-
-            // Gestione pulsante AI per suggerimenti
-            const aiSuggestBtn = document.getElementById('aiSuggestBtn');
-            if (aiSuggestBtn) {
-                aiSuggestBtn.addEventListener('click', function () {
-                    // Per ora mostra solo una preview della funzionalità futura
-                    const currentTime = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                    const suggestions = [
-                        `Viaggio ${currentTime}`,
-                        'Spostamento mattutino',
-                        'Tragitto serale',
-                        'Viaggio veloce',
-                        'Tour in città'
-                    ];
-
-                    const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
-
-                    // Anima il pulsante
-                    aiSuggestBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-                    aiSuggestBtn.disabled = true;
-
-                    setTimeout(() => {
-                        document.getElementById('tripName').value = randomSuggestion;
-                        aiSuggestBtn.innerHTML = `<svg width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
-                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828l.645-1.937zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.734 1.734 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.734 1.734 0 0 0 3.407 2.31l.387-1.162zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L10.863.1z"/>
-                </svg>`;
-                        aiSuggestBtn.disabled = false;
-
-                        // Feedback visivo
-                        const tripNameInput = document.getElementById('tripName');
-                        tripNameInput.classList.add('border-primary');
-                        setTimeout(() => tripNameInput.classList.remove('border-primary'), 2000);
-                    }, 1500);
-                });
-            }
-
-            // Gestione pulsante "Annulla" - il viaggio continua
-            const modal = document.getElementById('endTripModal');
-            if (modal) {
-                modal.addEventListener('hidden.bs.modal', function (event) {
-                    // Se il modal si chiude senza conferma, il viaggio continua
-                    if (timerInterval && costUpdateInterval) {
-                        console.log('Modal closed without confirmation - trip continues');
-                    } else {
-                        console.log('Modal closed after confirmation - trip ended');
-                    }
-                });
-            }
-        });
-
-        // Funzione per la mappa
-        function initMaps() {
-            console.log('Maps initialized');
-        }
 </script>
 
 <script src='@($"https://maps.googleapis.com/maps/api/js?key={Configuration["GoogleMaps:ApiKey"]}&callback=initMaps")'
