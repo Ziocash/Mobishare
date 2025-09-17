@@ -11,12 +11,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="container-fluid p-0 app-container mt-2">
-    <div class="row g-0 h-100">
-        <!-- Left Column (Map + Form) -->
-        <div class="col-md-9 left-column">
-            <!-- Map -->
-            <div class="map-container">
-                <!--<div class="map-placeholder" id="map-placeholder">
+  <div class="row g-0 h-100">
+    <!-- Left Column (Map + Form) -->
+    <div class="col-md-9 left-column">
+      <!-- Map -->
+      <div class="map-container">
+        <!--<div class="map-placeholder" id="map-placeholder">
                          Map With Current Location Here                    
                     </div> -->
         <div id="map">
@@ -63,7 +63,8 @@
               title="Chiudi popup">×</button>
           </div>
           <div class="popup-body-reserved">
-            <p>Il tuo saldo è insufficiente per prenotare un veicolo. È necessario avere almeno €1.00 per poter iniziare un viaggio.</p>
+            <p>Il tuo saldo è insufficiente per prenotare un veicolo. È necessario avere almeno €1.00 per poter iniziare
+              un viaggio.</p>
             <p><a href="/Wallet" class="btn btn-primary btn-sm mt-2">Ricarica il tuo saldo</a></p>
           </div>
           <div class="progress mt-2" style="height: 8px;">
@@ -114,104 +115,120 @@
         </h5>
       </div>
       <div class="travels-content">
-      @if (Model.AllRides != null && Model.AllRides.Count > 0)
-      {
-        <div style="padding: 10px 10px 40px 10px;">
-          @foreach (var vm in Model.AllRides)
-          {
-            var ride = vm.Ride;
-            <div class="row">
-              <div class="">
-                <!-- Travel Card -->
-                <div class="card travel-card">
-                  <div class="card-body">
-                    <h6 class="card-title mb-2">
-                      <i class="fas fa-bicycle me-2"></i>
-                      @(string.IsNullOrEmpty(ride.Name) ? "Viaggio senza Nome" : ride.Name)
-                    </h6>
+        @if (Model.AllRides != null && Model.AllRides.Count > 0)
+        {
+          <div style="padding: 10px 10px 40px 10px;">
+            @foreach (var vm in Model.AllRides)
+            {
+              var ride = vm.Ride;
+              <div class="row">
+                <div class="">
+                  <!-- Travel Card -->
+                  <div class="card travel-card">
+                    <div class="card-body">
+                      <h6 class="card-title mb-2">
+                        <i class="fas fa-bicycle me-2"></i>
+                        @(string.IsNullOrEmpty(ride.Name) ? "Viaggio senza Nome" : ride.Name)
+                      </h6>
 
-                    <!-- Start Position -->
-                    <div class="travel-info">
-                      <div class="label">
-                        <i class="fas fa-play-circle me-1"></i>Start:
-                      </div>
-                      @if (ride.PositionStart != null)
-                      {
-                        <div class="value">
-                          @vm.StartLocationName
+                      <!-- Start Position -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-play-circle me-1"></i>Start:
                         </div>
-                      }
-                    </div>
-
-                    <!-- End Position with Location Name -->
-                    <div class="travel-info">
-                      <div class="label">
-                        <i class="fas fa-stop-circle me-1"></i>End:
+                        @if (ride.PositionStart != null)
+                        {
+                          <div class="value">
+                            @vm.StartLocationName
+                          </div>
+                        }
                       </div>
-                      @if (ride.PositionEnd != null)
-                      {
-                        <div class="value">
-                          @vm.EndLocationName
+
+                      <!-- End Position with Location Name -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-stop-circle me-1"></i>End:
                         </div>
-                      }
-                    </div>
-
-                    <!-- Duration -->
-                    <div class="travel-info">
-                      <div class="label">
-                        <i class="fas fa-clock me-1"></i>Time:
-                      </div>
-                      @{
-                        var duration = ride.EndDateTime - ride.StartDateTime;
-                      }
-                      <div class="value">
-                        @if (duration.TotalSeconds < 60)
+                        @if (ride.PositionEnd != null)
                         {
-                          @duration.Seconds @:seconds
-                        }
-                        else if (duration.TotalMinutes < 2)
-                        {
-                          @duration.Minutes @:minute
-                        }
-                        else
-                        {
-                          @duration.Minutes @:minutes
+                          <div class="value">
+                            @vm.EndLocationName
+                          </div>
                         }
                       </div>
-                    </div>
 
-                    <!-- Price -->
-                    <div class="travel-info">
-                      <div class="label">
-                        <i class="fas fa-euro-sign me-1"></i>Price:
+                      <!-- Duration -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-clock me-1"></i>Time:
+                        </div>
+                        @{
+                          var duration = ride.EndDateTime - ride.StartDateTime;
+                        }
+                        <div class="value">
+                          @{
+                            // Prendiamo le parti intere della durata per una formattazione più pulita
+                            var ore = (int)duration.TotalHours;
+                            var minuti = duration.Minutes;
+                            var secondi = duration.Seconds;
+                          }
+
+                          @if (ore >= 1)
+                          {
+                            // Se c'è almeno un'ora
+                            @ore @(ore == 1 ? " Hour" : " Hours")
+
+                            @if (minuti > 0)
+                            {
+                              // Mostra i minuti solo se non sono zero
+                              @: @minuti @(minuti == 1 ? " Minute" : " Minutes")
+                            }
+                          }
+                          else if (minuti >= 1)
+                          {
+                            // Se ci sono solo minuti (e non ore)
+                            @minuti @(minuti == 1 ? " Minute" : " Minutes")
+                          }
+                          else
+                          {
+                            // Altrimenti, se ci sono solo secondi
+                            @secondi @(secondi == 1 ? " Second" : " Seconds")
+                          }
+                        </div>
                       </div>
-                      <div class="value">@ride.Price €</div>
-                    </div>
 
-                    <!-- Date -->
-                    <div class="travel-date">
-                      <i class="fas fa-calendar-alt me-1"></i>
-                      @ride.StartDateTime.ToString("MMMM dd, yyyy - hh:mm tt", CultureInfo.InvariantCulture)
+                      <!-- Price -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-euro-sign me-1"></i>Price:
+                        </div>
+                        <div class="value">@ride.Price €</div>
+                      </div>
+
+                      <!-- Date -->
+                      <div class="travel-date">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        @ride.StartDateTime.ToString("MMMM dd, yyyy - hh:mm tt", CultureInfo.InvariantCulture)
+                      </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        else
+        {
+          <div style="padding: 10px;">
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+              <i class="fas fa-info-circle me-2"></i>
+              <div>
+                <strong>No travels yet!</strong><br>
+                <small>Start your first journey by scanning a bike QR code or entering the bike code manually.</small>
               </div>
             </div>
           </div>
-        </div>
-                }
-        </div>
-      }
-      else
-      {
-        <div style="padding: 10px;">
-          <div class="alert alert-info d-flex align-items-center" role="alert">
-            <i class="fas fa-info-circle me-2"></i>
-            <div>
-              <strong>No travels yet!</strong><br>
-              <small>Start your first journey by scanning a bike QR code or entering the bike code manually.</small>
-            </div>
-          </div>
-        </div>
-      }
+        }
       </div> <!-- closes travels-content -->
     </div> <!-- closes travels-container -->
   </div>
@@ -219,7 +236,7 @@
 
 <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
   <input type="hidden" id="selectedVehicleId" name="vehicleId" />
-  
+
 
 
   <!-- Modale Bootstrap -->
@@ -265,37 +282,37 @@
 
 <!-- Modern animations -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // Controlla se mostrare il popup di fondi insufficienti
     const insufficientFundsFlag = document.getElementById('insufficientFundsFlag');
     if (insufficientFundsFlag && insufficientFundsFlag.value === 'true') {
-        showInsufficientFundsPopup();
+      showInsufficientFundsPopup();
     }
 
     // Smooth hover effects for chat bubble
     const chatBubble = document.getElementById('chatBubble');
     if (chatBubble) {
-        chatBubble.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1)';
-            this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.6)';
-        });
-        chatBubble.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
-            this.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
-        });
+      chatBubble.addEventListener('mouseenter', function () {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.6)';
+      });
+      chatBubble.addEventListener('mouseleave', function () {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+      });
     }
-    
+
     // Smooth scrolling for travel cards
     const travelCards = document.querySelectorAll('.travel-card');
     travelCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px) scale(1.02)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
+      card.addEventListener('mouseenter', function () {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+      });
+      card.addEventListener('mouseleave', function () {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
     });
-});
+  });
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&callback=initMap" async

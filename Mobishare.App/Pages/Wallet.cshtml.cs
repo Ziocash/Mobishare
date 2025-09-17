@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,6 +7,7 @@ using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
 using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
+using Mobishare.Core.Requests.Users.HistoryPointRequest.Commands;
 using PayPal.REST.Client;
 using PayPal.REST.Models.Orders;
 using PayPal.REST.Models.PaymentSources;
@@ -43,6 +42,94 @@ namespace Mobishare.App.Pages
             [Required(ErrorMessage = "Please enter an an amount.")]
             [Range(5, double.MaxValue, ErrorMessage = "Please enter an amount of at least 5.")]
             public double CreditAmount { get; set; }
+        }
+
+        public async Task<IActionResult> OnPostUsePoints()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                _logger.LogWarning("User ID is null. Unable to retrieve balance.");
+                return RedirectToPage("Wallet");
+            }
+
+            var balance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+            if (balance == null)
+            {
+                _logger.LogWarning("No balance record found for user {UserId}", userId);
+                return RedirectToPage("Wallet");
+            }
+
+            if (balance.Points < 5)
+            {
+                TempData["ErrorMessage"] = "You need at least 5 points to convert.";
+                return RedirectToPage();
+            }
+
+            var totalPoints = balance.Points;
+            var pointsToConvert = (totalPoints / 5) * 5;
+            var creditToReceive = pointsToConvert / 5.0;
+
+            var updateBalance = await _httpClient.PutAsJsonAsync("api/Balance",
+                new UpdateBalance
+                {
+                    Id = balance.Id,
+                    UserId = userId,
+                    Points = balance.Points - pointsToConvert,
+                    Credit = balance.Credit + creditToReceive
+                }
+            );
+
+            if (!updateBalance.IsSuccessStatusCode)
+            {
+                var errorContent = await updateBalance.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateBalance.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update balance. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            var createHistoryCredit = await _httpClient.PostAsJsonAsync("api/HistoryCredit",
+                new CreateHistoryCredit
+                {
+                    UserId = userId,
+                    BalanceId = balance.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    Credit = creditToReceive,
+                    TransactionType = CreditTransactionType.BonusCredit.ToString()
+                }
+            );
+
+            if (!createHistoryCredit.IsSuccessStatusCode)
+            {
+                var errorContent = await createHistoryCredit.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {createHistoryCredit.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to create history credit. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            var createHistoryPoint = await _httpClient.PostAsJsonAsync("api/HistoryPoint",
+                new CreateHistoryPoint
+                {
+                    UserId = userId,
+                    BalanceId = balance.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    Point = pointsToConvert,
+                    TransactionType = PointTransactionType.Redeemed.ToString()
+                }
+            );
+
+            if (!createHistoryPoint.IsSuccessStatusCode)
+            {
+                var errorContent = await createHistoryPoint.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {createHistoryPoint.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to create history point. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            return RedirectToPage("Wallet");
         }
 
         public async Task<IActionResult> OnPostDeposit()

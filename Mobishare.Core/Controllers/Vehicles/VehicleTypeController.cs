@@ -2,6 +2,7 @@ using System;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Mobishare.Core.Models.Vehicles;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Queries;
 using Swashbuckle.AspNetCore.Annotations;
@@ -114,6 +115,40 @@ public class VehicleTypeController : ControllerBase
 
         return Ok(response);
     }
+
+
+        [HttpGet("Vehicle/{id}")]
+    [SwaggerOperation(
+        Summary = "Get a vehicle type by vehicle ID",
+        Description = "Retrieves a vehicle type by vehicle Id."
+    )]
+    [SwaggerResponse(200, "Vehicle type retrieved successfully", typeof(VehicleType))]
+    [SwaggerResponse(404, "Vehicle type not found")]
+    public async Task<IActionResult> GetVehicleTypeByVehicleId(
+        [FromRoute]
+        [SwaggerParameter("The ID of the vehicle to retrieve the vehicleType", Required = true)]
+        int id)
+    {
+        if (id <= 0)
+        {
+            return BadRequest("Invalid vehicle type ID.");
+        }
+
+        var responseVehicle = await _mediator.Send(new GetVehicleById (id));
+        if (responseVehicle == null)
+        {
+            return NotFound("Vehicle not found.");
+        }
+
+        var responseVehicleType = await _mediator.Send(new GetVehicleTypeById(responseVehicle.VehicleTypeId));
+
+        if (responseVehicleType == null)
+        {
+            return NotFound("Vehicle type not found.");
+        }
+        return Ok(responseVehicleType.Type);
+    }
+
 
     [HttpGet("AllVehicleTypes")]
     [SwaggerOperation(

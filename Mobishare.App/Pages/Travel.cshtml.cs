@@ -246,7 +246,7 @@ namespace Mobishare.App.Pages
                         {
                             UserId = userId,
                             CreatedAt = DateTime.UtcNow,
-                            TransactionType = CreditTransactionType.Deposit.ToString(),
+                            TransactionType = PointTransactionType.Earned.ToString(),
                             BalanceId = userBalance.Id,
                             Point = points
                         }
