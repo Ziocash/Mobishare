@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Enums\Balance\PointTransactionType.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="Services/UserContext/UserContextService" />
   </ItemGroup>
 

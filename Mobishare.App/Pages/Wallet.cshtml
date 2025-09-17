@@ -29,7 +29,7 @@
         <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addFunds">
             Add Funds
         </button>
-        <button type="button" class="btn btn-warning">
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#usePoints">
             Use points
         </button>
     </div>
@@ -47,12 +47,65 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label asp-for="Input.CreditAmount" class="form-label"></label>
-                            <input asp-for="Input.CreditAmount" type="number" value="0" step="0.01" min="5" class="form-control" />
+                            <input asp-for="Input.CreditAmount" type="number" value="0" step="0.01" min="5"
+                                class="form-control" />
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale per usare i punti -->
+    <div class="modal fade" id="usePoints" tabindex="-1" aria-labelledby="usePointsLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="UsePoints">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="usePointsLabel">Converti i tuoi Punti</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        @{
+                            var totalPoints = Model.UserBalance.Points;
+                            var pointsToConvert = (totalPoints / 5) * 5;
+                            var creditToReceive = pointsToConvert / 5.0;
+                        }
+
+                        @if (totalPoints >= 5)
+                        {
+                            <p>Stai per convertire il massimo numero possibile dei tuoi punti in credito.</p>
+                            <p class="text-muted small">Regola di conversione: 5 Punti = 1,00 €</p>
+
+                            <hr>
+
+                            <dl class="row">
+                                <dt class="col-sm-8">Punti totali disponibili:</dt>
+                                <dd class="col-sm-4 text-end">@totalPoints</dd>
+
+                                <dt class="col-sm-8">Punti che verranno convertiti:</dt>
+                                <dd class="col-sm-4 text-end fw-bold">@pointsToConvert</dd>
+
+                                <dt class="col-sm-8">Credito che riceverai:</dt>
+                                <dd class="col-sm-4 text-end fw-bold text-success">@creditToReceive.ToString("C")</dd>
+                            </dl>
+
+                            <p class="mt-3">Vuoi confermare l'operazione?</p>
+                        }
+                        else
+                        {
+                            <p>Non hai abbastanza punti per effettuare una conversione. Te
+                                ne servono almeno 5.</p>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                        <button type="submit" class="btn btn-primary"
+                            disabled="@(Model.UserBalance.Points < 5)">Converti Punti</button>
                     </div>
                 </form>
             </div>
@@ -71,9 +124,10 @@
                             <small class="text-muted">@transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
                         </div>
                         <span class="fw-bold @(
-                            transaction.TransactionType == "RidePayment" ? "text-danger" :
-                            transaction.TransactionType == "Deposit" ? "text-success" : ""
-                        )">
+                              transaction.TransactionType == "RidePayment" ? "text-danger" :
+                               (transaction.TransactionType == "Deposit" || transaction.TransactionType == "BonusCredit") ? "text-success" : 
+    ""
+                                                  )">
                             @(transaction.TransactionType == "RidePayment" ? "-" : "")@transaction.Credit.ToString("C")
                         </span>
                     </div>
