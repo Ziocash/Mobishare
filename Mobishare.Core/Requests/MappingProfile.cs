@@ -11,6 +11,9 @@ using Mobishare.Core.Requests.Maps.ParkingSlotRequests.Commands;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
 using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
 using Mobishare.Core.Requests.Vehicles.PositionRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.ReportAssignmentsRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.ReportRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.RideRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.VehicleTypeRequests.Commands;
 
@@ -42,11 +45,25 @@ public class MappingProfile : Profile
         // Vehicle requests
         CreateMap<CreateVehicle, Vehicle>().ReverseMap();
         CreateMap<UpdateVehicle, Vehicle>().ReverseMap();
-        // CreateMap<DeleteVehicle, Vehicle>().ReverseMap();
+        CreateMap<DeleteVehicle, Vehicle>().ReverseMap();
 
+        // VehicleType requests
         CreateMap<CreateVehicleType, VehicleType>().ReverseMap();
         CreateMap<UpdateVehicleType, VehicleType>().ReverseMap();
         CreateMap<DeleteVehicleType, VehicleType>().ReverseMap();
+
+        //Ride requests
+        CreateMap<CreateRide, Ride>().ReverseMap();
+        CreateMap<UpdateRide, Ride>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.TripName))
+            .ReverseMap()
+            .ForMember(dest => dest.TripName, opt => opt.MapFrom(src => src.Name));
+        CreateMap<DeleteRide, Ride>().ReverseMap();
+
+        CreateMap<CreateReportAssignment, ReportAssignment>().ReverseMap();
+
+        CreateMap<CreateReport, Report>().ReverseMap();
+        CreateMap<UpdateReport, Report>().ReverseMap();
 
         //-------------------------------
 
@@ -56,7 +73,9 @@ public class MappingProfile : Profile
         CreateMap<CreateBalance, Balance>().ReverseMap();
         CreateMap<UpdateBalance, Balance>().ReverseMap();
 
+        // HistoryCredit requests
         CreateMap<CreateHistoryCredit, HistoryCredit>().ReverseMap();
+        
         //-------------------------------
 
         CreateMap<CreateConversation, Conversation>().ReverseMap();

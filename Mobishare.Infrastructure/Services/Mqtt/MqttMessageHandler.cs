@@ -1,28 +1,26 @@
-using System;
 using System.Text.Json;
-using MediatR;
-using Mobishare.Core.Requests.Vehicles.PositionRequests.Commands;
 using Microsoft.Extensions.Logging;
 using Mobishare.Core.Models.Vehicles;
-using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Mobishare.Infrastructure.Services.SignalR;
-using Mobishare.Core.Requests.Vehicles.VehicleRequests.Queries;
+using Mobishare.Core.VehicleStatus;
+using System.Net.Http.Json;
 
 namespace Mobishare.Infrastructure.Services.MQTT;
 
 public class MqttMessageHandler : IDisposable
 {
-    private readonly IMediator _mediator;
-    private readonly IMapper _mapper;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<MqttMessageHandler> _logger;
     private readonly MqttReceiver _receiver;
     private readonly IHubContext<VehicleHub> _hubContext;
 
-    public MqttMessageHandler(IMediator mediator, IMapper mapper, ILogger<MqttMessageHandler> logger, IHubContext<VehicleHub> hubContext)
+    public MqttMessageHandler(
+        IHttpClientFactory httpClientFactory,
+        ILogger<MqttMessageHandler> logger,
+        IHubContext<VehicleHub> hubContext)
     {
-        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _httpClient = httpClientFactory.CreateClient("CityApi");
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
 
@@ -43,7 +41,6 @@ public class MqttMessageHandler : IDisposable
     {
         try
         {
-
             // Esempio: il payload è un JSON del tipo { "latitude": ..., "longitude": ..., "vehicleId": ... }
             var vehiclePosition = JsonSerializer.Deserialize<Position>(payload, options: new JsonSerializerOptions
             {
@@ -62,8 +59,9 @@ public class MqttMessageHandler : IDisposable
                 _logger.LogWarning("Failed to retrieve position: lat: {Latitude}, lon {Longitude}", vehiclePosition.Latitude, vehiclePosition.Longitude);
                 return;
             }
-            
-            var vehicle = await _mediator.Send(new GetVehicleById(vehiclePosition.VehicleId));
+
+            var responseVehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{vehiclePosition.VehicleId}");
+            var vehicle = responseVehicle;
 
             if(vehicle == null)
             {
@@ -71,12 +69,29 @@ public class MqttMessageHandler : IDisposable
                 return;
             }
 
-            await _mediator.Send(
-                _mapper.Map<CreatePosition>(vehiclePosition)
-            );
+            // Solo aggiorna la posizione se il veicolo è libero, ma invia sempre l'aggiornamento al frontend
+            if (vehicle.Status == VehicleStatusType.Free.ToString())
+            {
+                var createResponse = await _httpClient.PostAsJsonAsync("api/Position", vehiclePosition);
+
+                if (!createResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await createResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
+                }
+            }
             
+            // Invia sempre l'aggiornamento al frontend con lo status del veicolo
+            var vehicleUpdate = new 
+            {
+                VehicleId = vehiclePosition.VehicleId,
+                Latitude = vehiclePosition.Latitude,
+                Longitude = vehiclePosition.Longitude,
+                Status = vehicle.Status,
+                BatteryLevel = vehicle.BatteryLevel
+            };
             
-            await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehiclePosition);
+            await _hubContext.Clients.All.SendAsync("ReceiveVehiclePositionUpdate", vehicleUpdate);
         }
         catch (Exception ex)
         {

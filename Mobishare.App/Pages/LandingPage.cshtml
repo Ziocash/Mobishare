@@ -4,238 +4,318 @@
 @inject IConfiguration Configuration
 @model Mobishare.App.Pages.LandingPageModel
 @{
-    ViewData["Title"] = "Main Page";
+  ViewData["Title"] = "Main Page";
 }
 
-<!-- ------------------------------------------------------------------------------ -->
-<!-- #region  Test del timer (rimuovere) -->
-<!-- Sposta lo script SignalR PRIMA di questo blocco oppure usa window.onload per garantire che sia caricato -->
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<!--
-
-
-<script>
-    async function startTimer() {
-        if (typeof signalR === "undefined") {
-            alert("SignalR non è stato caricato correttamente.");
-            return;
-        }
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/timerHub")
-            .build();
-
-        connection.on("ReceiveTime", seconds => {
-            const min = Math.floor(seconds / 60);
-            const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
-            document.getElementById("timerDisplay").textContent = `${min}:${sec}`;
-        });
-
-        connection.start()
-            .then(() => connection.invoke("StartTimer"))
-            .catch(err => console.error(err.toString()));
-    }
-</script>
-
-<button onclick="startTimer()">Avvia Timer</button>
-<div id="timerDisplay">--:--</div>
-
--->
-<!-- ------------------------------------------------------------------------------ -->
-
-<div class="container-fluid p-0 app-container">
-    <div class="row g-0 h-100">
-        <!-- Left Column (Map + Form) -->
-        <div class="col-md-9 left-column">
-            <!-- Map -->
-            <div class="map-container">
-                <!--<div class="map-placeholder" id="map-placeholder">
+<div class="container-fluid p-0 app-container mt-2">
+  <div class="row g-0 h-100">
+    <!-- Left Column (Map + Form) -->
+    <div class="col-md-9 left-column">
+      <!-- Map -->
+      <div class="map-container">
+        <!--<div class="map-placeholder" id="map-placeholder">
                          Map With Current Location Here                    
                     </div> -->
-                <div id="map"></div>
-                <!-- Map Popup with Red and Green Buttons -->
-                <div class="map-popup" id="mapPopup" style="">
-                    <div class="popup-header">
-                        <!--<button class="btn-close-popup" onclick="hidePopup()" title="Chiudi popup">×</button>-->
-                        Il Mezzo rimarrà prenotato ancora per&nbsp;<span id="timerDisplay">--:--</span>
-                    </div>
-                    <div class="popup-buttons">
-                        <button class="btn btn-danger btn-red" onclick="deleteReservation()">Annulla
-                            Prenotazione</button>
-                        <button class="btn btn-success">Avvia Viaggio</button>
-                    </div>
-                </div>
+        <div id="map">
 
-                <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
-
-                <!-- Current Location box-->
-                <div class="current-location" id="label">
-                    <div class="location-dot"></div>
-                    <span id="locationLabel">Current Location: Loading</span>
-                </div>
-            </div>
-
-            <!-- Vehicle Code Form -->
-            <div class="bike-code-form">
-                <div class="row g-2 align-items-center">
-                    <div class="col">
-                        <input type="text" id="bikeCode" class="form-control"
-                            placeholder="Enter bike code (e.g. 123...)">
-                        <div id="errorMessage" class="error-message">Invalid bike code. Please check and try again.
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <button id="startTravelBtn" class="btn btn-success">Start Travel</button>
-                    </div>
-                </div>
-            </div>
         </div>
-
-        <!-- Travel History-->
-        <div class="col-md-3 travels-container">
-            <div class="travels-header">
-                <h5 class="mb-0">Your Travels</h5>
-            </div>
-            @if (Model.AllRides != null && Model.AllRides.Count > 0)
-            {
-                <div class="col m-3">
-                    @foreach (var vm in Model.AllRides)
-                    {
-                        var ride = vm.Ride;
-                        <div class="row">
-                            <div class="">
-                                <!-- Travel Card -->
-                                <div class="card travel-card">
-                                    <div class="card-body">
-                                        <h6 class="card-title mb-2">Morning Commute</h6>
-
-                                        <!-- Start Position -->
-                                        <div class="travel-info">
-                                            <div class="label">Start:</div>
-                                            @if (ride.PositionStart != null)
-                                            {
-                                                <div class="value">
-                                                    @vm.StartLocationName
-                                                </div>
-                                            }
-                                        </div>
-
-                                        <!-- End Position with Location Name -->
-                                        <div class="travel-info">
-                                            <div class="label">End:</div>
-                                            @if (ride.PositionEnd != null)
-                                            {
-                                                <div class="value">
-                                                    @vm.EndLocationName
-                                                </div>
-                                            }
-                                        </div>
-
-                                        <!-- Duration -->
-                                        <div class="travel-info">
-                                            <div class="label">Duration:</div>
-                                            @{
-                                                var duration = ride.EndDateTime - ride.StartDateTime;
-                                            }
-                                            <div class="value">
-                                                @if (duration.TotalSeconds < 60)
-                                                {
-                                                    @duration.Seconds
-
-                                                    @:seconds
-                                                }
-                                                else if (duration.TotalMinutes < 2)
-                                                {
-                                                    @duration.Minutes
-
-                                                    @:minute
-                                                }
-                                                else
-                                                {
-                                                    @duration.Minutes
-
-                                                    @:minutes
-                                                }
-                                            </div>
-                                        </div>
-
-                                        <!-- Price -->
-                                        <div class="travel-info">
-                                            <div class="label">Price:</div>
-                                            <div class="value">@ride.Price €</div>
-                                        </div>
-
-                                        <!-- Date -->
-                                        <div class="travel-date">
-                                            @ride.StartDateTime.ToString("MMMM dd, yyyy - hh:mm tt",
-                                            CultureInfo.InvariantCulture)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                                }
-                </div>
-            }
-            else
-            {
-                <div class="m-2 alert alert-info alert-dismissible fade show" role="alert" id="infoAlert">
-                    There are no rides.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-
-            <form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
-                <input type="hidden" id="selectedVehicleId" name="vehicleId" />
-
-
-                <!-- Modale Bootstrap -->
-                <div class="modal fade" id="confirmReservationModal" tabindex="-1"
-                    aria-labelledby="confirmReservationModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content rounded-3 shadow">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Chiudi"></button>
-                            </div>
-                            <div class="modal-body">
-                                Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                                <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma"
-                                    onclick="showPopup()">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Popup for the reservation -->
+        <div class="map-popup" id="mapPopup" style="">
+          <div class="popup-header">
+            <!--<button class="btn-close-popup" onclick="hidePopup()" title="Chiudi popup">×</button>-->
+            Il Mezzo rimarrà prenotato ancora per&nbsp;<span id="timerDisplay">--:--</span>
+          </div>
+          <div class="popup-buttons">
+            <button class="btn btn-danger btn-red" onclick="deleteReservation()">Annulla
+              Prenotazione</button>
+            <form method="post" asp-page-handler="StartRide">
+              <button type='submit' class="btn btn-success">Avvia Viaggio</button>
+              <input type="hidden" id="selectedVehicleId" name="vehicleId" />
             </form>
 
-
+          </div>
         </div>
+
+        <!-- Popup for reservation already applied -->
+        <div class="map-popup" id="alreadyReservedPopup" style="display: none;">
+          <div class="popup-header-reserved">
+            <span>Hai già una prenotazione attiva!</span>
+            <button class="btn-close-popup ms-2" style="float: right;" onclick="hideAlreadyReservedPopup()"
+              title="Chiudi popup">×</button>
+          </div>
+          <div class="popup-body-reserved">
+            <p>Per prenotare un altro veicolo devi prima annullare la prenotazione attuale.</p>
+          </div>
+          <div class="progress mt-2" style="height: 8px;">
+            <div id="alreadyReservedProgress" class="progress-bar" role="progressbar"
+              style="width: 100%; transition: width 0.1s;"></div>
+          </div>
+        </div>
+
+        <!-- Popup for insufficient funds -->
+        <div class="map-popup" id="insufficientFundsPopup" style="display: none;">
+          <div class="popup-header-reserved">
+            <span>Fondi insufficienti!</span>
+            <button class="btn-close-popup ms-2" style="float: right;" onclick="hideInsufficientFundsPopup()"
+              title="Chiudi popup">×</button>
+          </div>
+          <div class="popup-body-reserved">
+            <p>Il tuo saldo è insufficiente per prenotare un veicolo. È necessario avere almeno €1.00 per poter iniziare
+              un viaggio.</p>
+            <p><a href="/Wallet" class="btn btn-primary btn-sm mt-2">Ricarica il tuo saldo</a></p>
+          </div>
+          <div class="progress mt-2" style="height: 8px;">
+            <div id="insufficientFundsProgress" class="progress-bar bg-danger" role="progressbar"
+              style="width: 100%; transition: width 0.1s;"></div>
+          </div>
+        </div>
+
+        <div id="vehicleDetails" class="alert alert-info mt-3" style="display: none;"></div>
+
+        <!-- Current Location box-->
+        <div class="current-location" id="label">
+          <div class="location-dot"></div>
+          <span id="locationLabel">Current Location: Loading</span>
+        </div>
+      </div>
+
+      <!-- Vehicle Code Form -->
+      <div class="bike-code-form">
+        <div class="row g-3 align-items-center">
+          <div class="col">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-qrcode"></i>
+              </span>
+              <input type="text" id="bikeCode" class="form-control" placeholder="Enter bike code (e.g. 123...)">
+            </div>
+            <div id="errorMessage" class="error-message">
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              Invalid bike code. Please check and try again.
+            </div>
+          </div>
+          <div class="col-auto">
+            <button id="startTravelBtn" class="btn btn-success">
+              <i class="fas fa-play me-2"></i>Reserve Vehicle
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Travel History-->
+    <div class="col-md-3 travels-container">
+      <div class="travels-header">
+        <h5 class="mb-0">
+          <i class="fas fa-route me-2"></i>
+          Your Travels
+        </h5>
+      </div>
+      <div class="travels-content">
+        @if (Model.AllRides != null && Model.AllRides.Count > 0)
+        {
+          <div style="padding: 10px 10px 40px 10px;">
+            @foreach (var vm in Model.AllRides)
+            {
+              var ride = vm.Ride;
+              <div class="row">
+                <div class="">
+                  <!-- Travel Card -->
+                  <div class="card travel-card">
+                    <div class="card-body">
+                      <h6 class="card-title mb-2">
+                        <i class="fas fa-bicycle me-2"></i>
+                        @(string.IsNullOrEmpty(ride.Name) ? "Viaggio senza Nome" : ride.Name)
+                      </h6>
+
+                      <!-- Start Position -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-play-circle me-1"></i>Start:
+                        </div>
+                        @if (ride.PositionStart != null)
+                        {
+                          <div class="value">
+                            @vm.StartLocationName
+                          </div>
+                        }
+                      </div>
+
+                      <!-- End Position with Location Name -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-stop-circle me-1"></i>End:
+                        </div>
+                        @if (ride.PositionEnd != null)
+                        {
+                          <div class="value">
+                            @vm.EndLocationName
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Duration -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-clock me-1"></i>Time:
+                        </div>
+                        @{
+                          var duration = ride.EndDateTime - ride.StartDateTime;
+                        }
+                        <div class="value">
+                          @{
+                            // Prendiamo le parti intere della durata per una formattazione più pulita
+                            var ore = (int)duration.TotalHours;
+                            var minuti = duration.Minutes;
+                            var secondi = duration.Seconds;
+                          }
+
+                          @if (ore >= 1)
+                          {
+                            // Se c'è almeno un'ora
+                            @ore @(ore == 1 ? " Hour" : " Hours")
+
+                            @if (minuti > 0)
+                            {
+                              // Mostra i minuti solo se non sono zero
+                              @: @minuti @(minuti == 1 ? " Minute" : " Minutes")
+                            }
+                          }
+                          else if (minuti >= 1)
+                          {
+                            // Se ci sono solo minuti (e non ore)
+                            @minuti @(minuti == 1 ? " Minute" : " Minutes")
+                          }
+                          else
+                          {
+                            // Altrimenti, se ci sono solo secondi
+                            @secondi @(secondi == 1 ? " Second" : " Seconds")
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Price -->
+                      <div class="travel-info">
+                        <div class="label">
+                          <i class="fas fa-euro-sign me-1"></i>Price:
+                        </div>
+                        <div class="value">@ride.Price €</div>
+                      </div>
+
+                      <!-- Date -->
+                      <div class="travel-date">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        @ride.StartDateTime.ToString("MMMM dd, yyyy - hh:mm tt", CultureInfo.InvariantCulture)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        else
+        {
+          <div style="padding: 10px;">
+            <div class="alert alert-info d-flex align-items-center" role="alert">
+              <i class="fas fa-info-circle me-2"></i>
+              <div>
+                <strong>No travels yet!</strong><br>
+                <small>Start your first journey by scanning a bike QR code or entering the bike code manually.</small>
+              </div>
+            </div>
+          </div>
+        }
+      </div> <!-- closes travels-content -->
+    </div> <!-- closes travels-container -->
+  </div>
 </div>
+
+<form id="vehicleReservationForm" method="post" asp-page-handler="ReserveVehicle">
+  <input type="hidden" id="selectedVehicleId" name="vehicleId" />
+
+
+
+  <!-- Modale Bootstrap -->
+  <div class="modal fade" id="confirmReservationModal" tabindex="-1" aria-labelledby="confirmReservationModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-3 shadow">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmReservationModalLabel">Conferma prenotazione</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          Vuoi prenotare il veicolo <strong id="vehicleIdDisplay"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+          <input type="submit" class="btn btn-primary" id="confirmReservationBtn" value="Conferma">
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
 
 <div id="chatBubble"
-    style=" position: fixed; bottom: 20px; right: 20px; background-color: #007bff; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; ">
-    💬 </div> <!-- Contenitore chat -->
+  style=" position: fixed; bottom: 30px; right: 30px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; border-radius: 50%; width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); z-index: 9999; transition: all 0.3s ease; font-size: 24px;">
+  <i class="fas fa-comments"></i>
+</div> <!-- Contenitore chat -->
 <div id="chatWindow"
-    style=" position: fixed; bottom: 90px; right: 20px; width: 350px; height: 500px; background-color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 9998; ">
-    <div
-        style="background-color: #007bff; color: white; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-        Chat Support <span style="cursor:pointer;" onclick="toggleChat()">×</span>
-    </div>
-    <iframe src="/Chat" style="width: 100%; height: 100%; border: none;">
-    </iframe>
+  style=" position: fixed; bottom: 90px; right: 20px; width: 350px; height: 500px; background-color: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 9998; ">
+  <div
+    style="background-color: #007bff; color: white; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+    Chat Support <span style="cursor:pointer;" onclick="toggleChat()">×</span>
+  </div>
+  <iframe src="/Chat" style="width: 100%; height: 100%; border: none;">
+  </iframe>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
-    integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
-    integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="~/js/bubbleChat.js" type="text/javascript"></script>
 <script src="~/js/user_logged_home.js" type="text/javascript"></script>
+
+<!-- Modern animations -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Controlla se mostrare il popup di fondi insufficienti
+    const insufficientFundsFlag = document.getElementById('insufficientFundsFlag');
+    if (insufficientFundsFlag && insufficientFundsFlag.value === 'true') {
+      showInsufficientFundsPopup();
+    }
+
+    // Smooth hover effects for chat bubble
+    const chatBubble = document.getElementById('chatBubble');
+    if (chatBubble) {
+      chatBubble.addEventListener('mouseenter', function () {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.6)';
+      });
+      chatBubble.addEventListener('mouseleave', function () {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
+      });
+    }
+
+    // Smooth scrolling for travel cards
+    const travelCards = document.querySelectorAll('.travel-card');
+    travelCards.forEach(card => {
+      card.addEventListener('mouseenter', function () {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+      });
+      card.addEventListener('mouseleave', function () {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+  });
+</script>
+
 <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&callback=initMap" async
-    defer></script>
+  defer></script>
+
+<link rel="stylesheet" href="~/css/user_logged_home.css">

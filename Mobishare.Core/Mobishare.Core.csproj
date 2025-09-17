@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Enums\Balance\PointTransactionType.cs" />
+    <Compile Include="Services/UserContext/UserContextService" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,12 +24,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.NetTopologySuite" Version="8.0.11" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="Requests/Chats/MessagePairRequests/Queries/" />
     <Folder Include="Requests/Vehicles/PositionRequests/Queries/" />
+    <Folder Include="Requests/Vehicles/RepairRequests/Queries/" />
   </ItemGroup>
 
   <ItemGroup>

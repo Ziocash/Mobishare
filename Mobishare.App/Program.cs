@@ -14,7 +14,13 @@ using Mobishare.Core.Services.GoogleGeocoding;
 using Mobishare.Infrastructure.Services.SignalR;
 using PayPal.REST.Client;
 using PayPal.REST.Models;
-using Mobishare.Infrastructure.Services.ChatBotAIService;
+using Mobishare.Ai.ChatBotAIService;
+using Mobishare.Ai.ChatBotAIService.IntentRouter;
+using Mobishare.Ai.ChatBotAIService.IntentClassifier;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
+using Mobishare.Core.Services.UserContext;
+using Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools.RoutingTools;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,12 +30,9 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddControllers();
 
-
 #region SignalR configuration
 builder.Services.AddSignalR();
 #endregion
-
-builder.Services.AddSingleton<IOllamaService, OllamaService>();
 
 #region Google geocoding service configuration
 builder.Services.AddScoped<IGoogleGeocodingService, GoogleGeocodingService>();
@@ -85,16 +88,31 @@ builder.Services.AddScoped<IAuthorizationHandler, IsStaffAuthorizationHandler>()
 builder.Services.AddScoped<IAuthorizationHandler, IsTechnicianAuthorizationHandler>();
 #endregion
 
+#region HttpClient configuration
+builder.Services.AddHttpClient("CityApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7027/");
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
+#endregion
+
 #region Ollama configuration
 builder.Services.AddScoped<IOllamaService, OllamaService>();
 # endregion
 
 
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 
 
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
 builder.Services.AddScoped<IKnowledgeBaseRetriever, KnowledgeBaseRetriever>();
 
+builder.Services.AddScoped<IRoutingTool, RoutingTool>();
+builder.Services.AddScoped<IVehicleTool, VehicleTool>();
+
+builder.Services.AddScoped<IIntentClassificationService, IntentClassificationService>();
+builder.Services.AddScoped<IIntentRouterService, IntentRouterService>();
+builder.Services.AddScoped<IToolExecutionService, ToolExecutionService>();
 
 
 #region PayPal configuration
@@ -108,6 +126,27 @@ builder.Services.Configure<PayPalClientOptions>(options =>
 #endregion
 
 builder.Services.AddSingleton<TimerService>();
+
+builder.Services.AddEndpointsApiExplorer();  // Necessario per .NET 7+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Mobishare API",
+        Version = "v1",
+        Description = "API documentation for Mobishare"
+    });
+
+    c.EnableAnnotations();
+    
+    // Aggiungi i commenti XML (opzionale ma consigliato)
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
 
 var app = builder.Build();
 
@@ -123,6 +162,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mobishare API v1");
+});
+
 
 app.UseAuthorization();
 

@@ -1,18 +1,13 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Mobishare.Core.Enums.Balance;
-using Mobishare.Core.Enums.Balance;
 using Mobishare.Core.Models.UserRelated;
 using Mobishare.Core.Requests.Users.BalanceRequest.Commands;
-using Mobishare.Core.Requests.Users.BalanceRequest.Queries;
 using Mobishare.Core.Requests.Users.HistoryCreditRequest.Commands;
-using Mobishare.Core.Requests.Users.HistoryCreditRequest.Queries;
+using Mobishare.Core.Requests.Users.HistoryPointRequest.Commands;
 using PayPal.REST.Client;
 using PayPal.REST.Models.Orders;
 using PayPal.REST.Models.PaymentSources;
@@ -22,24 +17,26 @@ namespace Mobishare.App.Pages
     public class WalletModel : PageModel
     {
         private readonly IPayPalClient _payPalClient;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
         private readonly ILogger<WalletModel> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         public Balance UserBalance { get; set; }
         public List<HistoryCredit> HistoryCredit { get; set; }
 
-        public WalletModel(IPayPalClient payPalClient, IMediator mediator, IMapper mapper, ILogger<WalletModel> logger, UserManager<IdentityUser> userManager)
+        public WalletModel(
+            IPayPalClient payPalClient,
+            IHttpClientFactory httpClientFactory,
+            ILogger<WalletModel> logger,
+            UserManager<IdentityUser> userManager)
         {
             _payPalClient = payPalClient ?? throw new ArgumentNullException(nameof(payPalClient));
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpClient = httpClientFactory.CreateClient("CityApi");
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         [BindProperty]
-        public InputWalletModel Input{ get; set; }
+        public InputWalletModel Input { get; set; }
         public class InputWalletModel
         {
             [Required(ErrorMessage = "Please enter an an amount.")]
@@ -47,14 +44,99 @@ namespace Mobishare.App.Pages
             public double CreditAmount { get; set; }
         }
 
+        public async Task<IActionResult> OnPostUsePoints()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                _logger.LogWarning("User ID is null. Unable to retrieve balance.");
+                return RedirectToPage("Wallet");
+            }
+
+            var balance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+            if (balance == null)
+            {
+                _logger.LogWarning("No balance record found for user {UserId}", userId);
+                return RedirectToPage("Wallet");
+            }
+
+            if (balance.Points < 5)
+            {
+                TempData["ErrorMessage"] = "You need at least 5 points to convert.";
+                return RedirectToPage();
+            }
+
+            var totalPoints = balance.Points;
+            var pointsToConvert = (totalPoints / 5) * 5;
+            var creditToReceive = pointsToConvert / 5.0;
+
+            var updateBalance = await _httpClient.PutAsJsonAsync("api/Balance",
+                new UpdateBalance
+                {
+                    Id = balance.Id,
+                    UserId = userId,
+                    Points = balance.Points - pointsToConvert,
+                    Credit = balance.Credit + creditToReceive
+                }
+            );
+
+            if (!updateBalance.IsSuccessStatusCode)
+            {
+                var errorContent = await updateBalance.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {updateBalance.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to update balance. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            var createHistoryCredit = await _httpClient.PostAsJsonAsync("api/HistoryCredit",
+                new CreateHistoryCredit
+                {
+                    UserId = userId,
+                    BalanceId = balance.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    Credit = creditToReceive,
+                    TransactionType = CreditTransactionType.BonusCredit.ToString()
+                }
+            );
+
+            if (!createHistoryCredit.IsSuccessStatusCode)
+            {
+                var errorContent = await createHistoryCredit.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {createHistoryCredit.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to create history credit. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            var createHistoryPoint = await _httpClient.PostAsJsonAsync("api/HistoryPoint",
+                new CreateHistoryPoint
+                {
+                    UserId = userId,
+                    BalanceId = balance.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    Point = pointsToConvert,
+                    TransactionType = PointTransactionType.Redeemed.ToString()
+                }
+            );
+
+            if (!createHistoryPoint.IsSuccessStatusCode)
+            {
+                var errorContent = await createHistoryPoint.Content.ReadAsStringAsync();
+                _logger.LogError($"API error: {createHistoryPoint.StatusCode}, Content: {errorContent}");
+                TempData["ErrorMessage"] = $"Failed to create history point. Error: {errorContent}";
+                await LoadAllData();
+                return Page();
+            }
+
+            return RedirectToPage("Wallet");
+        }
+
         public async Task<IActionResult> OnPostDeposit()
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var userId = _userManager.GetUserId(User);
-
-                UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
-                HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
+                await LoadAllData();
                 return Page();
             }
 
@@ -141,7 +223,7 @@ namespace Mobishare.App.Pages
 
                 _logger.LogInformation("Retrieving balance for user {UserId}", userId);
 
-                var balance = await _mediator.Send(new GetBalanceByUserId(userId));
+                var balance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
 
                 if (balance == null)
                 {
@@ -149,22 +231,40 @@ namespace Mobishare.App.Pages
                     return RedirectToPage("Wallet");
                 }
 
-                await _mediator.Send(new CreateHistoryCredit
-                {
-                    UserId = userId,
-                    Credit = double.Parse(res.PurchaseUnits.First().Amount.Value, CultureInfo.InvariantCulture),
-                    TransactionType = CreditTransactionType.Deposit.ToString(),
-                    CreatedAt = DateTime.UtcNow,
-                    BalanceId = balance.Id
-                });
+                var createResponse = await _httpClient.PostAsJsonAsync("api/HistoryCredit",
+                    new CreateHistoryCredit
+                    {
+                        UserId = userId,
+                        Credit = double.Parse(res.PurchaseUnits.First().Amount.Value, CultureInfo.InvariantCulture),
+                        TransactionType = CreditTransactionType.Deposit.ToString(),
+                        CreatedAt = DateTime.UtcNow,
+                        BalanceId = balance.Id
+                    }
+                );
 
-                await _mediator.Send(new UpdateBalance
+                if (!createResponse.IsSuccessStatusCode)
                 {
-                    Id = balance.Id,
-                    Credit = balance.Credit + double.Parse(res.PurchaseUnits.First().Amount.Value, CultureInfo.InvariantCulture),
-                    Points = balance.Points,
-                    UserId = userId
-                });
+                    var errorContent = await createResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {createResponse.StatusCode}, Content: {errorContent}");
+                    TempData["ErrorMessage"] = $"Failed to add histiry credit. Error: {errorContent}";
+                }
+
+                var updateResponse = await _httpClient.PutAsJsonAsync("api/Balance",
+                    new UpdateBalance
+                    {
+                        Id = balance.Id,
+                        Credit = balance.Credit + double.Parse(res.PurchaseUnits.First().Amount.Value, CultureInfo.InvariantCulture),
+                        Points = balance.Points,
+                        UserId = userId
+                    }
+                );
+
+                if (!updateResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await updateResponse.Content.ReadAsStringAsync();
+                    _logger.LogError($"API error: {updateResponse.StatusCode}, Content: {errorContent}");
+                    TempData["ErrorMessage"] = $"Failed to update balance. Error: {errorContent}";
+                }
             }
 
             return RedirectToPage("Wallet");
@@ -172,10 +272,25 @@ namespace Mobishare.App.Pages
 
         public async Task OnGetAsync()
         {
-            var userId = _userManager.GetUserId(User);
+            await LoadAllData();
+        }
 
-            UserBalance = await _mediator.Send(new GetBalanceByUserId(userId));
-            HistoryCredit = await _mediator.Send(new GetAllHistoryCreditByUserId(userId));
+        private async Task LoadAllData()
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+
+                var userBalanceResponse = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+                var historyCreditresponse = await _httpClient.GetFromJsonAsync<List<HistoryCredit>>($"api/HistoryCredit/AllHistoryCredits/{userId}");
+
+                UserBalance = userBalanceResponse;
+                HistoryCredit = historyCreditresponse ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading data");
+            }
         }
     }
 }
