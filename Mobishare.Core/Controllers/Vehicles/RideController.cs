@@ -72,7 +72,7 @@ public class RideController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetAllUserRides(userId));
-        
+
         return Ok(result);
     }
 
@@ -97,8 +97,9 @@ public class RideController : ControllerBase
         var result = await _mediator.Send(new GetRideByUserId(userId));
         if (result == null)
         {
-            return NotFound("Ride not found.");
+            return NoContent();
         }
+
         return Ok(result);
     }
 
@@ -122,11 +123,11 @@ public class RideController : ControllerBase
         var result = await _mediator.Send(new GetRideById(rideId));
         if (result == null)
         {
-            return NotFound("Ride not found.");
+            return Ok(new List<Ride>());
         }
         return Ok(result);
     }
-    
+
 
     [HttpPut()]
     [SwaggerOperation(
@@ -137,7 +138,7 @@ public class RideController : ControllerBase
     [SwaggerResponse(400, "Invalid request payload")]
     [SwaggerResponse(404, "Ride not found")]
     public async Task<IActionResult> UpdateRide(
-        [FromBody] 
+        [FromBody]
         [SwaggerParameter("updateRide", Required = true, Description = "The ride details to update")]
         UpdateRide updateRide)
     {

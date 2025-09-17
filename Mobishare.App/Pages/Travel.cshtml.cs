@@ -14,6 +14,10 @@ using Mobishare.Core.VehicleStatus;
 using Microsoft.EntityFrameworkCore;
 using Mobishare.Core.Models.Maps;
 using NetTopologySuite.IO;
+using Mobishare.Core.Requests.Users.HistoryPointRequest.Commands;
+using System.Transactions;
+using Mobishare.Core.VehicleClassification;
+using System.Net;
 
 namespace Mobishare.App.Pages
 {
@@ -66,6 +70,13 @@ namespace Mobishare.App.Pages
             {
                 _logger.LogWarning("Authenticated user has null UserId.");
                 return RedirectToPage("/Index");
+            }
+
+            var currentRideResponse = await _httpClient.GetAsync($"api/Ride/User/{userId}");
+            if (currentRideResponse.StatusCode == HttpStatusCode.NoContent)
+            {
+                _logger.LogInformation("Ride found for user with ID: {UserId}. Redirecting to travel.", userId);
+                return RedirectToPage("/LandingPage");
             }
 
             Ride = await _httpClient.GetFromJsonAsync<Ride>($"api/Ride/User/{userId}");
@@ -155,6 +166,45 @@ namespace Mobishare.App.Pages
                     _logger.LogWarning("Vehicle with ID {VehicleId} not found", ride.VehicleId);
                     return RedirectToPage("/Index");
                 }
+
+                var endTime = DateTime.UtcNow;
+                var durationInMinutes = (endTime - ride.StartDateTime).TotalMinutes;
+                var points = (int)durationInMinutes / 5;
+
+                // Recupera il tipo di veicolo per ottenere il prezzo al minuto
+                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
+                if (vehicleType == null)
+                {
+                    _logger.LogWarning("VehicleType with ID {VehicleTypeId} not found", vehicle.VehicleTypeId);
+                    return RedirectToPage("/Index");
+                }
+
+                // Calcola la durata in minuti e il prezzo
+                var calculatedPrice = 0m;
+                if (durationInMinutes < 30)
+                    calculatedPrice = (decimal)(FixedCostVehicle)Enum.Parse(typeof(FixedCostVehicle), vehicleType.Type);
+
+                else
+                    calculatedPrice = Math.Round(((decimal)durationInMinutes - 30) * vehicleType.PricePerMinute, 2);
+
+                // Recupera il saldo dell'utente
+                var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
+                if (userBalance == null)
+                {
+                    _logger.LogWarning("No balance found for user {UserId}", userId);
+                    TempData["ErrorMessage"] = "Impossibile recuperare il saldo dell'utente.";
+                    return Page();
+                }
+
+                // Verifica che l'utente abbia fondi sufficienti
+                if (userBalance.Credit < (double)calculatedPrice)
+                {
+                    _logger.LogWarning("Insufficient balance for user {UserId}. Required: €{Price}, Available: €{Balance}",
+                        userId, calculatedPrice, userBalance.Credit);
+                    TempData["ErrorMessage"] = $"Saldo insufficiente. Necessari: €{calculatedPrice:F2}, Disponibili: €{userBalance.Credit:F2}. Ricarica il tuo wallet.";
+                    return Page();
+                }
+
                 // Recupera l'ultima posizione del veicolo
                 var lastPosition = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{ride.VehicleId}");
 
@@ -189,42 +239,21 @@ namespace Mobishare.App.Pages
                     return Page();
                 }
 
-                // Recupera il tipo di veicolo per ottenere il prezzo al minuto
-                var vehicleType = await _httpClient.GetFromJsonAsync<VehicleType>($"api/VehicleType/{vehicle.VehicleTypeId}");
-                if (vehicleType == null)
+                if (vehicleType.Type == VehicleTypes.Bike.ToString())
                 {
-                    _logger.LogWarning("VehicleType with ID {VehicleTypeId} not found", vehicle.VehicleTypeId);
-                    return RedirectToPage("/Index");
+                    var createHistoryPointResponse = await _httpClient.PostAsJsonAsync("api/HistoryPoint",
+                        new CreateHistoryPoint
+                        {
+                            UserId = userId,
+                            CreatedAt = DateTime.UtcNow,
+                            TransactionType = CreditTransactionType.Deposit.ToString(),
+                            BalanceId = userBalance.Id,
+                            Point = points
+                        }
+                    );
                 }
-
-                // Calcola la durata in minuti e il prezzo
-                var endTime = DateTime.UtcNow;
-                var durationInMinutes = (endTime - ride.StartDateTime).TotalMinutes;
-                var calculatedPrice = 0m;
-                if (durationInMinutes < 30)
-                    calculatedPrice = (decimal)(FixedCostVehicle)Enum.Parse(typeof(FixedCostVehicle), vehicleType.Type);
-
                 else
-                    calculatedPrice = Math.Round(((decimal)durationInMinutes - 30) * vehicleType.PricePerMinute, 2);
-
-
-                // Recupera il saldo dell'utente
-                var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{userId}");
-                if (userBalance == null)
-                {
-                    _logger.LogWarning("No balance found for user {UserId}", userId);
-                    TempData["ErrorMessage"] = "Impossibile recuperare il saldo dell'utente.";
-                    return Page();
-                }
-
-                // Verifica che l'utente abbia fondi sufficienti
-                if (userBalance.Credit < (double)calculatedPrice)
-                {
-                    _logger.LogWarning("Insufficient balance for user {UserId}. Required: €{Price}, Available: €{Balance}",
-                        userId, calculatedPrice, userBalance.Credit);
-                    TempData["ErrorMessage"] = $"Saldo insufficiente. Necessari: €{calculatedPrice:F2}, Disponibili: €{userBalance.Credit:F2}. Ricarica il tuo wallet.";
-                    return Page();
-                }
+                    points = 0;
 
                 // Scala il costo dal saldo dell'utente
                 var newBalance = userBalance.Credit - (double)calculatedPrice;
@@ -233,7 +262,7 @@ namespace Mobishare.App.Pages
                     {
                         Id = userBalance.Id,
                         Credit = newBalance,
-                        Points = userBalance.Points,
+                        Points = userBalance.Points + points,
                         UserId = userId
                     }
                 );
@@ -264,9 +293,6 @@ namespace Mobishare.App.Pages
                     _logger.LogError($"Failed to create history credit: {createHistoryResponse.StatusCode}, Content: {errorContent}");
                     // Non blocchiamo il processo per questo errore, ma lo logghiamo
                 }
-
-
-
 
                 // Aggiorna il ride con orario di fine, posizione finale e prezzo calcolato
                 var updateRideResponse = await _httpClient.PutAsJsonAsync("api/Ride",
