@@ -2,25 +2,25 @@ namespace Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools;
 
 public static class UserContext
 {
-    private static readonly AsyncLocal<string> _UserId = new();
-    private static readonly AsyncLocal<string> _Lat = new();
-    private static readonly AsyncLocal<string> _Lon = new();
+    private static string _UserId = "";
+    private static string _Lat = "";
+    private static string _Lon = "";
 
     public static string UserId
     {
-        get => _UserId.Value;
-        set => _UserId.Value = value;
+        get => _UserId;
+        set => _UserId = value;
     }
 
     public static string Lat
     {
-        get => _Lat.Value;
-        set => _Lat.Value = value;
+        get => _Lat;
+        set => _Lat = value;
     }
 
     public static string Lon
     {
-        get => _Lon.Value;
-        set => _Lon.Value = value;
+        get => _Lon;
+        set => _Lon = value;
     }
 }
