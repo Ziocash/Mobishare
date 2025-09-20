@@ -26,6 +26,7 @@ using Mobishare.Ai.ChatBotAIService.Prompts;
 using System.Net.Http.Json;
 using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.Models.Maps;
+using OllamaSharp.Models.Chat;
 
 public class ChatHub : Hub
 {
@@ -69,8 +70,8 @@ public class ChatHub : Hub
         _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         _httpClient = httpClientFactory.CreateClient("CityApi");
 
-        _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
-        _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
+        _client = new OllamaApiClient(_configuration["Ollama:Llms:DefaultUrlApiClient"]!);
+        _client.SelectedModel = _configuration["Ollama:Llms:Qwen3:ModelName"]!;
 
         _chat = new Chat(_client)
         {
@@ -156,7 +157,7 @@ public class ChatHub : Hub
         var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
         var aiPromtMessage = "";
         var aiThinkMessage = "";
-
+        
         _chat.OnThink += async (sender, thinkContent) =>
         {
             aiThinkMessage += thinkContent;
@@ -205,7 +206,7 @@ public class ChatHub : Hub
                     IsForRag = false,
                     SourceType = SourceType.Chatbot.ToString(),
                     Answered = answered,
-                    Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
+                    Language = _configuration["Ollama:Llms:Qwen3:ModelName"] ?? "default"
                 }
             );
         }
@@ -276,7 +277,7 @@ public class ChatHub : Hub
                             IsForRag = false,
                             SourceType = SourceType.Chatbot.ToString(),
                             Answered = true,
-                            Language = _configuration["Ollama:Llm:ModelName"] ?? "default"
+                            Language = _configuration["Ollama:Llms:Qwen3:ModelName"] ?? "default"
                         }
                     );
                 

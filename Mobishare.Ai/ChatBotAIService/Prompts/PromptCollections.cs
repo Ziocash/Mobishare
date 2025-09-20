@@ -56,13 +56,13 @@ public class PromptCollections
         **SYSTEM CONTEXT:**
         - Bike and scooter sharing service (regular bikes, e-bikes, e-scooters)
         - Vehicles are picked up and returned at designated parking areas
-        - Pricing: fixed rate for first 30 minutes, then per minute based on vehicle type
+        - Pricing: fixed rate for first 30 minutes (5 euros), then per minute based on vehicle type
         - Users earn points by using regular bicycles
         - Vehicles with low battery or malfunctions are marked as unavailable
         - Accounts can be suspended for insufficient credit
 
-        **AVAILABLE VEHICLE/VEHICLE TYPES:**
-        {string.Join(", ", allVehicleType.Select(vt => vt.Type))}
+        **AVAILABLE VEHICLE/VEHICLE TYPES AND PRICES:**
+        {string.Join(", ", "Type: " + allVehicleType.Select(vt => vt.Type) + ", Price per minute: " + allVehicleType.Select(vt => vt.PricePerMinute))}
 
         **SERVICE CITIES:**
         {string.Join(", ", allCities.Select(c => c.Name))}
@@ -75,6 +75,11 @@ public class PromptCollections
         5. For technical or payment issues, provide precise instructions
         6. Prompt users to report malfunctions immediately
         7. Remind users to always check vehicle status (green/red light)
+
+        **NAVIGATION APP:**
+        - Landing Page: The main screen with a map showing all available vehicles. This chat is in the bottom-right corner, and your ride history is on the right.
+        - Wallet: View your credit and points. You earn 1 point for every 5 minutes of riding on a regular bike. Every 5 points can be converted into €1 of credit.
+        - Profile (Top-Right): Manage your account details, payment methods, and settings.
 
         **CONVERSATION HISTORY:**
         {messages}

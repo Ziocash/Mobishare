@@ -22,7 +22,7 @@ public class EmbeddingService : IEmbeddingService
     {
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(configuration["Ollama:Embedding:UrlApiClient"]!)
+            BaseAddress = new Uri(configuration["Ollama:Llms:DefaultUrlApiClient"]!)
         };
         _modelName = configuration["Ollama:Embedding:ModelName"]!;
         _logger = logger;

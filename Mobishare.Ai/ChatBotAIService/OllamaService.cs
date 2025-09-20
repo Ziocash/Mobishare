@@ -23,8 +23,8 @@ namespace Mobishare.Ai.ChatBotAIService
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
 
-            _client = new OllamaApiClient(_configuration["Ollama:Llm:UrlApiClient"]!);
-            _client.SelectedModel = _configuration["Ollama:Llm:ModelName"]!;
+            _client = new OllamaApiClient(_configuration["Ollama:Llms:DefaultUrlApiClient"]!);
+            _client.SelectedModel = _configuration["Ollama:Llms:Qwen3:ModelName"]!;
         }
 
         public async IAsyncEnumerable<string> StreamResponseAsync(int conversationId, string prompt)
