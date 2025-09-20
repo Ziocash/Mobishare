@@ -152,6 +152,7 @@ public class ChatHub : Hub
         _logger.LogInformation($"Message recieved: {message} nella conversazione {conversationId}");
 
         UserContext.UserId = userId;
+        _logger.LogInformation($"UserContext.UserId set to: {UserContext.UserId}, lat: {UserContext.Lat}, lon: {UserContext.Lon}");
         HttpClientContext.HttpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
 
         var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
@@ -270,7 +271,7 @@ public class ChatHub : Hub
 
                     _logger.LogDebug("Creating MessagePair with aiId={AiId}", aiMessage?.Content.ReadFromJsonAsync<ChatMessage>().Id);
 
-                    var createMessagePair = await _httpClient.PostAsJsonAsync("api/ChatMessage",
+                    var createMessagePair = await _httpClient.PostAsJsonAsync("api/MessagePair",
                         new CreateMessagePair
                         {
                             AiMessageId = aiMessage.Content.ReadFromJsonAsync<ChatMessage>().Id,
