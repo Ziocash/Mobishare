@@ -128,4 +128,16 @@ public class VehicleController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("GetAvailableVehicles")]
+    [SwaggerOperation(
+        Summary = "Get all available vehicles",
+        Description = "This endpoint retrieves all available vehicles.",
+        OperationId = "GetAllAvailableVehicles")]
+    [SwaggerResponse(200, "Available vehicles retrieved successfully", typeof(IEnumerable<Vehicle>))]
+    public async Task<IActionResult> GetAllAvailableVehicles()
+    {
+        var result = await _mediator.Send(new GetAllAvailableVehicles());
+
+        return Ok(result);
+    }
 }
