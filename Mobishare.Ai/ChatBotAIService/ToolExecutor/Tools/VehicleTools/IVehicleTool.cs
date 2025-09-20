@@ -16,5 +16,5 @@ public interface IVehicleTool
     /// Reserves a vehicle.
     /// </summary>
     /// <returns></returns>
-    Task<string> ReserveVehicleAsync();
+    Task<string> ReserveVehicleAsync(string userRequest);
 }

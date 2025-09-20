@@ -14,6 +14,6 @@ public class VehicleTools
         => await _vehicleTool.ReportVehicleIssueAsync(description, vehicleId);
 
     [OllamaTool]
-    public static async Task<string> ReserveVehicleAsync()
-        => await _vehicleTool.ReserveVehicleAsync();
+    public static async Task<string> ReserveVehicleAsync(string userRequest)
+        => await _vehicleTool.ReserveVehicleAsync(userRequest);
 }

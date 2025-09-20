@@ -100,12 +100,89 @@ public class VehicleTool : IVehicleTool
         return $"Segnalazione ricevuta con successo!";
     }
 
-    public Task<string> ReserveVehicleAsync()
+
+    /// <summary>
+    /// Reserves a vehicle. UserId, Lat and Lon are set from the UserContextService.
+    /// </summary>
+    /// <param name="vehicleId"></param>
+    /// <returns></returns>
+    public async Task<string> ReserveVehicleAsync(string userRequest)
     {
         UserId = UserContext.UserId;
-        var latUsr = UserContext.Lat.ToString();
-        var LonUsr = UserContext.Lon.ToString();
+        var latUsr = UserContext.Lat;
+        var LonUsr = UserContext.Lon;
+
+        // Debug: controlla se i dati ci sono
+        if (string.IsNullOrEmpty(latUsr) || string.IsNullOrEmpty(LonUsr))
+        {
+            return $"Coordinate utente non disponibili. Lat: {latUsr ?? "null"}, Lon: {LonUsr ?? "null"}";
+        }
+
+        var _chat = HttpClientContext.Chat;
+
+        var promptGenerator = new PromptCollections();
+
+        var availableVehicles = await _httpClient.GetFromJsonAsync<IEnumerable<Vehicle>>("api/Vehicle/GetAvailableVehicles");
+        if (availableVehicles == null || !availableVehicles.Any())
+        {
+            return "Nessun veicolo disponibile per la prenotazione.";
+        }
+
+        var vehicleList = new List<(int VehicleId, decimal Latitude, decimal Longitude)>();
+
+        foreach (var vehicle in availableVehicles)
+        {
+            // Recupera la posizione solo per il veicolo corrente
+            var pos = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{vehicle.Id}");
+            vehicleList.Add((vehicle.Id, pos?.Latitude ?? 0, pos?.Longitude ?? 0));
+        }
+
+
+        var promptText = promptGenerator.ReservationPrompt(userRequest, latUsr + "," + LonUsr, vehicleList);
+
+        var vehicleId = "";
+        await foreach (var res in _chat.SendAsync(promptText))
+        {
+            vehicleId += res;
+        }
+
+        //var responseFromApi = await _httpClient.PostAsJsonAsync("/LandingPage?handler=ReserveVehicle", new { vehicleId = vehicleId });
+        // if (!int.TryParse(vehicleId.Trim(), out int parsedVehicleId))
+        // {
+        //     return "Errore: ID veicolo non valido ricevuto dall'AI.";
+        // }
+
+        // var response = await _httpClient.PostAsJsonAsync("api/Vehicle/Reserve", new { 
+        //     VehicleId = parsedVehicleId,
+        //     UserId = _userContext.UserId 
+        // });
+
+        // if (!response.IsSuccessStatusCode)
+        // {
+        //     return $"Errore durante la prenotazione del veicolo. Status: {response.StatusCode}";
+        // }
         
-        return Task.FromResult("Veicolo riservato con successo.");
+        if (!int.TryParse(vehicleId.Trim(), out int parsedVehicleId))
+        {
+            return "Errore: ID veicolo non valido ricevuto dall'AI.";
+        }
+
+        var formContent = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("vehicleId", parsedVehicleId.ToString())
+        });
+
+        var response = await _httpClient.PostAsync("/LandingPage?handler=ReserveVehicle", formContent);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return $"Errore durante la prenotazione del veicolo. Status: {response.StatusCode}";
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        
+
+        return "Veicolo riservato con successo.";
     }
 }
