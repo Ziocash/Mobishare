@@ -256,6 +256,28 @@ function initMap() {
           lng: position.coords.longitude
         };
 
+        // Invia automaticamente le coordinate al backend
+        fetch('/api/UserContext/SetLocation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            lat: userLatLng.lat,
+            lon: userLatLng.lng
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            console.log('Posizione utente inviata al backend:', userLatLng);
+          } else {
+            console.error('Errore nell\'invio della posizione al backend. RISPOSTA:', response);
+          }
+        })
+        .catch(error => {
+          console.error('Errore nella richiesta di posizione:', error);
+        });
+
         map = new google.maps.Map(document.getElementById('map'), {
           center: userLatLng,
           zoom: 18,

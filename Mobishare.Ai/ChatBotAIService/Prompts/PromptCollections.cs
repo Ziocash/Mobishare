@@ -95,6 +95,41 @@ public class PromptCollections
     ";
     }
 
+    /// <summary>
+    /// Generates a prompt to assist in finalizing vehicle reservations.
+    /// </summary>
+    public string ReservationPrompt(string userMessage, string userLocation, IEnumerable<(int VehicleId, decimal Latitude, decimal Longitude)> availableVehicles)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("SYSTEM PROMPT:");
+        sb.AppendLine("You are an AI assistant that helps finalize vehicle bookings.");
+        sb.AppendLine();
+        sb.AppendLine("Context information:");
+        sb.AppendLine($"- User location: {userLocation}");
+        sb.AppendLine("- Available vehicles (with positions):");
+        foreach (var v in availableVehicles)
+        {
+            sb.AppendLine($"  - VehicleId: {v.VehicleId}, Lat: {v.Latitude}, Lon: {v.Longitude}");
+        }
+        sb.AppendLine();
+        sb.AppendLine("Your tasks are:");
+        sb.AppendLine("1. If the request includes a vehicleId, return only that vehicleId.");
+        sb.AppendLine("2. If the request does not include a vehicleId:");
+        sb.AppendLine("   - If the user explicitly asks for the closest vehicle, calculate which available vehicle is nearest to the user's location and return its vehicleId.");
+        sb.AppendLine("   - If the user omits the vehicleId without specifying, ask the user (in their own language) to clarify which vehicle they want.");
+        sb.AppendLine();
+        sb.AppendLine("IMPORTANT:");
+        sb.AppendLine("The final answer must be ONLY the vehicleId, or a clarification question if the user did not specify a vehicleId.");
+        sb.AppendLine("Do not add explanations or extra text.");
+        sb.AppendLine();
+        sb.AppendLine("--- USER MESSAGE ---");
+        sb.AppendLine(userMessage);
+
+        return sb.ToString();
+    }
+
+
     public string InactivityPrompt()
     {
         return $"Translate the following sentence into the language used in the current conversation: The conversation has been automatically closed due to inactivity. If you need assistance, just send a new message to reopen it. If you don't have the context, write the sentence: The conversation has been automatically closed due to inactivity.";

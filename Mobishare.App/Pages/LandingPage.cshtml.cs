@@ -39,7 +39,7 @@ namespace Mobishare.App.Pages
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public async Task<IActionResult> OnPostReserveVehicle(int vehicleId)
+        public async Task<IActionResult> OnPostReserveVehicle([FromForm] int vehicleId)
         {
             _logger.LogInformation("Prenotazione confermata per veicolo {VehicleId}", vehicleId);
 
@@ -217,6 +217,31 @@ namespace Mobishare.App.Pages
             {
                 _logger.LogWarning("Authenticated user has null UserId.");
                 return RedirectToPage("/Index");
+            }
+
+            var vehicleId = "3";
+
+            if (!int.TryParse(vehicleId.Trim(), out int parsedVehicleId))
+            {
+                _logger.LogWarning("Invalid vehicleId format: {VehicleId}", vehicleId);
+            }
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("vehicleId", parsedVehicleId.ToString())
+            });
+
+            // Log body inviato
+            var debugBody = await formContent.ReadAsStringAsync();
+            _logger.LogInformation($"TEST POST /LandingPage?handler=ReserveVehicle body: {debugBody}");
+
+            var response = await _httpClient.PostAsync("/LandingPage?handler=ReserveVehicle", formContent);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation($"TEST Risposta prenotazione: Status={response.StatusCode}, Content={responseContent}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Errore durante la prenotazione del veicolo. request Message: {response.RequestMessage}");
             }
 
             var currentRideResponse = await _httpClient.GetAsync($"api/Ride/User/{userId}");
