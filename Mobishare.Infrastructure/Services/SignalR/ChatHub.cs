@@ -154,7 +154,7 @@ public class ChatHub : Hub
         UserContext.UserId = userId;
         HttpClientContext.HttpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
 
-        var tools = new object[] { new ReportIssueTool(), new ReserveVehicleAsyncTool(), new RoutingPageTool() };
+        var tools = new object[] { typeof(VehicleTools) };
         var aiPromtMessage = "";
         var aiThinkMessage = "";
         
