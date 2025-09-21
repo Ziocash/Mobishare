@@ -7,7 +7,9 @@ using Mobishare.Core.Models.Vehicles;
 using Mobishare.Core.ReportStatusEnum;
 using Mobishare.Core.Requests.Vehicles.ReportAssignmentsRequests.Commands;
 using Mobishare.Core.Requests.Vehicles.ReportRequests.Commands;
+using Mobishare.Core.Requests.Vehicles.VehicleRequests.Commands;
 using Mobishare.Core.Services.UserContext;
+using Mobishare.Core.VehicleStatus;
 
 
 namespace Mobishare.Ai.ChatBotAIService.ToolExecutor.Tools.VehicleTools;
@@ -33,19 +35,23 @@ public class VehicleTool : IVehicleTool
          _httpClient = HttpClientContext.HttpClientFactory.CreateClient("CityApi");
      }
 
+    /// <summary>
+    /// Reports a vehicle issue. UserId is set from the UserContextService.
+    /// </summary> <param name="description"></param> <param name="vehicleId"></param>
+    /// <returns></returns>
     public async Task<string> ReportVehicleIssueAsync(string description, int vehicleId)
     {
         var userId = UserContext.UserId;
 
         var getTechnicians = await _httpClient.GetFromJsonAsync<IEnumerable<TechnicianReports>>("api/TechnicianApis/GetTechniciansReports");
-        
+
         if (getTechnicians == null)
         {
             return $"Nessun tecnico disponibile per gestire il report: {description}";
         }
 
         // test per vedere se il veicolo con quell'id esiste
-       
+
         var _chat = HttpClientContext.Chat;
 
         var promptGenerator = new PromptCollections();
@@ -83,7 +89,7 @@ public class VehicleTool : IVehicleTool
 
         var createdReport = await createReport.Content.ReadFromJsonAsync<Report>();
         var reportId = createdReport.Id;
-        
+
         var createReportAssignment = await _httpClient.PostAsJsonAsync("api/Report",
             new CreateReportAssignment
             {
@@ -130,59 +136,73 @@ public class VehicleTool : IVehicleTool
 
         var vehicleList = new List<(int VehicleId, decimal Latitude, decimal Longitude)>();
 
-        foreach (var vehicle in availableVehicles)
+        foreach (var veh in availableVehicles)
         {
             // Recupera la posizione solo per il veicolo corrente
-            var pos = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{vehicle.Id}");
-            vehicleList.Add((vehicle.Id, pos?.Latitude ?? 0, pos?.Longitude ?? 0));
+            var pos = await _httpClient.GetFromJsonAsync<Position>($"api/Position/{veh.Id}");
+            vehicleList.Add((veh.Id, pos?.Latitude ?? 0, pos?.Longitude ?? 0));
         }
-
 
         var promptText = promptGenerator.ReservationPrompt(userRequest, latUsr + "," + LonUsr, vehicleList);
 
         var vehicleId = "";
+
+        // Estrai l'ID del veicolo dalla risposta dell'AI
         await foreach (var res in _chat.SendAsync(promptText))
         {
             vehicleId += res;
         }
 
-        //var responseFromApi = await _httpClient.PostAsJsonAsync("/LandingPage?handler=ReserveVehicle", new { vehicleId = vehicleId });
-        // if (!int.TryParse(vehicleId.Trim(), out int parsedVehicleId))
-        // {
-        //     return "Errore: ID veicolo non valido ricevuto dall'AI.";
-        // }
-
-        // var response = await _httpClient.PostAsJsonAsync("api/Vehicle/Reserve", new { 
-        //     VehicleId = parsedVehicleId,
-        //     UserId = _userContext.UserId 
-        // });
-
-        // if (!response.IsSuccessStatusCode)
-        // {
-        //     return $"Errore durante la prenotazione del veicolo. Status: {response.StatusCode}";
-        // }
         
         if (!int.TryParse(vehicleId.Trim(), out int parsedVehicleId))
         {
             return "Errore: ID veicolo non valido ricevuto dall'AI.";
         }
-
-        var formContent = new FormUrlEncodedContent(new[]
+        // Controlla se l'utente ha un saldo sufficiente
+        var userBalance = await _httpClient.GetFromJsonAsync<Balance>($"api/Balance/{UserId}");
+        if (userBalance == null)
         {
-            new KeyValuePair<string, string>("vehicleId", parsedVehicleId.ToString())
-        });
-
-        var response = await _httpClient.PostAsync("/LandingPage?handler=ReserveVehicle", formContent);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return $"Errore durante la prenotazione del veicolo. Status: {response.StatusCode}";
+            //_logger.LogWarning("No balance found for user {UserId}", UserId);
+            return "Errore: non è stato trovato nessun wallet.";
         }
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+        // Verifica che l'utente abbia almeno 1 euro
+        if (userBalance.Credit < 1.0)
+        {
 
-        
+            return "Saldo insufficiente per la prenotazione. Si prega di ricaricare il conto.";
+        }
 
-        return "Veicolo riservato con successo.";
+        // Effettua la prenotazione del veicolo
+        var vehicle = await _httpClient.GetFromJsonAsync<Vehicle>($"api/Vehicle/{parsedVehicleId}");
+
+        if (vehicle == null)
+        {
+
+            return $"ERRORE: veicolo con ID {parsedVehicleId} inesistente.";
+        }
+
+        var updateResponse = await _httpClient.PutAsJsonAsync("api/Vehicle",
+            new UpdateVehicle
+            {
+                Id = vehicle.Id,
+                Plate = vehicle.Plate,
+                Status = VehicleStatusType.Reserved.ToString(),
+                BatteryLevel = vehicle.BatteryLevel,
+                ParkingSlotId = vehicle.ParkingSlotId,
+                VehicleTypeId = vehicle.VehicleTypeId,
+                CreatedAt = vehicle.CreatedAt
+            }
+        );
+
+        if (!updateResponse.IsSuccessStatusCode)
+        {
+            return $"Errore durante la prenotazione del veicolo. Status: {updateResponse.StatusCode}";
+        }
+        else
+        {
+            return "Veicolo prenotato con successo.";
+        }
+
     }
 }

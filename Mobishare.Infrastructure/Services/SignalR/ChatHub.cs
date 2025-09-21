@@ -175,6 +175,12 @@ public class ChatHub : Hub
 
         _chat.OnThink -= async (sender, thinkContent) => { };
 
+        _chat.OnToolResult += (sender, result) =>
+        {
+            _logger.LogInformation("Tool result: {result}", result);
+            
+        };
+
         var aiEmbedResponse = await _embeddingService.CreateEmbeddingAsync(aiPromtMessage);
         var deserializeAiEmbedResponse = JsonSerializer.Serialize(aiEmbedResponse);
         
