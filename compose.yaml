@@ -27,13 +27,12 @@ services:
 #     depends_on:
 #       - ollama
 
+
 #   ollama:
-#     image: ollama/ollama:latest
+#     build: ./ollama-docker
 #     container_name: ollama
 #     ports:
 #       - "11434:11434"
-#     environment:
-#       - OLLAMA_MODELS=qwen3:latest
 #     volumes:
 #       - ollama_data:/root/.ollama
 #     restart: unless-stopped
