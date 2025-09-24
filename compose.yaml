@@ -27,7 +27,6 @@ services:
 #     depends_on:
 #       - ollama
 
-
 #   ollama:
 #     build: ./ollama-docker
 #     container_name: ollama
@@ -39,4 +38,14 @@ services:
 
 # volumes:
 #   ollama_data:
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    # volumes:
+    volumes:
+      - ./mosquitto-config:/mosquitto/config
+    restart: always
+    ports:
+    - "1883:1883" 
   
