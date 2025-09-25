@@ -24,7 +24,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./Mobishare.db:/app/Mobishare.db
-#     depends_on:
+    depends_on:
+        - mosquitto
 #       - ollama
 
 #   ollama:
